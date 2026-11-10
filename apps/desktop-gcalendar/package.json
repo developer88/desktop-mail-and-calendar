@@ -1,0 +1,10 @@
+{
+  "name": "desktop-gcalendar",
+  "version": "0.1.0",
+  "description": "Standalone Windows 11 Desktop client for Google Calendar",
+  "private": true,
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build"
+  }
+}

@@ -1,0 +1,17 @@
+[package]
+name = "desktop-gmail"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[build-dependencies]
+tauri-build = { workspace = true }
+
+[dependencies]
+desktop-google-core = { path = "../../../crates/core" }
+tauri = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tauri-plugin-shell = { workspace = true }
+tauri-plugin-notification = { workspace = true }

@@ -1,0 +1,25 @@
+{
+  "name": "desktop-google-apps-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Native-feeling Windows 11 desktop applications for Gmail and Google Calendar built with Tauri v2",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "cargo test --package desktop-google-core",
+    "check": "cargo check --target x86_64-pc-windows-msvc --workspace",
+    "fmt": "cargo fmt --all --check",
+    "build": "cargo build --target x86_64-pc-windows-msvc --workspace --release",
+    "build:gmail": "cargo build --target x86_64-pc-windows-msvc --package desktop-gmail --release",
+    "build:calendar": "cargo build --target x86_64-pc-windows-msvc --package desktop-gcalendar --release",
+    "ci": "bash scripts/ci.sh",
+    "release:prepare": "node scripts/prepare-release.js"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

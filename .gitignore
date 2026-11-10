@@ -1,0 +1,31 @@
+# Rust / Cargo
+/target/
+Cargo.lock
+**/*.rs.bk
+
+# Node / NPM
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Tauri & Distribution
+/dist/
+/releases/
+**/src-tauri/target/
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+.idea/
+.vscode/
+*.suo
+*.user
+
+# Environment files
+.env
+.env.*
+!.env.example

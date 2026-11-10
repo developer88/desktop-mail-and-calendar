@@ -1,0 +1,46 @@
+/* Windows 11 Modern Theme Override for Google Webapps */
+:root {
+  --win11-font-family: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  --win11-accent: #0078d4;
+  --win11-border-radius: 8px;
+}
+
+body, input, textarea, select, button {
+  font-family: var(--win11-font-family) !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Rounded search bars and action buttons */
+.gb_fe, .gb_le, input[type="text"] {
+  border-radius: var(--win11-border-radius) !important;
+}
+
+/* Custom Windows 11 sleek scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 120, 0.35);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 120, 120, 0.6);
+}
+
+/* Dark mode enhancements when system prefers dark */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+  }
+}

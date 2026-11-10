@@ -1,0 +1,14 @@
+[package]
+name = "desktop-google-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+url = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
