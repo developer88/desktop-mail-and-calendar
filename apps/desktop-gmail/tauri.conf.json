@@ -10,18 +10,7 @@
   },
   "app": {
     "withGlobalTauri": true,
-    "windows": [
-      {
-        "title": "Gmail",
-        "width": 1280,
-        "height": 800,
-        "minWidth": 800,
-        "minHeight": 600,
-        "resizable": true,
-        "fullscreen": false,
-        "url": "https://mail.google.com"
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null
     }
