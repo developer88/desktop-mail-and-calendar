@@ -1,5 +1,5 @@
-// Prevents additional console window on Windows in release
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+// Forces Windows subsystem to "windows" so NO console window is spawned
+#![windows_subsystem = "windows"]
 
 fn main() {
     desktop_gmail::run();

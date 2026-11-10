@@ -107,10 +107,18 @@ pub fn run() {
             let tray_menu =
                 Menu::with_items(app, &[&show_item, &compose_item, &reload_item, &quit_item])?;
 
-            let _tray = TrayIconBuilder::with_id("main-tray")
+            let tray_icon = app.default_window_icon().cloned();
+
+            let mut tray_builder = TrayIconBuilder::with_id("main-tray")
                 .menu(&tray_menu)
                 .tooltip("Desktop Gmail")
-                .show_menu_on_left_click(false)
+                .show_menu_on_left_click(false);
+
+            if let Some(icon) = tray_icon {
+                tray_builder = tray_builder.icon(icon);
+            }
+
+            let _tray = tray_builder
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "show" => {
                         if let Some(w) = app.get_webview_window("main") {
