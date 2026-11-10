@@ -19,7 +19,13 @@ function calculateSha256(filePath) {
 function main() {
   const rootDir = path.resolve(__dirname, '..');
   const distDir = path.join(rootDir, 'dist');
-  const targetReleaseDir = path.join(rootDir, 'target', 'release');
+  const searchDirs = [
+    distDir,
+    path.join(rootDir, 'target', 'release'),
+    path.join(rootDir, 'target', 'x86_64-pc-windows-msvc', 'release'),
+    path.join(rootDir, 'target', 'x86_64-pc-windows-msvc', 'debug'),
+    path.join(rootDir, 'target', 'debug')
+  ];
 
   if (!fs.existsSync(distDir)) {
     fs.mkdirSync(distDir, { recursive: true });
@@ -37,18 +43,24 @@ function main() {
     let foundPath = null;
     let foundName = null;
 
-    for (const bName of app.binaryNames) {
-      const candidate = path.join(targetReleaseDir, bName);
-      if (fs.existsSync(candidate)) {
-        foundPath = candidate;
-        foundName = bName;
-        break;
+    for (const dir of searchDirs) {
+      if (!fs.existsSync(dir)) continue;
+      for (const bName of app.binaryNames) {
+        const candidate = path.join(dir, bName);
+        if (fs.existsSync(candidate)) {
+          foundPath = candidate;
+          foundName = bName;
+          break;
+        }
       }
+      if (foundPath) break;
     }
 
     if (foundPath) {
       const destPath = path.join(distDir, foundName);
-      fs.copyFileSync(foundPath, destPath);
+      if (foundPath !== destPath) {
+        fs.copyFileSync(foundPath, destPath);
+      }
       const sha256 = calculateSha256(destPath);
       const stats = fs.statSync(destPath);
 
@@ -59,16 +71,14 @@ function main() {
         sha256: sha256
       });
       checksums.push(`${sha256}  ${foundName}`);
-      console.log(`[Release] Packaged ${app.name} -> dist/${foundName} (${stats.size} bytes)`);
+      console.log(`[Release] Staged ${app.name} -> dist/${foundName} (${stats.size} bytes)`);
     } else {
-      console.warn(`[Release] Warning: Binary for ${app.name} not found in ${targetReleaseDir}`);
+      console.log(`[Release] Info: Binary for ${app.name} not compiled yet.`);
     }
   }
 
-  // Write SHA256SUMS.txt
   fs.writeFileSync(path.join(distDir, 'SHA256SUMS.txt'), checksums.join('\n') + '\n');
 
-  // Write release-manifest.json
   const manifest = {
     version: '0.1.0',
     buildDate: new Date().toISOString(),
@@ -81,7 +91,7 @@ function main() {
     JSON.stringify(manifest, null, 2) + '\n'
   );
 
-  console.log('[Release] Generated dist/SHA256SUMS.txt and dist/release-manifest.json');
+  console.log('[Release] Updated dist/SHA256SUMS.txt and dist/release-manifest.json');
 }
 
 main();
