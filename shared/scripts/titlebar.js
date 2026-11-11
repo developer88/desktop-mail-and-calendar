@@ -333,9 +333,7 @@
         label: 'Window',
         subitems: [
           { label: 'Minimize', action: () => triggerAction('minimize') },
-          { label: 'Maximize', action: () => triggerAction('maximize') },
-          { separator: true },
-          { label: 'Close', shortcut: 'Alt+F4', action: () => triggerAction('close') }
+          { label: 'Maximize', action: () => triggerAction('maximize') }
         ]
       }
     ];
