@@ -15,14 +15,12 @@ Engineered to provide a focused, lightweight desktop window for email and calend
 
 ## 📥 Download (Release v0.1.0)
 
-Pre-built binaries and Windows NSIS setup installers are available in [GitHub Releases](https://github.com/developer88/desktop_gmail_and_gcalendar/releases):
+Windows NSIS setup installers are available in [GitHub Releases](https://github.com/developer88/desktop_gmail_and_gcalendar/releases):
 
-| Application | Installer (`.exe`) | Portable Executable | Size |
-| :--- | :--- | :--- | :--- |
-| **Desktop Mail** | [`desktop-mail-setup.exe`](https://github.com/developer88/desktop_gmail_and_gcalendar/releases/download/v0.1.0/desktop-mail-setup.exe) | [`desktop-mail.exe`](https://github.com/developer88/desktop_gmail_and_gcalendar/releases/download/v0.1.0/desktop-mail.exe) | ~4 MB / ~12.8 MB |
-| **Desktop Calendar** | [`desktop-calendar-setup.exe`](https://github.com/developer88/desktop_gmail_and_gcalendar/releases/download/v0.1.0/desktop-calendar-setup.exe) | [`desktop-calendar.exe`](https://github.com/developer88/desktop_gmail_and_gcalendar/releases/download/v0.1.0/desktop-calendar.exe) | ~4 MB / ~12.8 MB |
-
-*Every release includes cryptographic hashes in `SHA256SUMS.txt` and a machine-readable `release-manifest.json`.*
+| Application | Installer (`.exe`) | Size |
+| :--- | :--- | :--- |
+| **Desktop Mail** | [`desktop-mail-setup.exe`](https://github.com/developer88/desktop_gmail_and_gcalendar/releases/download/v0.1.0/desktop-mail-setup.exe) | ~4 MB |
+| **Desktop Calendar** | [`desktop-calendar-setup.exe`](https://github.com/developer88/desktop_gmail_and_gcalendar/releases/download/v0.1.0/desktop-calendar-setup.exe) | ~4 MB |
 
 ---
 
@@ -122,23 +120,18 @@ npm test
 cargo test --package desktop-google-core
 ```
 
-### 3. Build Executables & Installers
+### 3. Build Installers
 ```bash
 # Compile release binaries
 npm run build:mail
 npm run build:calendar
 
-# Package NSIS installers & prepare release hashes
+# Package NSIS installers
 npm run build:installers
-npm run release:prepare
 ```
-The compiled files are placed into the `dist/` directory:
-- `dist/desktop-mail.exe`
+The compiled setup installers are generated in `dist/`:
 - `dist/desktop-mail-setup.exe`
-- `dist/desktop-calendar.exe`
 - `dist/desktop-calendar-setup.exe`
-- `dist/SHA256SUMS.txt`
-- `dist/release-manifest.json`
 
 ---
 
