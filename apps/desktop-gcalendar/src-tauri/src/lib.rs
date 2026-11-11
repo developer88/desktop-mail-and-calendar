@@ -91,6 +91,7 @@ pub fn run() {
                 .title(&config.title)
                 .inner_size(config.width, config.height)
                 .min_inner_size(config.min_width, config.min_height)
+                .center()
                 .resizable(true)
                 .decorations(false)
                 .shadow(true)

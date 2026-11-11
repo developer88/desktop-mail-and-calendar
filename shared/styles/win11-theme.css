@@ -5,6 +5,31 @@
   --win11-border-radius: 8px;
 }
 
+/* Lock root viewport: Google Calendar & Mail have internal scroll containers.
+   The root document must never scroll vertically or horizontally, preventing the
+   header from sliding underneath the custom frameless titlebar. */
+html, body {
+  overflow: hidden !important;
+  height: 100% !important;
+  max-height: 100vh !important;
+}
+
+/* Ensure Google Workspace companion side panel toggle button (expand/collapse sidebar)
+   is fully visible, never clipped by rounded corners, and never cut off at the bottom. */
+[aria-label*="Show side panel" i],
+[aria-label*="Hide side panel" i],
+[aria-label*="Side panel" i],
+[aria-label*="side panel" i] {
+  bottom: 14px !important;
+  right: 12px !important;
+  margin-bottom: 4px !important;
+}
+
+div[role="complementary"] {
+  padding-bottom: 14px !important;
+  box-sizing: border-box !important;
+}
+
 body, input, textarea, select, button {
   font-family: var(--win11-font-family) !important;
   -webkit-font-smoothing: antialiased;

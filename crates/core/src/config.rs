@@ -40,7 +40,7 @@ impl DesktopAppConfig {
             title: "Desktop Calendar".to_string(),
             initial_url: "https://calendar.google.com/calendar/u/0/r".to_string(),
             width: 1200.0,
-            height: 860.0,
+            height: 980.0,
             min_width: 720.0,
             min_height: 520.0,
             start_minimized: false,
@@ -72,7 +72,7 @@ mod tests {
         assert_eq!(cfg.title, "Desktop Calendar");
         assert!(cfg.initial_url.starts_with("https://calendar.google.com"));
         assert_eq!(cfg.width, 1200.0);
-        assert_eq!(cfg.height, 860.0);
+        assert_eq!(cfg.height, 980.0);
         assert_eq!(cfg.min_width, 720.0);
         assert_eq!(cfg.min_height, 520.0);
     }
