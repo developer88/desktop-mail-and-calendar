@@ -261,37 +261,107 @@
       svg.appendChild(front);
       svg.appendChild(fold);
     } else if (type === 'calendar-logo') {
-      const bg = document.createElementNS(svgNS, 'rect');
-      bg.setAttribute('x', '1.5');
-      bg.setAttribute('y', '1.5');
-      bg.setAttribute('width', '13');
-      bg.setAttribute('height', '13');
-      bg.setAttribute('rx', '3');
-      bg.setAttribute('fill', '#ffffff');
-      bg.setAttribute('stroke', '#22c55e');
-      bg.setAttribute('stroke-width', '1.2');
+      const back = document.createElementNS(svgNS, 'rect');
+      back.setAttribute('x', '1.5');
+      back.setAttribute('y', '2');
+      back.setAttribute('width', '13');
+      back.setAttribute('height', '12');
+      back.setAttribute('rx', '2.5');
+      back.setAttribute('fill', '#15803d');
 
-      const top = document.createElementNS(svgNS, 'rect');
-      top.setAttribute('x', '1.5');
-      top.setAttribute('y', '1.5');
-      top.setAttribute('width', '13');
-      top.setAttribute('height', '4.5');
-      top.setAttribute('rx', '2');
+      const page = document.createElementNS(svgNS, 'rect');
+      page.setAttribute('x', '2.2');
+      page.setAttribute('y', '2.6');
+      page.setAttribute('width', '11.6');
+      page.setAttribute('height', '10.8');
+      page.setAttribute('rx', '2');
+      page.setAttribute('fill', '#ffffff');
+
+      const top = document.createElementNS(svgNS, 'path');
+      top.setAttribute('d', 'M 2.2,6 L 2.2,4.6 C 2.2,3.5 3.1,2.6 4.2,2.6 L 11.8,2.6 C 12.9,2.6 13.8,3.5 13.8,4.6 L 13.8,6 Z');
       top.setAttribute('fill', '#22c55e');
+
+      const ring1 = document.createElementNS(svgNS, 'rect');
+      ring1.setAttribute('x', '4.8');
+      ring1.setAttribute('y', '1.2');
+      ring1.setAttribute('width', '1.4');
+      ring1.setAttribute('height', '2.4');
+      ring1.setAttribute('rx', '0.7');
+      ring1.setAttribute('fill', '#ffffff');
+      ring1.setAttribute('stroke', '#15803d');
+      ring1.setAttribute('stroke-width', '0.4');
+
+      const ring2 = document.createElementNS(svgNS, 'rect');
+      ring2.setAttribute('x', '9.8');
+      ring2.setAttribute('y', '1.2');
+      ring2.setAttribute('width', '1.4');
+      ring2.setAttribute('height', '2.4');
+      ring2.setAttribute('rx', '0.7');
+      ring2.setAttribute('fill', '#ffffff');
+      ring2.setAttribute('stroke', '#15803d');
+      ring2.setAttribute('stroke-width', '0.4');
 
       const text = document.createElementNS(svgNS, 'text');
       text.setAttribute('x', '8');
-      text.setAttribute('y', '12');
+      text.setAttribute('y', '11.4');
       text.setAttribute('text-anchor', 'middle');
-      text.setAttribute('fill', '#16a34a');
-      text.setAttribute('font-size', '6.5');
+      text.setAttribute('fill', '#15803d');
+      text.setAttribute('font-size', '5.5');
       text.setAttribute('font-weight', 'bold');
       text.setAttribute('font-family', 'sans-serif');
       text.textContent = '31';
 
-      svg.appendChild(bg);
+      svg.appendChild(back);
+      svg.appendChild(page);
       svg.appendChild(top);
+      svg.appendChild(ring1);
+      svg.appendChild(ring2);
       svg.appendChild(text);
+    } else if (type === 'window') {
+      const rect = document.createElementNS(svgNS, 'rect');
+      rect.setAttribute('x', '2');
+      rect.setAttribute('y', '3');
+      rect.setAttribute('width', '12');
+      rect.setAttribute('height', '10');
+      rect.setAttribute('rx', '2');
+      rect.setAttribute('fill', 'none');
+      rect.setAttribute('stroke', 'currentColor');
+      rect.setAttribute('stroke-width', '1.2');
+      const line = document.createElementNS(svgNS, 'line');
+      line.setAttribute('x1', '2');
+      line.setAttribute('y1', '6');
+      line.setAttribute('x2', '14');
+      line.setAttribute('y2', '6');
+      line.setAttribute('stroke', 'currentColor');
+      line.setAttribute('stroke-width', '1.2');
+      svg.appendChild(rect);
+      svg.appendChild(line);
+    } else if (type === 'lock') {
+      const rect = document.createElementNS(svgNS, 'rect');
+      rect.setAttribute('x', '3');
+      rect.setAttribute('y', '6.5');
+      rect.setAttribute('width', '10');
+      rect.setAttribute('height', '7.5');
+      rect.setAttribute('rx', '1.5');
+      rect.setAttribute('fill', 'none');
+      rect.setAttribute('stroke', 'currentColor');
+      rect.setAttribute('stroke-width', '1.2');
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', 'M 5,6.5 L 5,4.5 C 5,2.8 6.3,1.5 8,1.5 C 9.7,1.5 11,2.8 11,4.5 L 11,6.5');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '1.2');
+      svg.appendChild(rect);
+      svg.appendChild(path);
+    } else if (type === 'code') {
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', 'M 5.5,4.5 L 2,8 L 5.5,11.5 M 10.5,4.5 L 14,8 L 10.5,11.5 M 9,3 L 7,13');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '1.2');
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(path);
     }
     return svg;
   }
@@ -521,6 +591,7 @@
           ['notifications_enabled', 'open_at_login', 'perm_mic', 'perm_camera', 'perm_location'].forEach((k) => {
             try { localStorage.removeItem('desktop_pref_' + k); } catch (_) {}
           });
+          try { localStorage.removeItem('desktop_first_run_completed'); } catch (_) {}
           renderContent('privacy');
         });
 
@@ -603,6 +674,16 @@
 
         discBox.appendChild(discTitle);
         discBox.appendChild(discText);
+
+        const noticeLink = document.createElement('button');
+        noticeLink.className = 'desktop-about-link-btn';
+        noticeLink.textContent = 'Review Welcome & Privacy Notice';
+        noticeLink.addEventListener('click', () => {
+          closeSettingsDialog();
+          showWelcomeSplash(true);
+        });
+        discBox.appendChild(noticeLink);
+
         contentArea.appendChild(discBox);
       }
     }
@@ -667,6 +748,142 @@
   function closeSettingsDialog() {
     const overlay = document.getElementById('desktop-settings-overlay');
     if (overlay) overlay.remove();
+  }
+
+  // Welcome & Privacy Notice Splash Screen (shown on very first load)
+  function showWelcomeSplash(isRevisit) {
+    if (document.getElementById('desktop-splash-overlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'desktop-splash-overlay';
+
+    const dialog = document.createElement('div');
+    dialog.id = 'desktop-splash-dialog';
+
+    // Badge with app logo
+    const badge = document.createElement('div');
+    badge.className = 'desktop-splash-badge ' + (isCalendar ? 'calendar-theme' : 'mail-theme');
+    const logoSvg = createSvgIcon(isCalendar ? 'calendar-logo' : 'mail-logo');
+    logoSvg.setAttribute('viewBox', '0 0 16 16');
+    logoSvg.setAttribute('width', '36');
+    logoSvg.setAttribute('height', '36');
+    badge.appendChild(logoSvg);
+
+    // Title
+    const title = document.createElement('h1');
+    title.className = 'desktop-splash-title';
+    title.textContent = isCalendar ? 'Welcome to Desktop Calendar' : 'Welcome to Desktop Mail';
+
+    // Subtitle / Description
+    const desc = document.createElement('p');
+    desc.className = 'desktop-splash-desc';
+    desc.textContent = isCalendar
+      ? 'An independent, fast, and focused desktop experience for Google Calendar.'
+      : 'An independent, fast, and focused desktop experience for Google Mail.';
+
+    // Disclaimer & Privacy Highlights Cards
+    const cards = document.createElement('div');
+    cards.className = 'desktop-splash-cards';
+
+    const items = [
+      {
+        icon: 'window',
+        title: 'Independent Wrapper',
+        desc: isCalendar
+          ? 'Desktop Calendar is an unofficial desktop client created solely to provide a focused native window for Google Calendar.'
+          : 'Desktop Mail is an unofficial desktop client created solely to provide a focused native window for Google Mail.'
+      },
+      {
+        icon: 'shield',
+        title: 'Privacy-First (No Tracking & No Logging)',
+        desc: 'Strictly zero telemetry. The wrapper does not collect analytics, track your activity, or record background diagnostic logs.'
+      },
+      {
+        icon: 'lock',
+        title: 'Zero Data Access',
+        desc: isCalendar
+          ? 'The wrapper never reads, inspects, intercepts, or alters your calendar events, agendas, or Google account credentials.'
+          : 'The wrapper never reads, inspects, intercepts, or alters your emails, messages, contacts, or Google account credentials.'
+      },
+      {
+        icon: 'code',
+        title: '100% Free & Open Source',
+        desc: 'Built with Rust and Tauri. The complete source code is transparent, publicly auditable, and freely available on GitHub.'
+      }
+    ];
+
+    items.forEach((item) => {
+      const row = document.createElement('div');
+      row.className = 'desktop-splash-card-row';
+
+      const iconWrap = document.createElement('div');
+      iconWrap.className = 'desktop-splash-card-icon';
+      iconWrap.appendChild(createSvgIcon(item.icon));
+
+      const textWrap = document.createElement('div');
+      textWrap.className = 'desktop-splash-card-text';
+
+      const head = document.createElement('div');
+      head.className = 'desktop-splash-card-header';
+      head.textContent = item.title;
+
+      const body = document.createElement('div');
+      body.className = 'desktop-splash-card-body';
+      body.textContent = item.desc;
+
+      textWrap.appendChild(head);
+      textWrap.appendChild(body);
+      row.appendChild(iconWrap);
+      row.appendChild(textWrap);
+      cards.appendChild(row);
+    });
+
+    // Action button
+    const actionBtn = document.createElement('button');
+    actionBtn.className = 'desktop-splash-btn ' + (isCalendar ? 'calendar-theme' : 'mail-theme');
+    actionBtn.textContent = isRevisit ? 'Got It' : 'Get Started';
+
+    function dismissSplash() {
+      try {
+        localStorage.setItem('desktop_first_run_completed', 'true');
+      } catch (_) {}
+      overlay.classList.add('closing');
+      setTimeout(() => {
+        overlay.remove();
+      }, 200);
+    }
+
+    actionBtn.addEventListener('click', dismissSplash);
+
+    dialog.appendChild(badge);
+    dialog.appendChild(title);
+    dialog.appendChild(desc);
+    dialog.appendChild(cards);
+    dialog.appendChild(actionBtn);
+
+    overlay.appendChild(dialog);
+
+    if (isRevisit) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          dismissSplash();
+        }
+      });
+    }
+
+    const root = document.documentElement || document.body;
+    if (root) {
+      root.appendChild(overlay);
+    }
+  }
+
+  function checkFirstRunSplash() {
+    try {
+      const completed = localStorage.getItem('desktop_first_run_completed');
+      if (!completed) {
+        showWelcomeSplash(false);
+      }
+    } catch (_) {}
   }
 
   // Dropdown Menu System matching Gemini Desktop app
@@ -886,6 +1103,7 @@
   });
 
   function createTitlebar() {
+    checkFirstRunSplash();
     if (document.getElementById('desktop-custom-titlebar')) return;
 
     const titlebar = document.createElement('div');

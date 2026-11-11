@@ -2,40 +2,76 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 
 def render_calendar(size):
+    # Professional tactile calendar pad matching Desktop Mail envelope style
     scale = 4
     s = size * scale
     im = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     draw = ImageDraw.Draw(im)
 
-    pad = int(s * 0.08)
-    x0, y0, x1, y1 = pad, pad, s - pad, s - pad
-    r = int(s * 0.22)
-    border_w = max(2, int(s * 0.05))
-
-    # Lite Green Palette
-    green = (34, 197, 94, 255)       # #22c55e (lite green)
-    dark_green = (22, 163, 74, 255)  # #16a34a
+    # Palette
+    green_main = (34, 197, 94, 255)     # #22c55e (vibrant green header)
+    green_dark = (21, 128, 61, 255)     # #15803d (deep green base/back)
+    green_crease = (18, 107, 51, 255)   # #126b33
+    green_text = (21, 128, 61, 255)     # #15803d
     white = (255, 255, 255, 255)
+    gray_binder = (226, 232, 240, 255)  # #e2e8f0
+    gray_line = (203, 213, 225, 255)    # #cbd5e1
 
-    # White card body
-    draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=white, outline=green, width=border_w)
+    # Geometry relative to s (identical bounding proportions to mail)
+    pad_x = int(s * 0.08)
+    cw = s - 2 * pad_x
+    ch = int(cw * 0.88)
 
-    # Top header banner (clipped to card's top rounded corners)
-    header_h = int((y1 - y0) * 0.34)
+    x0 = pad_x
+    y0 = int(s * 0.14)
+    x1 = x0 + cw
+    y1 = y0 + ch
+    r = int(s * 0.16)
+
+    # 1. Back plate / base in dark green
+    draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=green_dark)
+
+    # 2. White calendar tear-off page
+    inset_x = int(s * 0.03)
+    inset_y = int(s * 0.03)
+    px0 = x0 + inset_x
+    py0 = y0 + inset_y
+    px1 = x1 - inset_x
+    py1 = y1 - inset_y
+    pr = int(r * 0.85)
+    draw.rounded_rectangle([px0, py0, px1, py1], radius=pr, fill=white)
+
+    # 3. Top header banner (vibrant green, clipped to top rounded corners)
     mask = Image.new("L", (s, s), 0)
-    mask_draw = ImageDraw.Draw(mask)
-    mask_draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=255)
+    m_draw = ImageDraw.Draw(mask)
+    m_draw.rounded_rectangle([px0, py0, px1, py1], radius=pr, fill=255)
 
     header = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     h_draw = ImageDraw.Draw(header)
-    h_draw.rectangle([x0, y0, x1, y0 + header_h], fill=green)
+    header_h = int(ch * 0.30)
+    h_draw.rectangle([px0, py0, px1, py0 + header_h], fill=green_main)
+
+    # Subtle horizontal crease under the header bar
+    sw = max(2, int(s * 0.018))
+    h_draw.line([(px0, py0 + header_h), (px1, py0 + header_h)], fill=green_crease, width=sw)
+
+    # Top binder rings / hanging tabs (2 rounded tabs at top)
+    ring_w = int(s * 0.065)
+    ring_h = int(s * 0.10)
+    ring_y0 = py0 - int(ring_h * 0.35)
+    ring_y1 = ring_y0 + ring_h
+    rr = ring_w // 2
+
+    rx1 = px0 + int((px1 - px0) * 0.28)
+    rx2 = px0 + int((px1 - px0) * 0.72)
+
+    h_draw.rounded_rectangle([rx1 - rr, ring_y0, rx1 + rr, ring_y1], radius=rr, fill=white, outline=green_dark, width=max(2, int(s * 0.015)))
+    h_draw.rounded_rectangle([rx2 - rr, ring_y0, rx2 + rr, ring_y1], radius=rr, fill=white, outline=green_dark, width=max(2, int(s * 0.015)))
+
     im.paste(header, (0, 0), mask)
 
-    # Re-draw outer border to ensure crisp edges over the header
-    draw.rounded_rectangle([x0, y0, x1, y1], radius=r, outline=green, width=border_w)
-
-    # Draw '31' text in lower body
-    font_size = int((y1 - y0 - header_h) * 0.65)
+    # 4. Bold '31' text in lower body of the white page
+    font_size = int((py1 - (py0 + header_h)) * 0.65)
     font_path = "/mnt/c/Windows/Fonts/segoeuib.ttf"
     if not os.path.exists(font_path):
         font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
@@ -46,10 +82,10 @@ def render_calendar(size):
     tw = bbox[2] - bbox[0]
     th = bbox[3] - bbox[1]
 
-    center_y = y0 + header_h + (y1 - (y0 + header_h)) / 2
+    center_y = py0 + header_h + (py1 - (py0 + header_h)) / 2
     tx = (s - tw) / 2 - bbox[0]
-    ty = center_y - th / 2 - bbox[1]
-    draw.text((tx, ty), text, font=font, fill=dark_green)
+    ty = center_y - th / 2 - bbox[1] - int(s * 0.01)
+    draw.text((tx, ty), text, font=font, fill=green_text)
 
     return im.resize((size, size), Image.Resampling.LANCZOS)
 

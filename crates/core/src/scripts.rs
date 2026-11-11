@@ -54,5 +54,7 @@ mod tests {
         assert!(bundle.contains("initUnreadObserver"));
         assert!(bundle.contains("initTitlebarOverlay"));
         assert!(bundle.contains("Segoe UI Variable Text"));
+        assert!(bundle.contains("desktop_first_run_completed"));
+        assert!(bundle.contains("desktop-splash-overlay"));
     }
 }
