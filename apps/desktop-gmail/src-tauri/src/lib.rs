@@ -119,6 +119,39 @@ pub fn run() {
                 .shadow(true)
                 .user_agent(USER_AGENT)
                 .initialization_script(&injected_script)
+                .on_document_title_changed({
+                    let app_cmd = app.handle().clone();
+                    move |window, title| {
+                        if let Some(cmd) = title.strip_prefix("__desktop_cmd__:") {
+                            match cmd {
+                                "drag" => {
+                                    let _ = window.start_dragging();
+                                }
+                                "minimize" => {
+                                    let _ = window.minimize();
+                                }
+                                "maximize" => {
+                                    if let Ok(is_max) = window.is_maximized() {
+                                        if is_max {
+                                            let _ = window.unmaximize();
+                                        } else {
+                                            let _ = window.maximize();
+                                        }
+                                    }
+                                }
+                                "close" => {
+                                    app_cmd.exit(0);
+                                }
+                                "fullscreen" => {
+                                    if let Ok(is_full) = window.is_fullscreen() {
+                                        let _ = window.set_fullscreen(!is_full);
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                })
                 .on_navigation(move |url| {
                     if url.scheme() == "desktop-app" {
                         if url.host_str() == Some("window") {

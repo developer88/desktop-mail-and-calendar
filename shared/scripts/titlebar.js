@@ -6,6 +6,20 @@
 (function initTitlebarOverlay() {
   const svgNS = 'http://www.w3.org/2000/svg';
 
+  // Fast, CSP-proof native action trigger via document.title interceptor
+  let lastNonCmdTitle = document.title || 'Gmail';
+  function triggerAction(action) {
+    if (!document.title.startsWith('__desktop_cmd__:')) {
+      lastNonCmdTitle = document.title;
+    }
+    document.title = '__desktop_cmd__:' + action;
+    setTimeout(() => {
+      if (document.title.startsWith('__desktop_cmd__:')) {
+        document.title = lastNonCmdTitle;
+      }
+    }, 40);
+  }
+
   // Zoom management
   let currentZoom = 1.0;
   try {
@@ -46,26 +60,18 @@
     svg.style.pointerEvents = 'none';
 
     if (type === 'menu') {
-      const line1 = document.createElementNS(svgNS, 'line');
-      line1.setAttribute('x1', '1');
-      line1.setAttribute('y1', '4');
-      line1.setAttribute('x2', '11');
-      line1.setAttribute('y2', '4');
-      line1.setAttribute('stroke', 'currentColor');
-      line1.setAttribute('stroke-width', '1.3');
-      line1.setAttribute('stroke-linecap', 'round');
-
-      const line2 = document.createElementNS(svgNS, 'line');
-      line2.setAttribute('x1', '1');
-      line2.setAttribute('y1', '8');
-      line2.setAttribute('x2', '11');
-      line2.setAttribute('y2', '8');
-      line2.setAttribute('stroke', 'currentColor');
-      line2.setAttribute('stroke-width', '1.3');
-      line2.setAttribute('stroke-linecap', 'round');
-
-      svg.appendChild(line1);
-      svg.appendChild(line2);
+      // 3 clean horizontal lines matching Gemini Desktop app
+      [2.5, 6, 9.5].forEach((y) => {
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('x1', '1.5');
+        line.setAttribute('y1', y.toString());
+        line.setAttribute('x2', '10.5');
+        line.setAttribute('y2', y.toString());
+        line.setAttribute('stroke', 'currentColor');
+        line.setAttribute('stroke-width', '1.2');
+        line.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(line);
+      });
     } else if (type === 'min') {
       const path = document.createElementNS(svgNS, 'path');
       path.setAttribute('d', 'M 1,6 L 11,6');
@@ -106,16 +112,6 @@
       svg.appendChild(path);
     }
     return svg;
-  }
-
-  function triggerAction(action) {
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = 'desktop-app://window/' + action;
-    (document.documentElement || document.body).appendChild(iframe);
-    setTimeout(() => {
-      try { iframe.remove(); } catch (_) {}
-    }, 150);
   }
 
   // Settings Modal Dialog
@@ -216,14 +212,76 @@
     if (overlay) overlay.remove();
   }
 
-  // Dropdown Menu
+  // Dropdown Menu System matching Gemini Desktop app
   let activeDropdown = null;
+  let activeSubmenu = null;
+
+  function closeSubmenu() {
+    if (activeSubmenu) {
+      activeSubmenu.remove();
+      activeSubmenu = null;
+    }
+  }
 
   function closeMenu() {
+    closeSubmenu();
     if (activeDropdown) {
       activeDropdown.remove();
       activeDropdown = null;
     }
+  }
+
+  function createSubmenu(parentItem, items) {
+    closeSubmenu();
+
+    const submenu = document.createElement('div');
+    submenu.className = 'desktop-menu-dropdown desktop-submenu';
+
+    items.forEach((itemDef) => {
+      if (itemDef.separator) {
+        const sep = document.createElement('div');
+        sep.className = 'desktop-menu-separator';
+        submenu.appendChild(sep);
+        return;
+      }
+
+      const item = document.createElement('div');
+      item.className = 'desktop-menu-item';
+
+      const label = document.createElement('span');
+      label.className = 'desktop-menu-item-label';
+      label.textContent = itemDef.label;
+      item.appendChild(label);
+
+      if (itemDef.shortcut) {
+        const sc = document.createElement('span');
+        sc.className = 'desktop-menu-item-shortcut';
+        sc.textContent = itemDef.shortcut;
+        item.appendChild(sc);
+      }
+
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeMenu();
+        if (itemDef.action) itemDef.action();
+      });
+
+      submenu.appendChild(item);
+    });
+
+    const rect = parentItem.getBoundingClientRect();
+    submenu.style.top = rect.top + 'px';
+    
+    // Position to the left of the main menu if near right edge
+    const subWidth = 190;
+    if (rect.left - subWidth < 10) {
+      submenu.style.left = (rect.right + 2) + 'px';
+    } else {
+      submenu.style.right = (window.innerWidth - rect.left + 2) + 'px';
+    }
+
+    (document.documentElement || document.body).appendChild(submenu);
+    activeSubmenu = submenu;
   }
 
   function toggleMenu(anchorBtn) {
@@ -234,77 +292,78 @@
 
     const dropdown = document.createElement('div');
     dropdown.id = 'desktop-menu-dropdown';
+    dropdown.className = 'desktop-menu-dropdown';
 
-    function addHeader(text) {
-      const h = document.createElement('div');
-      h.className = 'desktop-menu-section-header';
-      h.textContent = text;
-      dropdown.appendChild(h);
-    }
-
-    function addSeparator() {
-      const sep = document.createElement('div');
-      sep.className = 'desktop-menu-separator';
-      dropdown.appendChild(sep);
-    }
-
-    function addItem(label, shortcut, onClick) {
-      const item = document.createElement('div');
-      item.className = 'desktop-menu-item';
-
-      const labelSpan = document.createElement('span');
-      labelSpan.className = 'desktop-menu-item-label';
-      labelSpan.textContent = label;
-      item.appendChild(labelSpan);
-
-      if (shortcut) {
-        const scSpan = document.createElement('span');
-        scSpan.className = 'desktop-menu-item-shortcut';
-        scSpan.textContent = shortcut;
-        item.appendChild(scSpan);
+    const menuStructure = [
+      {
+        label: 'File',
+        subitems: [
+          { label: 'Settings', action: () => openSettingsDialog() },
+          { separator: true },
+          { label: 'Exit', shortcut: 'Alt+F4', action: () => triggerAction('close') }
+        ]
+      },
+      {
+        label: 'Edit',
+        subitems: [
+          { label: 'Undo', shortcut: 'Ctrl+Z', action: () => document.execCommand('undo') },
+          { label: 'Redo', shortcut: 'Ctrl+Y', action: () => document.execCommand('redo') },
+          { separator: true },
+          { label: 'Cut', shortcut: 'Ctrl+X', action: () => document.execCommand('cut') },
+          { label: 'Copy', shortcut: 'Ctrl+C', action: () => document.execCommand('copy') },
+          { label: 'Paste', shortcut: 'Ctrl+V', action: () => document.execCommand('paste') },
+          { separator: true },
+          { label: 'Select all', shortcut: 'Ctrl+A', action: () => document.execCommand('selectAll') }
+        ]
+      },
+      {
+        label: 'View',
+        subitems: [
+          { label: 'Reload', shortcut: 'Ctrl+R', action: () => window.location.reload() },
+          { label: 'Force Reload', shortcut: 'Ctrl+Shift+R', action: () => window.location.reload(true) },
+          { separator: true },
+          { label: 'Actual size', shortcut: 'Ctrl+0', action: () => applyZoom(1.0) },
+          { label: 'Zoom in', shortcut: 'Ctrl++', action: () => applyZoom(currentZoom + 0.1) },
+          { label: 'Zoom out', shortcut: 'Ctrl+-', action: () => applyZoom(currentZoom - 0.1) },
+          { separator: true },
+          { label: 'Toggle full screen', shortcut: 'F11', action: () => triggerAction('fullscreen') }
+        ]
+      },
+      {
+        label: 'Window',
+        subitems: [
+          { label: 'Minimize', action: () => triggerAction('minimize') },
+          { label: 'Maximize', action: () => triggerAction('maximize') },
+          { separator: true },
+          { label: 'Close', shortcut: 'Alt+F4', action: () => triggerAction('close') }
+        ]
       }
+    ];
+
+    menuStructure.forEach((category) => {
+      const item = document.createElement('div');
+      item.className = 'desktop-menu-item has-sub';
+
+      const label = document.createElement('span');
+      label.className = 'desktop-menu-item-label';
+      label.textContent = category.label;
+      item.appendChild(label);
+
+      const arrow = document.createElement('span');
+      arrow.className = 'desktop-menu-arrow';
+      arrow.textContent = '›';
+      item.appendChild(arrow);
+
+      item.addEventListener('mouseenter', () => {
+        createSubmenu(item, category.subitems);
+      });
 
       item.addEventListener('click', (e) => {
         e.stopPropagation();
-        closeMenu();
-        onClick();
+        createSubmenu(item, category.subitems);
       });
 
       dropdown.appendChild(item);
-    }
-
-    // File section
-    addHeader('File');
-    addItem('Settings', '', () => {
-      openSettingsDialog();
-    });
-    addItem('Exit', 'Alt+F4', () => {
-      triggerAction('close');
-    });
-
-    addSeparator();
-
-    // View section
-    addHeader('View');
-    addItem('Reload', 'Ctrl+R', () => {
-      window.location.reload();
-    });
-    addItem('Force Reload', 'Ctrl+Shift+R', () => {
-      window.location.reload(true);
-    });
-    addSeparator();
-    addItem('Actual size', 'Ctrl+0', () => {
-      applyZoom(1.0);
-    });
-    addItem('Zoom in', 'Ctrl++', () => {
-      applyZoom(currentZoom + 0.1);
-    });
-    addItem('Zoom out', 'Ctrl+-', () => {
-      applyZoom(currentZoom - 0.1);
-    });
-    addSeparator();
-    addItem('Toggle full screen', 'F11', () => {
-      triggerAction('fullscreen');
     });
 
     const rect = anchorBtn.getBoundingClientRect();
@@ -317,10 +376,15 @@
 
   // Dismiss menu on outside clicks
   window.addEventListener('pointerdown', (e) => {
-    if (activeDropdown && !activeDropdown.contains(e.target)) {
+    if (activeDropdown || activeSubmenu) {
+      const inDropdown = activeDropdown && activeDropdown.contains(e.target);
+      const inSubmenu = activeSubmenu && activeSubmenu.contains(e.target);
       const menuBtn = document.getElementById('desktop-caption-menu');
-      if (menuBtn && menuBtn.contains(e.target)) return;
-      closeMenu();
+      const inMenuBtn = menuBtn && menuBtn.contains(e.target);
+
+      if (!inDropdown && !inSubmenu && !inMenuBtn) {
+        closeMenu();
+      }
     }
   });
 
@@ -378,15 +442,11 @@
     dragArea.id = 'desktop-custom-titlebar-drag';
     dragArea.setAttribute('data-tauri-drag-region', 'deep');
 
-    const titleText = document.createElement('span');
-    titleText.id = 'desktop-custom-titlebar-title';
-    titleText.textContent = 'Gmail';
-    dragArea.appendChild(titleText);
-
+    // Clean, natural background without artificial serif title
     const controls = document.createElement('div');
     controls.id = 'desktop-custom-titlebar-controls';
 
-    // Hamburger Menu Button (=)
+    // Hamburger Menu Button (3 horizontal lines)
     const menuBtn = document.createElement('button');
     menuBtn.className = 'desktop-caption-btn menu';
     menuBtn.id = 'desktop-caption-menu';

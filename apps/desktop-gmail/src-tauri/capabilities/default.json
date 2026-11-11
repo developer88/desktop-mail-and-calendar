@@ -3,6 +3,12 @@
   "identifier": "default",
   "description": "Default capabilities for Desktop Gmail",
   "windows": ["main"],
+  "remote": {
+    "urls": [
+      "https://mail.google.com/*",
+      "https://accounts.google.com/*"
+    ]
+  },
   "permissions": [
     "core:default",
     "shell:default",
