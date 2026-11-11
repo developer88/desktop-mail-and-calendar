@@ -147,6 +147,12 @@ pub fn run() {
                                         let _ = window.set_fullscreen(!is_full);
                                     }
                                 }
+                                "autostart:on" => {
+                                    set_windows_autostart(true);
+                                }
+                                "autostart:off" => {
+                                    set_windows_autostart(false);
+                                }
                                 _ => {}
                             }
                         }
@@ -309,3 +315,42 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running Desktop Gmail");
 }
+
+#[cfg(target_os = "windows")]
+fn set_windows_autostart(enable: bool) {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+    if let Ok(exe_path) = std::env::current_exe() {
+        let exe_str = exe_path.to_string_lossy();
+        if enable {
+            let _ = std::process::Command::new("reg")
+                .args(&[
+                    "add",
+                    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+                    "/v",
+                    "DesktopGmail",
+                    "/t",
+                    "REG_SZ",
+                    "/d",
+                    &format!("\"{}\"", exe_str),
+                    "/f",
+                ])
+                .creation_flags(CREATE_NO_WINDOW)
+                .output();
+        } else {
+            let _ = std::process::Command::new("reg")
+                .args(&[
+                    "delete",
+                    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+                    "/v",
+                    "DesktopGmail",
+                    "/f",
+                ])
+                .creation_flags(CREATE_NO_WINDOW)
+                .output();
+        }
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn set_windows_autostart(_enable: bool) {}
