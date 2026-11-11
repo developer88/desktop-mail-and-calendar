@@ -3,6 +3,7 @@ pub const DECLUTTER_CSS: &str = include_str!("../../../shared/styles/declutter.c
 pub const NAVIGATION_INTERCEPTOR_SCRIPT: &str =
     include_str!("../../../shared/scripts/navigation-interceptor.js");
 pub const UNREAD_OBSERVER_SCRIPT: &str = include_str!("../../../shared/scripts/unread-observer.js");
+pub const TITLEBAR_SCRIPT: &str = include_str!("../../../shared/scripts/titlebar.js");
 
 /// Constructs the complete consolidated JavaScript bundle injected into the webview on page initialization
 pub fn get_injected_bundle() -> String {
@@ -30,11 +31,14 @@ pub fn get_injected_bundle() -> String {
 {nav}
 
 {unread}
+
+{titlebar}
 "#,
         theme = escaped_theme,
         declutter = escaped_declutter,
         nav = NAVIGATION_INTERCEPTOR_SCRIPT,
         unread = UNREAD_OBSERVER_SCRIPT,
+        titlebar = TITLEBAR_SCRIPT,
     )
 }
 
@@ -48,6 +52,7 @@ mod tests {
         assert!(bundle.contains("desktop-google-theme"));
         assert!(bundle.contains("initNavigationInterceptor"));
         assert!(bundle.contains("initUnreadObserver"));
+        assert!(bundle.contains("initTitlebarOverlay"));
         assert!(bundle.contains("Segoe UI Variable Text"));
     }
 }

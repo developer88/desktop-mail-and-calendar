@@ -55,6 +55,31 @@ mod commands {
         }
         Ok(())
     }
+
+    #[tauri::command]
+    pub fn minimize_window<R: Runtime>(app: AppHandle<R>) {
+        if let Some(w) = app.get_webview_window("main") {
+            let _ = w.minimize();
+        }
+    }
+
+    #[tauri::command]
+    pub fn maximize_window<R: Runtime>(app: AppHandle<R>) {
+        if let Some(w) = app.get_webview_window("main") {
+            if let Ok(is_max) = w.is_maximized() {
+                if is_max {
+                    let _ = w.unmaximize();
+                } else {
+                    let _ = w.maximize();
+                }
+            }
+        }
+    }
+
+    #[tauri::command]
+    pub fn close_window<R: Runtime>(app: AppHandle<R>) {
+        app.exit(0);
+    }
 }
 
 pub fn run() {
@@ -66,7 +91,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::open_external_url,
             commands::update_unread_badge,
-            commands::handle_mailto
+            commands::handle_mailto,
+            commands::minimize_window,
+            commands::maximize_window,
+            commands::close_window
         ])
         .setup(move |app| {
             let injected_script = get_injected_bundle();
@@ -87,9 +115,39 @@ pub fn run() {
                 .inner_size(config.width, config.height)
                 .min_inner_size(config.min_width, config.min_height)
                 .resizable(true)
+                .decorations(false)
+                .shadow(true)
                 .user_agent(USER_AGENT)
                 .initialization_script(&injected_script)
                 .on_navigation(move |url| {
+                    if url.scheme() == "desktop-app" {
+                        if url.host_str() == Some("window") {
+                            match url.path() {
+                                "/minimize" => {
+                                    if let Some(w) = app_nav.get_webview_window("main") {
+                                        let _ = w.minimize();
+                                    }
+                                }
+                                "/maximize" => {
+                                    if let Some(w) = app_nav.get_webview_window("main") {
+                                        if let Ok(is_max) = w.is_maximized() {
+                                            if is_max {
+                                                let _ = w.unmaximize();
+                                            } else {
+                                                let _ = w.maximize();
+                                            }
+                                        }
+                                    }
+                                }
+                                "/close" => {
+                                    app_nav.exit(0);
+                                }
+                                _ => {}
+                            }
+                        }
+                        return false;
+                    }
+
                     let url_str = url.as_str();
                     if desktop_google_core::should_open_in_external_browser(
                         url_str,

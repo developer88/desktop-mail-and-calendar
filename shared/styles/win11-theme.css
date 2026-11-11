@@ -35,6 +35,83 @@ body, input, textarea, select, button {
   background: rgba(120, 120, 120, 0.6);
 }
 
+/* Custom Frameless Titlebar Styling */
+#desktop-custom-titlebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  z-index: 2147483647;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: transparent;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+
+#desktop-custom-titlebar-drag {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: 14px;
+  cursor: default;
+  -webkit-app-region: drag;
+}
+
+#desktop-custom-titlebar-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.3px;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+#desktop-custom-titlebar-controls {
+  display: flex;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+
+.desktop-caption-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+  padding: 0;
+  margin: 0;
+  outline: none;
+}
+
+.desktop-caption-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.desktop-caption-btn.close:hover {
+  background: #e81123 !important;
+  color: #ffffff !important;
+}
+
+.desktop-caption-btn svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* Offset Gmail top header so it sits cleanly below the titlebar */
+header.gb_Ja, header[role="banner"] {
+  padding-top: 28px !important;
+}
+
 /* Dark mode enhancements when system prefers dark */
 @media (prefers-color-scheme: dark) {
   ::-webkit-scrollbar-thumb {
