@@ -16,7 +16,7 @@ pub fn get_injected_bundle() -> String {
     // 1. Subframe / Iframe Guard:
     // Never inject the desktop shell, titlebar, or modals into embedded child iframes (Meet, Tasks, Keep, etc.)
     try {{
-        if (window.top !== window.self) {{
+        if (window.self !== window.top || window.parent !== window || window.frameElement) {{
             return;
         }}
     }} catch (_) {{
@@ -82,7 +82,7 @@ mod tests {
     #[test]
     fn test_injected_bundle_generation() {
         let bundle = get_injected_bundle();
-        assert!(bundle.contains("window.top !== window.self"));
+        assert!(bundle.contains("window.self !== window.top"));
         assert!(bundle.contains("isGoogleAuthFlow"));
         assert!(bundle.contains("desktop-google-theme"));
         assert!(bundle.contains("initNavigationInterceptor"));

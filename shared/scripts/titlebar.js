@@ -5,7 +5,7 @@
  */
 (function initTitlebarOverlay() {
   try {
-    if (window.top !== window.self) return;
+    if (window.self !== window.top || window.parent !== window || window.frameElement) return;
   } catch (_) {
     return;
   }
@@ -970,6 +970,7 @@
 
   function checkFirstRunSplash() {
     try {
+      if (window.self !== window.top || window.parent !== window || window.frameElement) return;
       const completed = localStorage.getItem('desktop_first_run_completed');
       if (!completed) {
         showWelcomeSplash(false);
