@@ -196,7 +196,7 @@ body, input, textarea, select, button {
   margin: 4px 6px !important;
 }
 
-/* Settings Modal Dialog - Windows 11 Fluent Style */
+/* Settings Modal Dialog - Google Material 3 / Gmail Style */
 #desktop-settings-overlay {
   position: fixed !important;
   top: 0 !important;
@@ -204,31 +204,31 @@ body, input, textarea, select, button {
   right: 0 !important;
   bottom: 0 !important;
   z-index: 2147483647 !important;
-  background: rgba(0, 0, 0, 0.45) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  animation: desktopModalFadeIn 0.15s ease-out !important;
+  animation: desktopModalFadeIn 0.15s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
 @keyframes desktopModalFadeIn {
-  from { opacity: 0; transform: scale(0.98); }
+  from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
 }
 
 #desktop-settings-dialog {
-  background: #ffffff !important;
-  color: #1a1a1a !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  border-radius: 12px !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28) !important;
-  width: 680px !important;
+  background: #f8fafd !important;
+  color: #1f1f1f !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2) !important;
+  width: 700px !important;
   max-width: 92vw !important;
-  height: 520px !important;
+  height: 540px !important;
   max-height: 88vh !important;
-  font-family: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-family: "Google Sans", Roboto, "Segoe UI Variable Text", "Segoe UI", -apple-system, sans-serif !important;
   overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
@@ -237,10 +237,10 @@ body, input, textarea, select, button {
 
 @media (prefers-color-scheme: dark) {
   #desktop-settings-dialog {
-    background: #202020 !important;
-    color: #f3f3f3 !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7) !important;
+    background: #1e1f20 !important;
+    color: #e3e3e3 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6) !important;
   }
 }
 
@@ -248,53 +248,59 @@ body, input, textarea, select, button {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 14px 20px !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  padding: 18px 24px 14px 24px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-settings-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
   }
 }
 
 .desktop-settings-title-group {
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
-  font-size: 16px !important;
-  font-weight: 600 !important;
+  gap: 12px !important;
+  font-size: 20px !important;
+  font-weight: 500 !important;
   color: inherit !important;
 }
 
 .desktop-settings-title-group svg {
-  width: 18px !important;
-  height: 18px !important;
-  color: #0078d4 !important;
+  width: 22px !important;
+  height: 22px !important;
+  color: #0b57d0 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .desktop-settings-title-group svg {
+    color: #a8c7fa !important;
+  }
 }
 
 .desktop-settings-close-btn {
   background: transparent !important;
   border: none !important;
-  color: rgba(120, 120, 120, 0.9) !important;
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 6px !important;
+  color: #444746 !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
-  transition: background-color 0.1s ease !important;
+  transition: background-color 0.15s ease !important;
 }
 
 .desktop-settings-close-btn:hover {
-  background: rgba(0, 0, 0, 0.06) !important;
-  color: #000000 !important;
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #1f1f1f !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-settings-close-btn {
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: #c4c7c5 !important;
   }
   .desktop-settings-close-btn:hover {
     background: rgba(255, 255, 255, 0.1) !important;
@@ -309,109 +315,110 @@ body, input, textarea, select, button {
 }
 
 .desktop-settings-nav {
-  width: 200px !important;
-  background: #f8fafc !important;
-  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
-  padding: 16px 10px !important;
+  width: 220px !important;
+  background: #f0f4f9 !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.06) !important;
+  padding: 16px 12px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 4px !important;
+  gap: 6px !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-settings-nav {
-    background: #181818 !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: #18191b !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
   }
 }
 
 .desktop-settings-nav-item {
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
-  padding: 10px 14px !important;
-  border-radius: 20px !important;
-  font-size: 13px !important;
+  gap: 12px !important;
+  padding: 10px 16px !important;
+  border-radius: 24px !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
   cursor: pointer !important;
-  color: #4b5563 !important;
-  transition: background-color 0.12s ease, color 0.12s ease !important;
+  color: #444746 !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
 }
 
 .desktop-settings-nav-item svg {
-  width: 16px !important;
-  height: 16px !important;
+  width: 18px !important;
+  height: 18px !important;
   flex-shrink: 0 !important;
 }
 
 .desktop-settings-nav-item:hover {
-  background: rgba(0, 0, 0, 0.04) !important;
-  color: #111827 !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: #1f1f1f !important;
 }
 
 .desktop-settings-nav-item.active {
-  background: #e0f2fe !important;
-  color: #0284c7 !important;
+  background: #d3e3fd !important;
+  color: #041e49 !important;
   font-weight: 600 !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-settings-nav-item {
-    color: rgba(255, 255, 255, 0.75) !important;
+    color: #c4c7c5 !important;
   }
   .desktop-settings-nav-item:hover {
     background: rgba(255, 255, 255, 0.06) !important;
     color: #ffffff !important;
   }
   .desktop-settings-nav-item.active {
-    background: rgba(14, 165, 233, 0.2) !important;
-    color: #38bdf8 !important;
+    background: #004a77 !important;
+    color: #c2e7ff !important;
   }
 }
 
 .desktop-settings-content {
   flex: 1 !important;
-  padding: 22px 28px !important;
+  padding: 24px 28px !important;
   overflow-y: auto !important;
   display: flex !important;
   flex-direction: column !important;
 }
 
 .desktop-settings-section-title {
-  font-size: 17px !important;
-  font-weight: 600 !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
   margin-bottom: 4px !important;
   color: inherit !important;
 }
 
 .desktop-settings-section-desc {
   font-size: 13px !important;
-  color: #6b7280 !important;
+  color: #444746 !important;
   margin-bottom: 20px !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-settings-section-desc {
-    color: rgba(255, 255, 255, 0.55) !important;
+    color: #c4c7c5 !important;
   }
 }
 
 .desktop-settings-card {
   background: #ffffff !important;
-  border: 1px solid #e5e7eb !important;
-  border-radius: 10px !important;
-  padding: 14px 18px !important;
+  border: 1px solid #e0e2ec !important;
+  border-radius: 16px !important;
+  padding: 16px 20px !important;
   margin-bottom: 12px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  transition: border-color 0.15s ease !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-settings-card {
-    background: rgba(255, 255, 255, 0.04) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: #282a2c !important;
+    border: 1px solid #444746 !important;
     box-shadow: none !important;
   }
 }
@@ -419,81 +426,141 @@ body, input, textarea, select, button {
 .desktop-card-info {
   display: flex !important;
   align-items: flex-start !important;
-  gap: 12px !important;
+  gap: 14px !important;
   flex: 1 !important;
   padding-right: 16px !important;
 }
 
 .desktop-card-icon {
   margin-top: 2px !important;
-  color: #4b5563 !important;
+  color: #444746 !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-card-icon {
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: #c4c7c5 !important;
   }
 }
 
 .desktop-card-icon svg {
-  width: 18px !important;
-  height: 18px !important;
+  width: 20px !important;
+  height: 20px !important;
 }
 
 .desktop-card-text {
   display: flex !important;
   flex-direction: column !important;
-  gap: 2px !important;
+  gap: 3px !important;
 }
 
 .desktop-card-title {
-  font-size: 14px !important;
-  font-weight: 600 !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
   color: inherit !important;
 }
 
 .desktop-card-sub {
   font-size: 12px !important;
-  color: #6b7280 !important;
+  color: #444746 !important;
   line-height: 1.4 !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-card-sub {
-    color: rgba(255, 255, 255, 0.5) !important;
+    color: #c4c7c5 !important;
   }
 }
 
-/* Toggle Switch */
+/* Material 3 Toggle Switch */
 .desktop-toggle-switch {
-  width: 44px !important;
-  height: 24px !important;
-  background: #cbd5e1 !important;
-  border-radius: 12px !important;
+  width: 50px !important;
+  height: 30px !important;
+  background: #e1e3e1 !important;
+  border: 2px solid #747775 !important;
+  border-radius: 15px !important;
   cursor: pointer !important;
   position: relative !important;
-  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 1), border-color 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
   flex-shrink: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .desktop-toggle-switch.on {
-  background: #0284c7 !important;
+  background: #0b57d0 !important;
+  border-color: #0b57d0 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .desktop-toggle-switch {
+    background: #363638 !important;
+    border-color: #8e918f !important;
+  }
+  .desktop-toggle-switch.on {
+    background: #a8c7fa !important;
+    border-color: #a8c7fa !important;
+  }
 }
 
 .desktop-toggle-knob {
-  width: 18px !important;
-  height: 18px !important;
-  background: #ffffff !important;
+  width: 16px !important;
+  height: 16px !important;
+  background: #747775 !important;
   border-radius: 50% !important;
   position: absolute !important;
-  top: 3px !important;
-  left: 3px !important;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+  top: 5px !important;
+  left: 5px !important;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), width 0.2s, height 0.2s, background-color 0.2s !important;
 }
 
 .desktop-toggle-switch.on .desktop-toggle-knob {
   transform: translateX(20px) !important;
+  background: #ffffff !important;
+  width: 22px !important;
+  height: 22px !important;
+  top: 2px !important;
+  left: 2px !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .desktop-toggle-knob {
+    background: #8e918f !important;
+  }
+  .desktop-toggle-switch.on .desktop-toggle-knob {
+    background: #041e49 !important;
+  }
+}
+
+/* Privacy Section Reset Button */
+.desktop-privacy-reset-wrap {
+  margin-top: 14px !important;
+  display: flex !important;
+  justify-content: flex-start !important;
+}
+
+.desktop-reset-btn {
+  background: transparent !important;
+  border: 1px solid #b3261e !important;
+  color: #b3261e !important;
+  border-radius: 20px !important;
+  padding: 8px 18px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.desktop-reset-btn:hover {
+  background: rgba(179, 38, 30, 0.08) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .desktop-reset-btn {
+    border-color: #f2b8b5 !important;
+    color: #f2b8b5 !important;
+  }
+  .desktop-reset-btn:hover {
+    background: rgba(242, 184, 181, 0.1) !important;
+  }
 }
 
 /* About Section Specifics */
@@ -519,19 +586,19 @@ body, input, textarea, select, button {
 }
 
 .desktop-about-title {
-  font-size: 18px !important;
-  font-weight: 600 !important;
+  font-size: 20px !important;
+  font-weight: 500 !important;
 }
 
 .desktop-about-sub {
   font-size: 13px !important;
-  color: #6b7280 !important;
+  color: #444746 !important;
   margin-top: 2px !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-about-sub {
-    color: rgba(255, 255, 255, 0.5) !important;
+    color: #c4c7c5 !important;
   }
 }
 
@@ -552,12 +619,12 @@ body, input, textarea, select, button {
 
 .desktop-version-label {
   font-size: 14px !important;
-  color: #4b5563 !important;
+  color: #444746 !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-version-label {
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: #c4c7c5 !important;
   }
 }
 
@@ -569,10 +636,10 @@ body, input, textarea, select, button {
 
 .desktop-update-btn {
   background: transparent !important;
-  border: 1px solid #0284c7 !important;
-  color: #0284c7 !important;
-  border-radius: 6px !important;
-  padding: 6px 14px !important;
+  border: 1px solid #747775 !important;
+  color: #0b57d0 !important;
+  border-radius: 20px !important;
+  padding: 8px 18px !important;
   font-size: 13px !important;
   font-weight: 500 !important;
   cursor: pointer !important;
@@ -580,36 +647,46 @@ body, input, textarea, select, button {
 }
 
 .desktop-update-btn:hover {
-  background: rgba(2, 132, 199, 0.08) !important;
+  background: rgba(11, 87, 208, 0.08) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .desktop-update-btn {
+    border-color: #8e918f !important;
+    color: #a8c7fa !important;
+  }
+  .desktop-update-btn:hover {
+    background: rgba(168, 199, 250, 0.1) !important;
+  }
 }
 
 .desktop-disclaimer-box {
-  background: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 8px !important;
-  padding: 14px 16px !important;
-  font-size: 12px !important;
+  background: #f0f4f9 !important;
+  border: 1px solid #e0e2ec !important;
+  border-radius: 16px !important;
+  padding: 16px 20px !important;
+  font-size: 13px !important;
   line-height: 1.5 !important;
-  color: #64748b !important;
+  color: #444746 !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-disclaimer-box {
-    background: rgba(255, 255, 255, 0.03) !important;
-    border: 1px solid rgba(255, 255, 255, 0.07) !important;
-    color: rgba(255, 255, 255, 0.5) !important;
+    background: #282a2c !important;
+    border: 1px solid #444746 !important;
+    color: #c4c7c5 !important;
   }
 }
 
 .desktop-disclaimer-title {
   font-weight: 600 !important;
-  margin-bottom: 4px !important;
-  color: #334155 !important;
+  margin-bottom: 6px !important;
+  color: #1f1f1f !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-disclaimer-title {
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: #e3e3e3 !important;
   }
 }
 
@@ -617,47 +694,44 @@ body, input, textarea, select, button {
 .desktop-settings-footer {
   display: flex !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  padding: 12px 24px !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
-  background: #fafafa !important;
+  justify-content: flex-end !important;
+  padding: 14px 28px !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
+  background: #f8fafd !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-settings-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-    background: #181818 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+    background: #1e1f20 !important;
   }
 }
 
-.desktop-reset-btn {
-  background: transparent !important;
-  border: none !important;
-  color: #dc2626 !important;
-  font-size: 13px !important;
-  cursor: pointer !important;
-  padding: 4px 0 !important;
-}
-
-.desktop-reset-btn:hover {
-  text-decoration: underline !important;
-}
-
 .desktop-settings-done-btn {
-  background: #0078d4 !important;
+  background: #0b57d0 !important;
   color: #ffffff !important;
   border: none !important;
   border-radius: 20px !important;
-  padding: 8px 24px !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
+  padding: 10px 28px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
   cursor: pointer !important;
-  transition: background-color 0.15s ease !important;
-  margin-left: auto !important;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
 .desktop-settings-done-btn:hover {
-  background: #0284c7 !important;
+  background: #0842a0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .desktop-settings-done-btn {
+    background: #a8c7fa !important;
+    color: #041e49 !important;
+  }
+  .desktop-settings-done-btn:hover {
+    background: #c2e7ff !important;
+  }
 }
 
 /* Offset Gmail top header so it sits cleanly below the titlebar */

@@ -366,14 +366,14 @@
         contentArea.appendChild(secTitle);
         contentArea.appendChild(secDesc);
 
-        // 1. Desktop Notifications
+        // 1. Desktop Notifications (off by default)
         renderToggleCard(
           contentArea,
           'bell',
           'Desktop Notifications',
           'Show system notifications for new unread incoming emails.',
           'notifications_enabled',
-          true,
+          false,
           (enabled) => {
             if (enabled && typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
               Notification.requestPermission();
@@ -381,7 +381,7 @@
           }
         );
 
-        // 2. Open at login
+        // 2. Open at login (off by default)
         renderToggleCard(
           contentArea,
           'login',
@@ -405,14 +405,14 @@
         contentArea.appendChild(secTitle);
         contentArea.appendChild(secDesc);
 
-        // Permissions needed by Gmail & Google Meet inside Gmail
+        // Permissions needed by Gmail & Google Meet inside Gmail (all off by default)
         renderToggleCard(
           contentArea,
           'mic',
           'Microphone',
           'Allow Gmail and Google Meet to access your microphone for audio and calls.',
           'perm_mic',
-          true
+          false
         );
 
         renderToggleCard(
@@ -421,7 +421,7 @@
           'Camera',
           'Allow Google Meet inside Gmail to access your camera for video calls.',
           'perm_camera',
-          true
+          false
         );
 
         renderToggleCard(
@@ -433,14 +433,22 @@
           false
         );
 
-        renderToggleCard(
-          contentArea,
-          'bug',
-          'Usage statistics and crash reporting',
-          'Send anonymous diagnostic info to help improve Desktop Gmail performance.',
-          'perm_telemetry',
-          false
-        );
+        // Reset stored permissions inside Privacy section
+        const resetWrap = document.createElement('div');
+        resetWrap.className = 'desktop-privacy-reset-wrap';
+
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'desktop-reset-btn';
+        resetBtn.textContent = 'Reset stored permissions';
+        resetBtn.addEventListener('click', () => {
+          ['notifications_enabled', 'open_at_login', 'perm_mic', 'perm_camera', 'perm_location'].forEach((k) => {
+            try { localStorage.removeItem('desktop_pref_' + k); } catch (_) {}
+          });
+          renderContent('privacy');
+        });
+
+        resetWrap.appendChild(resetBtn);
+        contentArea.appendChild(resetWrap);
       } else if (tabId === 'about') {
         // About Header
         const aboutHead = document.createElement('div');
@@ -555,22 +563,11 @@
     const footer = document.createElement('div');
     footer.className = 'desktop-settings-footer';
 
-    const resetBtn = document.createElement('button');
-    resetBtn.className = 'desktop-reset-btn';
-    resetBtn.textContent = 'Reset stored permissions';
-    resetBtn.addEventListener('click', () => {
-      ['notifications_enabled', 'open_at_login', 'perm_mic', 'perm_camera', 'perm_location', 'perm_telemetry'].forEach((k) => {
-        try { localStorage.removeItem('desktop_pref_' + k); } catch (_) {}
-      });
-      renderContent(currentTab);
-    });
-
     const doneBtn = document.createElement('button');
     doneBtn.className = 'desktop-settings-done-btn';
     doneBtn.textContent = 'Done';
     doneBtn.addEventListener('click', closeSettingsDialog);
 
-    footer.appendChild(resetBtn);
     footer.appendChild(doneBtn);
 
     dialog.appendChild(header);
