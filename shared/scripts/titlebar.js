@@ -10,7 +10,7 @@
     window.location.href.includes('service=cl');
 
   // Fast, CSP-proof native action trigger via document.title interceptor
-  let lastNonCmdTitle = document.title || (isCalendar ? 'Google Calendar' : 'Gmail');
+  let lastNonCmdTitle = document.title || (isCalendar ? 'Desktop Calendar' : 'Desktop Mail');
   function triggerAction(action) {
     if (!document.title.startsWith('__desktop_cmd__:')) {
       lastNonCmdTitle = document.title;
@@ -209,28 +209,30 @@
       path.setAttribute('stroke-width', '1.2');
       path.setAttribute('stroke-linecap', 'round');
       svg.appendChild(path);
-    } else if (type === 'gmail-logo') {
-      // Modern Google 4-color M logo
-      const p1 = document.createElementNS(svgNS, 'path');
-      p1.setAttribute('d', 'M 3,4 L 3,12 L 5.5,12 L 5.5,6.5 L 8,8.5 L 10.5,6.5 L 10.5,12 L 13,12 L 13,4 L 8,8 Z');
-      p1.setAttribute('fill', '#EA4335'); // Red
+    } else if (type === 'mail-logo') {
+      const bg = document.createElementNS(svgNS, 'rect');
+      bg.setAttribute('x', '1.5');
+      bg.setAttribute('y', '2.5');
+      bg.setAttribute('width', '13');
+      bg.setAttribute('height', '11');
+      bg.setAttribute('rx', '2.5');
+      bg.setAttribute('fill', '#ffffff');
+      bg.setAttribute('stroke', '#f97316');
+      bg.setAttribute('stroke-width', '1.2');
 
-      const p2 = document.createElementNS(svgNS, 'path');
-      p2.setAttribute('d', 'M 3,4 L 5.5,6.5 L 5.5,12 L 3,12 Z');
-      p2.setAttribute('fill', '#4285F4'); // Blue
+      const flap = document.createElementNS(svgNS, 'path');
+      flap.setAttribute('d', 'M 1.5,4 L 8,8.5 L 14.5,4 L 14.5,3 C 14.5,2.7 14.3,2.5 14,2.5 L 2,2.5 C 1.7,2.5 1.5,2.7 1.5,3 Z');
+      flap.setAttribute('fill', '#f97316');
 
-      const p3 = document.createElementNS(svgNS, 'path');
-      p3.setAttribute('d', 'M 13,4 L 10.5,6.5 L 10.5,12 L 13,12 Z');
-      p3.setAttribute('fill', '#34A853'); // Green
+      const fold = document.createElementNS(svgNS, 'path');
+      fold.setAttribute('d', 'M 1.5,13.5 L 6,9 M 14.5,13.5 L 10,9');
+      fold.setAttribute('stroke', '#ea580c');
+      fold.setAttribute('stroke-width', '1');
+      fold.setAttribute('stroke-linecap', 'round');
 
-      const p4 = document.createElementNS(svgNS, 'path');
-      p4.setAttribute('d', 'M 10.5,6.5 L 13,4 L 10.5,4 Z');
-      p4.setAttribute('fill', '#FBBC05'); // Yellow
-
-      svg.appendChild(p1);
-      svg.appendChild(p2);
-      svg.appendChild(p3);
-      svg.appendChild(p4);
+      svg.appendChild(bg);
+      svg.appendChild(flap);
+      svg.appendChild(fold);
     } else if (type === 'calendar-logo') {
       const bg = document.createElementNS(svgNS, 'rect');
       bg.setAttribute('x', '1.5');
@@ -239,8 +241,8 @@
       bg.setAttribute('height', '13');
       bg.setAttribute('rx', '3');
       bg.setAttribute('fill', '#ffffff');
-      bg.setAttribute('stroke', '#4285f4');
-      bg.setAttribute('stroke-width', '1');
+      bg.setAttribute('stroke', '#22c55e');
+      bg.setAttribute('stroke-width', '1.2');
 
       const top = document.createElementNS(svgNS, 'rect');
       top.setAttribute('x', '1.5');
@@ -248,13 +250,13 @@
       top.setAttribute('width', '13');
       top.setAttribute('height', '4.5');
       top.setAttribute('rx', '2');
-      top.setAttribute('fill', '#4285f4');
+      top.setAttribute('fill', '#22c55e');
 
       const text = document.createElementNS(svgNS, 'text');
       text.setAttribute('x', '8');
       text.setAttribute('y', '12');
       text.setAttribute('text-anchor', 'middle');
-      text.setAttribute('fill', '#1a73e8');
+      text.setAttribute('fill', '#16a34a');
       text.setAttribute('font-size', '6.5');
       text.setAttribute('font-weight', 'bold');
       text.setAttribute('font-family', 'sans-serif');
@@ -324,7 +326,7 @@
     const tabs = [
       { id: 'general', label: 'General', icon: 'gear' },
       { id: 'privacy', label: 'Privacy & permissions', icon: 'shield' },
-      { id: 'about', label: isCalendar ? 'About Desktop Calendar' : 'About Desktop Gmail', icon: 'info' }
+      { id: 'about', label: isCalendar ? 'About Desktop Calendar' : 'About Desktop Mail', icon: 'info' }
     ];
 
     const contentArea = document.createElement('div');
@@ -424,8 +426,8 @@
           'login',
           'Open at login',
           isCalendar
-            ? 'Start Desktop Google Calendar automatically when you sign into Windows.'
-            : 'Start Desktop Gmail automatically when you sign into Windows.',
+            ? 'Start Desktop Calendar automatically when you sign into Windows.'
+            : 'Start Desktop Mail automatically when you sign into Windows.',
           'open_at_login',
           false,
           (enabled) => {
@@ -440,8 +442,8 @@
         const secDesc = document.createElement('div');
         secDesc.className = 'desktop-settings-section-desc';
         secDesc.textContent = isCalendar
-          ? 'Control what device hardware and capabilities Google Calendar can access.'
-          : 'Control what device hardware and capabilities Gmail can access.';
+          ? 'Control what device hardware and capabilities Calendar can access.'
+          : 'Control what device hardware and capabilities Mail can access.';
 
         contentArea.appendChild(secTitle);
         contentArea.appendChild(secDesc);
@@ -453,7 +455,7 @@
           'Microphone',
           isCalendar
             ? 'Allow Google Meet inside Calendar to access your microphone for voice and calls.'
-            : 'Allow Gmail and Google Meet to access your microphone for audio and calls.',
+            : 'Allow Desktop Mail and Google Meet to access your microphone for audio and calls.',
           'perm_mic',
           false
         );
@@ -464,7 +466,7 @@
           'Camera',
           isCalendar
             ? 'Allow Google Meet inside Calendar to access your camera for video calls.'
-            : 'Allow Google Meet inside Gmail to access your camera for video calls.',
+            : 'Allow Google Meet inside Desktop Mail to access your camera for video calls.',
           'perm_camera',
           false
         );
@@ -474,8 +476,8 @@
           'location',
           'Location',
           isCalendar
-            ? 'Allow Google Calendar to access approximate location for event addresses and directions.'
-            : 'Allow Gmail to access approximate location for security alerts and sign-in verification.',
+            ? 'Allow Desktop Calendar to access approximate location for event addresses and directions.'
+            : 'Allow Desktop Mail to access approximate location for security alerts and sign-in verification.',
           'perm_location',
           false
         );
@@ -503,7 +505,7 @@
 
         const logoWrap = document.createElement('div');
         logoWrap.className = 'desktop-about-logo';
-        const logoSvg = createSvgIcon(isCalendar ? 'calendar-logo' : 'gmail-logo');
+        const logoSvg = createSvgIcon(isCalendar ? 'calendar-logo' : 'mail-logo');
         logoSvg.setAttribute('viewBox', '0 0 16 16');
         logoSvg.setAttribute('width', '48');
         logoSvg.setAttribute('height', '48');
@@ -512,13 +514,13 @@
         const aboutTitles = document.createElement('div');
         const mainTitle = document.createElement('div');
         mainTitle.className = 'desktop-about-title';
-        mainTitle.textContent = isCalendar ? 'About Desktop Calendar' : 'About Desktop Gmail';
+        mainTitle.textContent = isCalendar ? 'About Desktop Calendar' : 'About Desktop Mail';
 
         const subTitle = document.createElement('div');
         subTitle.className = 'desktop-about-sub';
         subTitle.textContent = isCalendar
           ? 'Unofficial desktop wrapper for Google Calendar.'
-          : 'Unofficial desktop wrapper for Google Gmail.';
+          : 'Unofficial desktop wrapper for Google Mail / Gmail.';
 
         aboutTitles.appendChild(mainTitle);
         aboutTitles.appendChild(subTitle);
@@ -568,8 +570,8 @@
 
         const discText = document.createElement('div');
         discText.textContent = isCalendar
-          ? 'Desktop Google Calendar is an independent open-source wrapper created solely to provide a focused desktop window for Google Calendar. It has no affiliation, connection, or endorsement with Google LLC or Alphabet Inc. All Google Calendar trademarks, logos, web interfaces, and intellectual property remain the exclusive property of Google LLC.'
-          : 'Desktop Gmail is an independent open-source wrapper created solely to provide a focused desktop window for Gmail. It has no affiliation, connection, or endorsement with Google LLC or Alphabet Inc. All Gmail trademarks, logos, web interfaces, and intellectual property remain the exclusive property of Google LLC.';
+          ? 'Desktop Calendar is an independent open-source wrapper created solely to provide a focused desktop window for Google Calendar. It has no affiliation, connection, or endorsement with Google LLC or Alphabet Inc. All Google Calendar trademarks, logos, web interfaces, and intellectual property remain the exclusive property of Google LLC.'
+          : 'Desktop Mail is an independent open-source wrapper created solely to provide a focused desktop window for Gmail. It has no affiliation, connection, or endorsement with Google LLC or Alphabet Inc. All Gmail trademarks, logos, web interfaces, and intellectual property remain the exclusive property of Google LLC.';
 
         discBox.appendChild(discTitle);
         discBox.appendChild(discText);

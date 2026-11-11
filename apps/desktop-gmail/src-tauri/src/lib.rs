@@ -267,7 +267,7 @@ pub fn run() {
             let compose_item =
                 MenuItem::with_id(app, "compose", "Compose New Mail", true, None::<&str>)?;
             let reload_item = MenuItem::with_id(app, "reload", "Refresh Inbox", true, None::<&str>)?;
-            let quit_item = MenuItem::with_id(app, "quit", "Quit Gmail", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "Quit Desktop Mail", true, None::<&str>)?;
 
             let tray_menu =
                 Menu::with_items(app, &[&show_item, &compose_item, &reload_item, &quit_item])?;
@@ -276,7 +276,7 @@ pub fn run() {
 
             let mut tray_builder = TrayIconBuilder::with_id("main-tray")
                 .menu(&tray_menu)
-                .tooltip("Desktop Gmail")
+                .tooltip("Desktop Mail")
                 .show_menu_on_left_click(false);
 
             if let Some(icon) = tray_icon {
@@ -334,7 +334,7 @@ pub fn run() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("error while running Desktop Gmail");
+        .expect("error while running Desktop Mail");
 }
 
 #[cfg(target_os = "windows")]
@@ -349,7 +349,7 @@ fn set_windows_autostart(enable: bool) {
                     "add",
                     "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
                     "/v",
-                    "DesktopGmail",
+                    "DesktopMail",
                     "/t",
                     "REG_SZ",
                     "/d",
@@ -364,7 +364,7 @@ fn set_windows_autostart(enable: bool) {
                     "delete",
                     "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
                     "/v",
-                    "DesktopGmail",
+                    "DesktopMail",
                     "/f",
                 ])
                 .creation_flags(CREATE_NO_WINDOW)

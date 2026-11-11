@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Desktop Gmail",
+  "productName": "Desktop Mail",
   "version": "0.1.0",
   "identifier": "com.andrey.desktop-gmail",
   "build": {

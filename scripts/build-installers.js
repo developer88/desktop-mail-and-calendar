@@ -102,17 +102,17 @@ SectionEnd
 function main() {
   const apps = [
     {
-      appId: 'DesktopGmail',
-      appName: 'Desktop Gmail',
-      installDirName: 'DesktopGmail',
+      appId: 'DesktopMail',
+      appName: 'Desktop Mail',
+      installDirName: 'DesktopMail',
       binaryName: 'desktop-gmail.exe',
       installerName: 'desktop-gmail-setup.exe',
       iconRelPath: 'apps/desktop-gmail/src-tauri/icons/icon.ico'
     },
     {
-      appId: 'DesktopGoogleCalendar',
-      appName: 'Desktop Google Calendar',
-      installDirName: 'DesktopGoogleCalendar',
+      appId: 'DesktopCalendar',
+      appName: 'Desktop Calendar',
+      installDirName: 'DesktopCalendar',
       binaryName: 'desktop-gcalendar.exe',
       installerName: 'desktop-gcalendar-setup.exe',
       iconRelPath: 'apps/desktop-gcalendar/src-tauri/icons/icon.ico'

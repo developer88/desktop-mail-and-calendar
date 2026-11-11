@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Desktop Google Calendar",
+  "productName": "Desktop Calendar",
   "version": "0.1.0",
   "identifier": "com.andrey.desktop-gcalendar",
   "build": {

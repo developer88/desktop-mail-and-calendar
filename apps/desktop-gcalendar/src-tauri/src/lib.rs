@@ -265,7 +265,7 @@ pub fn run() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("error while running Desktop Google Calendar");
+        .expect("error while running Desktop Calendar");
 }
 
 #[cfg(target_os = "windows")]
@@ -280,7 +280,7 @@ fn set_windows_autostart(enable: bool) {
                     "add",
                     "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
                     "/v",
-                    "DesktopGoogleCalendar",
+                    "DesktopCalendar",
                     "/t",
                     "REG_SZ",
                     "/d",
@@ -295,7 +295,7 @@ fn set_windows_autostart(enable: bool) {
                     "delete",
                     "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
                     "/v",
-                    "DesktopGoogleCalendar",
+                    "DesktopCalendar",
                     "/f",
                 ])
                 .creation_flags(CREATE_NO_WINDOW)

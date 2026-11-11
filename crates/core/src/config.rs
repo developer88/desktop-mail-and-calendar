@@ -24,7 +24,7 @@ impl DesktopAppConfig {
     pub fn for_gmail() -> Self {
         Self {
             kind: AppKind::Gmail,
-            title: "Gmail".to_string(),
+            title: "Desktop Mail".to_string(),
             initial_url: "https://mail.google.com/mail/u/0/".to_string(),
             width: 1280.0,
             height: 800.0,
@@ -39,7 +39,7 @@ impl DesktopAppConfig {
     pub fn for_calendar() -> Self {
         Self {
             kind: AppKind::Calendar,
-            title: "Google Calendar".to_string(),
+            title: "Desktop Calendar".to_string(),
             initial_url: "https://calendar.google.com/calendar/u/0/r".to_string(),
             width: 1120.0,
             height: 760.0,
@@ -60,7 +60,7 @@ mod tests {
     fn test_gmail_defaults() {
         let cfg = DesktopAppConfig::for_gmail();
         assert_eq!(cfg.kind, AppKind::Gmail);
-        assert_eq!(cfg.title, "Gmail");
+        assert_eq!(cfg.title, "Desktop Mail");
         assert!(cfg.initial_url.starts_with("https://mail.google.com"));
         assert!(!cfg.close_to_tray);
     }
@@ -69,7 +69,7 @@ mod tests {
     fn test_calendar_defaults() {
         let cfg = DesktopAppConfig::for_calendar();
         assert_eq!(cfg.kind, AppKind::Calendar);
-        assert_eq!(cfg.title, "Google Calendar");
+        assert_eq!(cfg.title, "Desktop Calendar");
         assert!(cfg.initial_url.starts_with("https://calendar.google.com"));
         assert!(cfg.close_to_tray);
     }
