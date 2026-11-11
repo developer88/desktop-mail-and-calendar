@@ -79,6 +79,9 @@ pub fn run() {
                     .expect("Failed to parse initial URL for Gmail"),
             );
 
+            let app_nav = app.handle().clone();
+            let app_win = app.handle().clone();
+
             let window = WebviewWindowBuilder::new(app, "main", initial_url)
                 .title(&config.title)
                 .inner_size(config.width, config.height)
@@ -86,6 +89,35 @@ pub fn run() {
                 .resizable(true)
                 .user_agent(USER_AGENT)
                 .initialization_script(&injected_script)
+                .on_navigation(move |url| {
+                    let url_str = url.as_str();
+                    if desktop_google_core::should_open_in_external_browser(
+                        url_str,
+                        desktop_google_core::AppKind::Gmail,
+                    ) {
+                        use tauri_plugin_shell::ShellExt;
+                        let _ = app_nav.shell().open(url_str, None);
+                        false
+                    } else {
+                        true
+                    }
+                })
+                .on_new_window(move |url, _features| {
+                    let url_str = url.as_str();
+                    if desktop_google_core::should_open_in_external_browser(
+                        url_str,
+                        desktop_google_core::AppKind::Gmail,
+                    ) {
+                        use tauri_plugin_shell::ShellExt;
+                        let _ = app_win.shell().open(url_str, None);
+                        tauri::webview::NewWindowResponse::Deny
+                    } else {
+                        if let Some(w) = app_win.get_webview_window("main") {
+                            let _ = w.navigate(url.clone());
+                        }
+                        tauri::webview::NewWindowResponse::Deny
+                    }
+                })
                 .build()?;
 
             // 2. Handle close button: exit immediately when close_to_tray is disabled

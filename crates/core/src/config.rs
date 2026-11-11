@@ -25,7 +25,7 @@ impl DesktopAppConfig {
         Self {
             kind: AppKind::Gmail,
             title: "Gmail".to_string(),
-            initial_url: "https://mail.google.com".to_string(),
+            initial_url: "https://mail.google.com/mail/u/0/".to_string(),
             width: 1280.0,
             height: 800.0,
             min_width: 800.0,

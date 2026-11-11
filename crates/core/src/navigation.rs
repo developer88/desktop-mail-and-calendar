@@ -33,10 +33,16 @@ pub fn classify_url(raw_url: &str, app_kind: AppKind) -> UrlCategory {
     if host == "accounts.google.com"
         || host == "myaccount.google.com"
         || host == "oauth2.googleapis.com"
+        || host == "apis.google.com"
         || host == "gstatic.com"
         || host.ends_with(".gstatic.com")
         || host == "googleusercontent.com"
         || host.ends_with(".googleusercontent.com")
+        || ((host == "google.com" || host == "www.google.com")
+            && (parsed.path().starts_with("/accounts")
+                || parsed.path().starts_with("/signin")
+                || parsed.path().starts_with("/gmail")
+                || parsed.path().contains("signinchooser")))
     {
         return UrlCategory::GoogleAuth;
     }
