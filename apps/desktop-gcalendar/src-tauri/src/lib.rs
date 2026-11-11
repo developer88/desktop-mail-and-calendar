@@ -159,6 +159,15 @@ pub fn run() {
                     }
 
                     let url_str = url.as_str();
+                    if let Some(host) = url.host_str() {
+                        if host == "workspace.google.com" {
+                            if let Some(w) = app_nav.get_webview_window("main") {
+                                let _ = w.eval("window.location.replace('https://calendar.google.com/calendar/u/0/r');");
+                            }
+                            return false;
+                        }
+                    }
+
                     if desktop_google_core::should_open_in_external_browser(
                         url_str,
                         desktop_google_core::AppKind::Calendar,
@@ -172,6 +181,15 @@ pub fn run() {
                 })
                 .on_new_window(move |url, _features| {
                     let url_str = url.as_str();
+                    if let Some(host) = url.host_str() {
+                        if host == "workspace.google.com" {
+                            if let Some(w) = app_win.get_webview_window("main") {
+                                let _ = w.eval("window.location.replace('https://calendar.google.com/calendar/u/0/r');");
+                            }
+                            return tauri::webview::NewWindowResponse::Deny;
+                        }
+                    }
+
                     if desktop_google_core::should_open_in_external_browser(
                         url_str,
                         desktop_google_core::AppKind::Calendar,

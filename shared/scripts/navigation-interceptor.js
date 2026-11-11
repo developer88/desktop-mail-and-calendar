@@ -22,7 +22,7 @@
       host === 'googleusercontent.com' ||
       host.endsWith('.googleusercontent.com') ||
       ((host === 'google.com' || host === 'www.google.com') &&
-        (path.startsWith('/accounts') || path.startsWith('/signin') || path.startsWith('/gmail') || path.includes('signinchooser')))
+        (path.startsWith('/accounts') || path.startsWith('/signin') || path.startsWith('/gmail') || path.startsWith('/calendar') || path.includes('signinchooser')))
     );
   }
 

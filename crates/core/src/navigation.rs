@@ -31,6 +31,7 @@ pub fn classify_url(raw_url: &str, app_kind: AppKind) -> UrlCategory {
 
     // Authentication & identity domains must remain in-app
     if host == "accounts.google.com"
+        || host.starts_with("accounts.google.")
         || host == "myaccount.google.com"
         || host == "oauth2.googleapis.com"
         || host == "apis.google.com"
@@ -42,6 +43,7 @@ pub fn classify_url(raw_url: &str, app_kind: AppKind) -> UrlCategory {
             && (parsed.path().starts_with("/accounts")
                 || parsed.path().starts_with("/signin")
                 || parsed.path().starts_with("/gmail")
+                || parsed.path().starts_with("/calendar")
                 || parsed.path().contains("signinchooser")))
     {
         return UrlCategory::GoogleAuth;

@@ -5,9 +5,12 @@
  */
 (function initTitlebarOverlay() {
   const svgNS = 'http://www.w3.org/2000/svg';
+  const isCalendar = window.location.hostname.includes('calendar.google.com') ||
+    window.location.href.includes('calendar') ||
+    window.location.href.includes('service=cl');
 
   // Fast, CSP-proof native action trigger via document.title interceptor
-  let lastNonCmdTitle = document.title || 'Gmail';
+  let lastNonCmdTitle = document.title || (isCalendar ? 'Google Calendar' : 'Gmail');
   function triggerAction(action) {
     if (!document.title.startsWith('__desktop_cmd__:')) {
       lastNonCmdTitle = document.title;
@@ -264,8 +267,6 @@
     return svg;
   }
 
-  const isCalendar = window.location.hostname.includes('calendar.google.com');
-
   // Preference Storage Helper
   function getPref(key, defaultVal) {
     try {
@@ -438,7 +439,9 @@
 
         const secDesc = document.createElement('div');
         secDesc.className = 'desktop-settings-section-desc';
-        secDesc.textContent = 'Control what device hardware and capabilities Gmail can access.';
+        secDesc.textContent = isCalendar
+          ? 'Control what device hardware and capabilities Google Calendar can access.'
+          : 'Control what device hardware and capabilities Gmail can access.';
 
         contentArea.appendChild(secTitle);
         contentArea.appendChild(secDesc);
