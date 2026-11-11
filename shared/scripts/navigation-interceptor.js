@@ -5,6 +5,12 @@
  * 3. F5 and Ctrl+R keyboard shortcuts reload the current page.
  */
 (function initNavigationInterceptor() {
+  try {
+    if (window.top !== window.self) return;
+  } catch (_) {
+    return;
+  }
+
   function isInternalUrl(url) {
     if (!url) return false;
     const host = (url.hostname || '').toLowerCase();
@@ -62,12 +68,29 @@
 
     const href = target.href;
 
-    // Handle mailto: links directly to Gmail in-app compose
+    // Handle mailto: links (only if user explicitly enabled this in Settings; off by default)
     if (href.startsWith('mailto:')) {
-      event.preventDefault();
-      event.stopPropagation();
-      const mailtoQuery = href.slice(7);
-      window.location.href = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(mailtoQuery);
+      const handleMailto = localStorage.getItem('desktop_pref_handle_mailto_links') === 'true';
+      if (handleMailto) {
+        event.preventDefault();
+        event.stopPropagation();
+        const mailtoQuery = href.slice(7);
+        window.location.href = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(mailtoQuery);
+        return;
+      }
+      return;
+    }
+
+    // Handle webcal: links (only if user explicitly enabled this in Settings; off by default)
+    if (href.startsWith('webcal:')) {
+      const handleCalendar = localStorage.getItem('desktop_pref_handle_calendar_links') === 'true';
+      if (handleCalendar) {
+        event.preventDefault();
+        event.stopPropagation();
+        const webcalUrl = 'https://calendar.google.com/calendar/u/0/r/settings/addcalendar?cid=' + encodeURIComponent(href);
+        window.location.href = webcalUrl;
+        return;
+      }
       return;
     }
 

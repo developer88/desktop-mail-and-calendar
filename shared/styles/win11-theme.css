@@ -384,7 +384,7 @@ body, input, textarea, select, button {
 }
 
 .desktop-settings-content.about-view {
-  overflow-y: hidden !important;
+  overflow-y: auto !important;
 }
 
 .desktop-settings-section-title {

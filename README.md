@@ -5,6 +5,7 @@
 [![Tauri](https://img.shields.io/badge/Tauri-v2.0-24C8DB.svg)](https://tauri.app/)
 [![Windows 11](https://img.shields.io/badge/Platform-Windows%2011-0078D4.svg)](https://www.microsoft.com/windows)
 [![Privacy First](https://img.shields.io/badge/Privacy-Zero%20Telemetry-success.svg)](#-privacy--security-guarantees)
+[![Changelog](https://img.shields.io/badge/Changelog-SemVer-purple.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 Native-feeling, standalone Windows 11 desktop applications for **Gmail** and **Google Calendar** powered by **Tauri 2.0** and **Microsoft Edge WebView2**.

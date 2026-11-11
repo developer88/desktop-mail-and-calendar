@@ -13,7 +13,17 @@ pub fn get_injected_bundle() -> String {
     format!(
         r#"
 (function() {{
-    // Google Authentication Guard:
+    // 1. Subframe / Iframe Guard:
+    // Never inject the desktop shell, titlebar, or modals into embedded child iframes (Meet, Tasks, Keep, etc.)
+    try {{
+        if (window.top !== window.self) {{
+            return;
+        }}
+    }} catch (_) {{
+        return;
+    }}
+
+    // 2. Google Authentication Guard:
     // When on Google OAuth, Accounts, or Sign-In screens, do NOT alter Google DOM,
     // intercept navigation, or override window.open. Keeps auth flow 100% untouched.
     function isGoogleAuthFlow() {{
@@ -72,6 +82,7 @@ mod tests {
     #[test]
     fn test_injected_bundle_generation() {
         let bundle = get_injected_bundle();
+        assert!(bundle.contains("window.top !== window.self"));
         assert!(bundle.contains("isGoogleAuthFlow"));
         assert!(bundle.contains("desktop-google-theme"));
         assert!(bundle.contains("initNavigationInterceptor"));

@@ -3,6 +3,11 @@
  * and reports it to the Tauri backend to set Taskbar and Tray badges.
  */
 (function initUnreadObserver() {
+  try {
+    if (window.top !== window.self) return;
+  } catch (_) {
+    return;
+  }
   let lastReportedCount = -1;
 
   function inspectTitle() {

@@ -4,6 +4,11 @@
  * Uses strict DOM methods (no innerHTML) to comply with Gmail's Trusted Types CSP.
  */
 (function initTitlebarOverlay() {
+  try {
+    if (window.top !== window.self) return;
+  } catch (_) {
+    return;
+  }
   const svgNS = 'http://www.w3.org/2000/svg';
   const isCalendar = window.location.hostname.includes('calendar.google.com') ||
     window.location.href.includes('calendar') ||
@@ -145,6 +150,14 @@
     } else if (type === 'login') {
       const path = document.createElementNS(svgNS, 'path');
       path.setAttribute('d', 'M 6,3 L 3,3 C 2.4,3 2,3.4 2,4 L 2,12 C 2,12.6 2.4,13 3,13 L 6,13 M 9,11 L 12,8 L 9,5 M 5,8 L 12,8');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '1.3');
+      path.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(path);
+    } else if (type === 'link') {
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', 'M 6.5,9.5 C 5,11 3.5,11 2.5,10 C 1.5,9 1.5,7.5 3,6 L 5.5,3.5 C 7,2 8.5,2 9.5,3 M 9.5,6.5 C 11,5 12.5,5 13.5,6 C 14.5,7 14.5,8.5 13,10 L 10.5,12.5 C 9,14 7.5,14 6.5,13 M 5.5,10.5 L 10.5,5.5');
       path.setAttribute('fill', 'none');
       path.setAttribute('stroke', 'currentColor');
       path.setAttribute('stroke-width', '1.3');
@@ -540,6 +553,18 @@
           (enabled) => {
             triggerAction(enabled ? 'autostart:on' : 'autostart:off');
           }
+        );
+
+        // 3. Handle external protocol links (off by default)
+        renderToggleCard(
+          contentArea,
+          'link',
+          isCalendar ? 'Handle calendar links' : 'Handle mailto: links',
+          isCalendar
+            ? 'Open webcal: calendar subscription links inside Desktop Calendar (off by default).'
+            : 'Open mailto: email compose links inside Desktop Mail (off by default).',
+          isCalendar ? 'handle_calendar_links' : 'handle_mailto_links',
+          false
         );
       } else if (tabId === 'privacy') {
         const secTitle = document.createElement('div');
