@@ -1,6 +1,6 @@
-/* Declutter stylesheet: Hides promotional Google widgets and unnecessary web-only chrome */
+/* Declutter stylesheet: Hides promotional widgets and unnecessary web-only chrome */
 
-/* Hide Google promotional banners & Meet widgets inside Gmail sidebars */
+/* Hide promotional banners & widgets inside sidebars */
 div[aria-label="Google apps"],
 a[aria-label="Google apps"],
 .gb_A,

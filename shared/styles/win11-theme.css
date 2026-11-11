@@ -1,4 +1,4 @@
-/* Windows 11 Modern Theme Override for Google Webapps */
+/* Windows 11 Modern Theme Override */
 :root {
   --win11-font-family: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
   --win11-accent: #0078d4;
@@ -196,7 +196,7 @@ body, input, textarea, select, button {
   margin: 4px 6px !important;
 }
 
-/* Settings Modal Dialog - Google Material 3 / Gmail Style */
+/* Settings Modal Dialog - Modern Windows 11 Fluent Style */
 #desktop-settings-overlay {
   position: fixed !important;
   top: 0 !important;

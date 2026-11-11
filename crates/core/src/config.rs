@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AppKind {
-    Gmail,
+    Mail,
     Calendar,
 }
 
@@ -21,9 +21,9 @@ pub struct DesktopAppConfig {
 }
 
 impl DesktopAppConfig {
-    pub fn for_gmail() -> Self {
+    pub fn for_mail() -> Self {
         Self {
-            kind: AppKind::Gmail,
+            kind: AppKind::Mail,
             title: "Desktop Mail".to_string(),
             initial_url: "https://mail.google.com/mail/u/0/".to_string(),
             width: 1280.0,
@@ -57,9 +57,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_gmail_defaults() {
-        let cfg = DesktopAppConfig::for_gmail();
-        assert_eq!(cfg.kind, AppKind::Gmail);
+    fn test_mail_defaults() {
+        let cfg = DesktopAppConfig::for_mail();
+        assert_eq!(cfg.kind, AppKind::Mail);
         assert_eq!(cfg.title, "Desktop Mail");
         assert!(cfg.initial_url.starts_with("https://mail.google.com"));
         assert!(!cfg.close_to_tray);

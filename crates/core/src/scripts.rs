@@ -10,11 +10,11 @@ pub const TITLEBAR_SCRIPT: &str = include_str!("../../../shared/scripts/titlebar
 /// Constructs the complete consolidated JavaScript bundle injected into the webview on page initialization
 pub fn get_injected_bundle(app_kind: AppKind) -> String {
     let app_kind_str = match app_kind {
-        AppKind::Gmail => "mail",
+        AppKind::Mail => "mail",
         AppKind::Calendar => "calendar",
     };
     let primary_host = match app_kind {
-        AppKind::Gmail => "mail.google.com",
+        AppKind::Mail => "mail.google.com",
         AppKind::Calendar => "calendar.google.com",
     };
 
@@ -31,7 +31,7 @@ pub fn get_injected_bundle(app_kind: AppKind) -> String {
     // 1. Multi-Layer Subframe / Iframe / Companion Guard:
     // Never inject the desktop shell, titlebar, or modals into:
     // - Subframes or child iframes (window.self !== window.top)
-    // - Embedded companion sidebars (e.g. Calendar/Keep/Tasks companion inside Gmail)
+    // - Embedded companion sidebars (e.g. companion inside mail)
     // - Non-primary service hosts (e.g. Mail must NEVER inject into calendar.google.com)
     try {{
         if (window.self !== window.top || window.parent !== window || window.frameElement) {{
@@ -55,10 +55,10 @@ pub fn get_injected_bundle(app_kind: AppKind) -> String {
         return;
     }}
 
-    // 2. Google Authentication Guard:
-    // When on Google OAuth, Accounts, or Sign-In screens, do NOT alter Google DOM,
+    // 2. Authentication Flow Guard:
+    // When on OAuth, Accounts, or Sign-In screens, do NOT alter DOM,
     // intercept navigation, or override window.open. Keeps auth flow 100% untouched.
-    function isGoogleAuthFlow() {{
+    function isAuthFlow() {{
         try {{
             if (host === 'accounts.google.com' || host.startsWith('accounts.google.') || host === 'myaccount.google.com') {{
                 return true;
@@ -71,11 +71,11 @@ pub fn get_injected_bundle(app_kind: AppKind) -> String {
         return false;
     }}
 
-    if (!isGoogleAuthFlow()) {{
+    if (!isAuthFlow()) {{
         function applyStyles() {{
-            if (document.getElementById('desktop-google-theme')) return;
+            if (document.getElementById('desktop-theme')) return;
             var styleEl = document.createElement('style');
-            styleEl.id = 'desktop-google-theme';
+            styleEl.id = 'desktop-theme';
             styleEl.textContent = `{theme}\n{declutter}`;
             (document.head || document.documentElement).appendChild(styleEl);
         }}
@@ -91,7 +91,7 @@ pub fn get_injected_bundle(app_kind: AppKind) -> String {
     {titlebar}
 
     // Interactive interceptors: only active within the main app
-    if (!isGoogleAuthFlow()) {{
+    if (!isAuthFlow()) {{
         {nav}
         {unread}
     }}
@@ -113,12 +113,12 @@ mod tests {
 
     #[test]
     fn test_injected_bundle_generation() {
-        let bundle = get_injected_bundle(AppKind::Gmail);
+        let bundle = get_injected_bundle(AppKind::Mail);
         assert!(bundle.contains("APP_KIND = \"mail\""));
         assert!(bundle.contains("PRIMARY_HOST = \"mail.google.com\""));
         assert!(bundle.contains("window.self !== window.top"));
-        assert!(bundle.contains("isGoogleAuthFlow"));
-        assert!(bundle.contains("desktop-google-theme"));
+        assert!(bundle.contains("isAuthFlow"));
+        assert!(bundle.contains("desktop-theme"));
         assert!(bundle.contains("initNavigationInterceptor"));
         assert!(bundle.contains("initUnreadObserver"));
         assert!(bundle.contains("initTitlebarOverlay"));

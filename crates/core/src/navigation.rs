@@ -4,7 +4,7 @@ use url::Url;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UrlCategory {
     InApp,
-    GoogleAuth,
+    Auth,
     Mailto,
     External,
 }
@@ -51,12 +51,12 @@ pub fn classify_url(raw_url: &str, app_kind: AppKind) -> UrlCategory {
                 || parsed.path().starts_with("/_/signin")
                 || parsed.path().contains("signinchooser")))
     {
-        return UrlCategory::GoogleAuth;
+        return UrlCategory::Auth;
     }
 
     // App-specific internal domains
     match app_kind {
-        AppKind::Gmail => {
+        AppKind::Mail => {
             if host == "mail.google.com"
                 || host == "contacts.google.com"
                 || host == "chat.google.com"
@@ -86,14 +86,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_internal_gmail_navigation() {
+    fn test_internal_mail_navigation() {
         assert_eq!(
-            classify_url("https://mail.google.com/mail/u/0/#inbox", AppKind::Gmail),
+            classify_url("https://mail.google.com/mail/u/0/#inbox", AppKind::Mail),
             UrlCategory::InApp
         );
         assert!(!should_open_in_external_browser(
             "https://mail.google.com/mail/u/0/#inbox",
-            AppKind::Gmail
+            AppKind::Mail
         ));
     }
 
@@ -110,12 +110,12 @@ mod tests {
 
         for url in auth_urls {
             assert_eq!(
-                classify_url(url, AppKind::Gmail),
-                UrlCategory::GoogleAuth,
-                "Expected {url} to be classified as GoogleAuth for Gmail"
+                classify_url(url, AppKind::Mail),
+                UrlCategory::Auth,
+                "Expected {url} to be classified as Auth for Mail"
             );
             assert!(
-                !should_open_in_external_browser(url, AppKind::Gmail),
+                !should_open_in_external_browser(url, AppKind::Mail),
                 "Expected {url} to stay in-app"
             );
         }
@@ -132,12 +132,12 @@ mod tests {
 
         for url in external_urls {
             assert_eq!(
-                classify_url(url, AppKind::Gmail),
+                classify_url(url, AppKind::Mail),
                 UrlCategory::External,
-                "Expected {url} to be classified as External for Gmail"
+                "Expected {url} to be classified as External for Mail"
             );
             assert!(
-                should_open_in_external_browser(url, AppKind::Gmail),
+                should_open_in_external_browser(url, AppKind::Mail),
                 "Expected {url} to open in external browser"
             );
         }
@@ -146,12 +146,12 @@ mod tests {
     #[test]
     fn test_mailto_classification() {
         assert_eq!(
-            classify_url("mailto:support@example.com", AppKind::Gmail),
+            classify_url("mailto:support@example.com", AppKind::Mail),
             UrlCategory::Mailto
         );
         assert!(!should_open_in_external_browser(
             "mailto:support@example.com",
-            AppKind::Gmail
+            AppKind::Mail
         ));
     }
 

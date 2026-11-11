@@ -1,7 +1,6 @@
 /**
- * Injects a modern Windows 11 frameless titlebar overlay
- * that blends seamlessly with Gmail's background image.
- * Uses strict DOM methods (no innerHTML) to comply with Gmail's Trusted Types CSP.
+ * Injects a modern Windows 11 frameless titlebar overlay.
+ * Uses strict DOM methods (no innerHTML) to comply with Trusted Types CSP.
  */
 (function initTitlebarOverlay() {
   try {
@@ -590,14 +589,14 @@
         contentArea.appendChild(secTitle);
         contentArea.appendChild(secDesc);
 
-        // Permissions needed by Gmail/Calendar & Google Meet (all off by default)
+        // Permissions needed for calls and media (all off by default)
         renderToggleCard(
           contentArea,
           'mic',
           'Microphone',
           isCalendar
-            ? 'Allow Google Meet inside Calendar to access your microphone for voice and calls.'
-            : 'Allow Desktop Mail and Google Meet to access your microphone for audio and calls.',
+            ? 'Allow voice calls and meetings inside Calendar to access your microphone.'
+            : 'Allow Desktop Mail to access your microphone for audio and voice calls.',
           'perm_mic',
           false
         );
@@ -607,8 +606,8 @@
           'camera',
           'Camera',
           isCalendar
-            ? 'Allow Google Meet inside Calendar to access your camera for video calls.'
-            : 'Allow Google Meet inside Desktop Mail to access your camera for video calls.',
+            ? 'Allow video calls and meetings inside Calendar to access your camera.'
+            : 'Allow Desktop Mail to access your camera for video calls.',
           'perm_camera',
           false
         );
@@ -662,8 +661,8 @@
         const subTitle = document.createElement('div');
         subTitle.className = 'desktop-about-sub';
         subTitle.textContent = isCalendar
-          ? 'Unofficial desktop wrapper for Google Calendar.'
-          : 'Unofficial desktop wrapper for Gmail.';
+          ? 'Unofficial desktop wrapper for Calendar.'
+          : 'Unofficial desktop wrapper for Mail.';
 
         aboutTitles.appendChild(mainTitle);
         aboutTitles.appendChild(subTitle);
@@ -879,8 +878,8 @@
     const desc = document.createElement('p');
     desc.className = 'desktop-splash-desc';
     desc.textContent = isCalendar
-      ? 'An independent, fast, and focused desktop experience for Google Calendar.'
-      : 'An independent, fast, and focused desktop experience for Gmail.';
+      ? 'An independent, fast, and focused desktop experience for Calendar.'
+      : 'An independent, fast, and focused desktop experience for Mail.';
 
     // Disclaimer & Privacy Highlights Cards
     const cards = document.createElement('div');
@@ -891,8 +890,8 @@
         icon: 'window',
         title: 'Independent Wrapper',
         desc: isCalendar
-          ? 'Desktop Calendar is an unofficial desktop client created solely to provide a focused native window for Google Calendar.'
-          : 'Desktop Mail is an unofficial desktop client created solely to provide a focused native window for Gmail.'
+          ? 'Desktop Calendar is an unofficial desktop client created solely to provide a focused native window for Calendar.'
+          : 'Desktop Mail is an unofficial desktop client created solely to provide a focused native window for Mail.'
       },
       {
         icon: 'shield',
@@ -903,8 +902,8 @@
         icon: 'lock',
         title: 'Zero Data Access',
         desc: isCalendar
-          ? 'The wrapper never reads, inspects, intercepts, or alters your calendar events, agendas, or Google account credentials.'
-          : 'The wrapper never reads, inspects, intercepts, or alters your emails, messages, contacts, or Google account credentials.'
+          ? 'The wrapper never reads, inspects, intercepts, or alters your calendar events, agendas, or account credentials.'
+          : 'The wrapper never reads, inspects, intercepts, or alters your emails, messages, contacts, or account credentials.'
       },
       {
         icon: 'code',

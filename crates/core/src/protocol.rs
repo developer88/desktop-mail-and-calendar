@@ -52,8 +52,8 @@ pub fn parse_mailto_url(raw: &str) -> Option<MailtoData> {
     Some(data)
 }
 
-/// Converts a MailtoData structure into a Gmail web compose URL that opens inside the app
-pub fn to_gmail_compose_url(data: &MailtoData) -> String {
+/// Converts a MailtoData structure into a web compose URL that opens inside the app
+pub fn to_mail_compose_url(data: &MailtoData) -> String {
     let mut params = form_urlencoded::Serializer::new(String::new());
     params.append_pair("view", "cm");
     params.append_pair("fs", "1");
@@ -78,6 +78,11 @@ pub fn to_gmail_compose_url(data: &MailtoData) -> String {
     format!("https://mail.google.com/mail/?{}", params.finish())
 }
 
+#[inline]
+pub fn to_gmail_compose_url(data: &MailtoData) -> String {
+    to_mail_compose_url(data)
+}
+
 fn urlencoding_decode(input: &str) -> String {
     form_urlencoded::parse(input.as_bytes())
         .next()
@@ -96,7 +101,7 @@ mod tests {
         assert!(parsed.subject.is_none());
         assert!(parsed.body.is_none());
 
-        let url = to_gmail_compose_url(&parsed);
+        let url = to_mail_compose_url(&parsed);
         assert!(url.contains("to=hello%40example.com"));
         assert!(url.contains("view=cm"));
     }
@@ -112,7 +117,7 @@ mod tests {
         assert_eq!(parsed.body.as_deref(), Some("Hi Alice"));
         assert_eq!(parsed.cc.as_deref(), Some("bob@example.com"));
 
-        let compose_url = to_gmail_compose_url(&parsed);
+        let compose_url = to_mail_compose_url(&parsed);
         assert!(compose_url.starts_with("https://mail.google.com/mail/?"));
         assert!(compose_url.contains("to=alice%40example.com"));
         assert!(compose_url.contains("su=Project+Update"));

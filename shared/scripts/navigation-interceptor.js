@@ -1,7 +1,7 @@
 /**
  * Injected script that ensures:
- * 1. Links with target="_blank" that belong to Gmail or Google Auth open in the same window.
- * 2. mailto: links route to Gmail's compose window.
+ * 1. Links with target="_blank" that belong to the current service or auth flow open in the same window.
+ * 2. mailto: links route to the mail compose window.
  * 3. F5 and Ctrl+R keyboard shortcuts reload the current page.
  */
 (function initNavigationInterceptor() {

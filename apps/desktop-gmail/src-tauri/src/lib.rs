@@ -1,5 +1,5 @@
 use desktop_google_core::{
-    parse_mailto_url, scripts::get_injected_bundle, to_gmail_compose_url, DesktopAppConfig,
+    parse_mailto_url, scripts::get_injected_bundle, to_mail_compose_url, DesktopAppConfig,
 };
 use tauri::{
     menu::{Menu, MenuItem},
@@ -25,17 +25,17 @@ mod commands {
     pub fn update_unread_badge<R: Runtime>(app: AppHandle<R>, count: u32) -> Result<(), String> {
         if let Some(window) = app.get_webview_window("main") {
             let title = if count > 0 {
-                format!("Gmail ({})", count)
+                format!("Desktop Mail ({})", count)
             } else {
-                "Gmail".to_string()
+                "Desktop Mail".to_string()
             };
             let _ = window.set_title(&title);
         }
         if let Some(tray) = app.tray_by_id("main-tray") {
             let tooltip = if count > 0 {
-                format!("Gmail - {} unread messages", count)
+                format!("Desktop Mail - {} unread messages", count)
             } else {
-                "Gmail - Inbox zero".to_string()
+                "Desktop Mail - Inbox zero".to_string()
             };
             let _ = tray.set_tooltip(Some(tooltip));
         }
@@ -45,7 +45,7 @@ mod commands {
     #[tauri::command]
     pub fn handle_mailto<R: Runtime>(app: AppHandle<R>, mailto: String) -> Result<(), String> {
         if let Some(data) = parse_mailto_url(&mailto) {
-            let compose_url = to_gmail_compose_url(&data);
+            let compose_url = to_mail_compose_url(&data);
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.show();
                 let _ = window.unminimize();
@@ -84,7 +84,7 @@ mod commands {
 }
 
 pub fn run() {
-    let config = DesktopAppConfig::for_gmail();
+    let config = DesktopAppConfig::for_mail();
 
     tauri::Builder::<tauri::Wry>::default()
         .plugin(tauri_plugin_shell::init())
@@ -105,7 +105,7 @@ pub fn run() {
                 config
                     .initial_url
                     .parse()
-                    .expect("Failed to parse initial URL for Gmail"),
+                    .expect("Failed to parse initial URL for Mail"),
             );
 
             let app_nav = app.handle().clone();
@@ -212,7 +212,7 @@ pub fn run() {
 
                     if desktop_google_core::should_open_in_external_browser(
                         url_str,
-                        desktop_google_core::AppKind::Gmail,
+                        desktop_google_core::AppKind::Mail,
                     ) {
                         use tauri_plugin_shell::ShellExt;
                         let _ = app_nav.shell().open(url_str, None);
@@ -234,7 +234,7 @@ pub fn run() {
 
                     if desktop_google_core::should_open_in_external_browser(
                         url_str,
-                        desktop_google_core::AppKind::Gmail,
+                        desktop_google_core::AppKind::Mail,
                     ) {
                         use tauri_plugin_shell::ShellExt;
                         let _ = app_win.shell().open(url_str, None);
@@ -264,7 +264,7 @@ pub fn run() {
             });
 
             // 3. Build System Tray Menu
-            let show_item = MenuItem::with_id(app, "show", "Show Gmail", true, None::<&str>)?;
+            let show_item = MenuItem::with_id(app, "show", "Show Desktop Mail", true, None::<&str>)?;
             let compose_item =
                 MenuItem::with_id(app, "compose", "Compose New Mail", true, None::<&str>)?;
             let reload_item = MenuItem::with_id(app, "reload", "Refresh Inbox", true, None::<&str>)?;

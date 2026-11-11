@@ -6,4 +6,4 @@ pub mod tray;
 
 pub use config::{AppKind, DesktopAppConfig};
 pub use navigation::{classify_url, should_open_in_external_browser, UrlCategory};
-pub use protocol::{parse_mailto_url, to_gmail_compose_url, MailtoData};
+pub use protocol::{parse_mailto_url, to_gmail_compose_url, to_mail_compose_url, MailtoData};
