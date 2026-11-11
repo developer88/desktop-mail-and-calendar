@@ -210,28 +210,55 @@
       path.setAttribute('stroke-linecap', 'round');
       svg.appendChild(path);
     } else if (type === 'mail-logo') {
-      const bg = document.createElementNS(svgNS, 'rect');
-      bg.setAttribute('x', '1.5');
-      bg.setAttribute('y', '2.5');
-      bg.setAttribute('width', '13');
-      bg.setAttribute('height', '11');
-      bg.setAttribute('rx', '2.5');
-      bg.setAttribute('fill', '#ffffff');
-      bg.setAttribute('stroke', '#f97316');
-      bg.setAttribute('stroke-width', '1.2');
+      const back = document.createElementNS(svgNS, 'rect');
+      back.setAttribute('x', '1.5');
+      back.setAttribute('y', '4.5');
+      back.setAttribute('width', '13');
+      back.setAttribute('height', '9.5');
+      back.setAttribute('rx', '2');
+      back.setAttribute('fill', '#d9530a');
 
-      const flap = document.createElementNS(svgNS, 'path');
-      flap.setAttribute('d', 'M 1.5,4 L 8,8.5 L 14.5,4 L 14.5,3 C 14.5,2.7 14.3,2.5 14,2.5 L 2,2.5 C 1.7,2.5 1.5,2.7 1.5,3 Z');
-      flap.setAttribute('fill', '#f97316');
+      const letter = document.createElementNS(svgNS, 'rect');
+      letter.setAttribute('x', '3');
+      letter.setAttribute('y', '2');
+      letter.setAttribute('width', '10');
+      letter.setAttribute('height', '8');
+      letter.setAttribute('rx', '1.5');
+      letter.setAttribute('fill', '#ffffff');
+
+      const line1 = document.createElementNS(svgNS, 'line');
+      line1.setAttribute('x1', '4.5');
+      line1.setAttribute('y1', '4.2');
+      line1.setAttribute('x2', '8.5');
+      line1.setAttribute('y2', '4.2');
+      line1.setAttribute('stroke', '#cbd5e1');
+      line1.setAttribute('stroke-width', '1');
+      line1.setAttribute('stroke-linecap', 'round');
+
+      const line2 = document.createElementNS(svgNS, 'line');
+      line2.setAttribute('x1', '4.5');
+      line2.setAttribute('y1', '6.2');
+      line2.setAttribute('x2', '10.5');
+      line2.setAttribute('y2', '6.2');
+      line2.setAttribute('stroke', '#cbd5e1');
+      line2.setAttribute('stroke-width', '1');
+      line2.setAttribute('stroke-linecap', 'round');
+
+      const front = document.createElementNS(svgNS, 'path');
+      front.setAttribute('d', 'M 1.5,7 L 8,10.8 L 14.5,7 L 14.5,12 C 14.5,13.1 13.6,14 12.5,14 L 3.5,14 C 2.4,14 1.5,13.1 1.5,12 Z');
+      front.setAttribute('fill', '#f97316');
 
       const fold = document.createElementNS(svgNS, 'path');
-      fold.setAttribute('d', 'M 1.5,13.5 L 6,9 M 14.5,13.5 L 10,9');
-      fold.setAttribute('stroke', '#ea580c');
-      fold.setAttribute('stroke-width', '1');
-      fold.setAttribute('stroke-linecap', 'round');
+      fold.setAttribute('d', 'M 1.5,7 L 8,10.8 L 14.5,7');
+      fold.setAttribute('stroke', '#c2410c');
+      fold.setAttribute('stroke-width', '0.9');
+      fold.setAttribute('fill', 'none');
 
-      svg.appendChild(bg);
-      svg.appendChild(flap);
+      svg.appendChild(back);
+      svg.appendChild(letter);
+      svg.appendChild(line1);
+      svg.appendChild(line2);
+      svg.appendChild(front);
       svg.appendChild(fold);
     } else if (type === 'calendar-logo') {
       const bg = document.createElementNS(svgNS, 'rect');

@@ -54,44 +54,85 @@ def render_calendar(size):
     return im.resize((size, size), Image.Resampling.LANCZOS)
 
 def render_mail(size):
+    # Professional tactile envelope with white letter card
     scale = 4
     s = size * scale
     im = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     draw = ImageDraw.Draw(im)
 
-    pad = int(s * 0.08)
-    x0, y0, x1, y1 = pad, pad, s - pad, s - pad
-    r = int(s * 0.22)
-    border_w = max(2, int(s * 0.05))
-
-    # Orange Palette
-    orange = (249, 115, 22, 255)      # #f97316 (vibrant orange)
-    dark_orange = (234, 88, 12, 255)  # #ea580c
+    # Palette
+    orange_main = (249, 115, 22, 255)    # #f97316 (vibrant orange front)
+    orange_dark = (217, 83, 10, 255)     # #d9530a (deep orange back)
+    orange_crease = (194, 65, 12, 255)   # #c2410c
     white = (255, 255, 255, 255)
+    gray_line = (203, 213, 225, 255)     # #cbd5e1
 
-    # White card body
-    draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=white, outline=orange, width=border_w)
+    # Geometry relative to s
+    pad_x = int(s * 0.08)
+    ew = s - 2 * pad_x
+    eh = int(ew * 0.76)
 
-    # Envelope flap: triangular flap pointing down
-    cx = s / 2
-    flap_tip_y = y0 + int((y1 - y0) * 0.52)
+    x0 = pad_x
+    y0 = int(s * 0.22)
+    x1 = x0 + ew
+    y1 = y0 + eh
+    r = int(s * 0.16)
 
+    # 1. Back flap / envelope back
+    draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=orange_dark)
+
+    # 2. White letter peeking out at top
+    lw = int(ew * 0.80)
+    lh = int(eh * 0.72)
+    lx0 = (s - lw) // 2
+    ly0 = int(s * 0.10)
+    lx1 = lx0 + lw
+    ly1 = ly0 + lh
+    lr = int(s * 0.08)
+    draw.rounded_rectangle([lx0, ly0, lx1, ly1], radius=lr, fill=white)
+
+    # Text lines on the letter
+    line_h = max(2, int(s * 0.025))
+    line_r = line_h // 2
+    draw.rounded_rectangle(
+        [lx0 + int(lw * 0.16), ly0 + int(lh * 0.28), lx0 + int(lw * 0.58), ly0 + int(lh * 0.28) + line_h],
+        radius=line_r,
+        fill=gray_line,
+    )
+    draw.rounded_rectangle(
+        [lx0 + int(lw * 0.16), ly0 + int(lh * 0.48), lx0 + int(lw * 0.82), ly0 + int(lh * 0.48) + line_h],
+        radius=line_r,
+        fill=gray_line,
+    )
+
+    # 3. Front pocket (clipped to envelope rounded bounds)
     mask = Image.new("L", (s, s), 0)
-    mask_draw = ImageDraw.Draw(mask)
-    mask_draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=255)
+    m_draw = ImageDraw.Draw(mask)
+    m_draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=255)
 
-    flap_im = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    f_draw = ImageDraw.Draw(flap_im)
-    f_draw.polygon([(x0, y0), (x1, y0), (cx, flap_tip_y)], fill=orange)
-    im.paste(flap_im, (0, 0), mask)
+    front = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    f_draw = ImageDraw.Draw(front)
 
-    # Diagonal fold lines from bottom corners
-    fold_w = max(2, int(s * 0.035))
-    draw.line([(x0 + border_w, y1 - border_w), (cx - int(s * 0.12), flap_tip_y + int(s * 0.04))], fill=orange, width=fold_w)
-    draw.line([(x1 - border_w, y1 - border_w), (cx + int(s * 0.12), flap_tip_y + int(s * 0.04))], fill=orange, width=fold_w)
+    cx = s // 2
+    notch_y = y0 + int(eh * 0.44)
+    # Front pocket polygon
+    f_draw.polygon(
+        [
+            (x0, y0 + int(eh * 0.14)),
+            (cx, notch_y),
+            (x1, y0 + int(eh * 0.14)),
+            (x1, y1),
+            (x0, y1),
+        ],
+        fill=orange_main,
+    )
 
-    # Re-draw outer border to ensure crisp edges over the flap
-    draw.rounded_rectangle([x0, y0, x1, y1], radius=r, outline=orange, width=border_w)
+    # Delicate crease line
+    sw = max(2, int(s * 0.022))
+    f_draw.line([(x0, y0 + int(eh * 0.14)), (cx, notch_y)], fill=orange_crease, width=sw)
+    f_draw.line([(x1, y0 + int(eh * 0.14)), (cx, notch_y)], fill=orange_crease, width=sw)
+
+    im.paste(front, (0, 0), mask)
 
     return im.resize((size, size), Image.Resampling.LANCZOS)
 
