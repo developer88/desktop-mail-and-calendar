@@ -1,91 +1,5 @@
 import os
-from PIL import Image, ImageDraw, ImageFont
-
-def render_calendar(size):
-    # Professional tactile calendar pad matching Desktop Mail envelope style
-    scale = 4
-    s = size * scale
-    im = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(im)
-
-    # Palette
-    green_main = (34, 197, 94, 255)     # #22c55e (vibrant green header)
-    green_dark = (21, 128, 61, 255)     # #15803d (deep green base/back)
-    green_crease = (18, 107, 51, 255)   # #126b33
-    green_text = (21, 128, 61, 255)     # #15803d
-    white = (255, 255, 255, 255)
-
-    # Geometry relative to s (identical bounding proportions to mail)
-    pad_x = int(s * 0.08)
-    cw = s - 2 * pad_x
-    ch = int(cw * 0.88)
-
-    x0 = pad_x
-    y0 = int(s * 0.14)
-    x1 = x0 + cw
-    y1 = y0 + ch
-    r = int(s * 0.16)
-
-    # 1. Back plate / base in dark green
-    draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=green_dark)
-
-    # 2. White calendar tear-off page (solid white body)
-    inset_x = int(s * 0.025)
-    inset_y = int(s * 0.025)
-    px0 = x0 + inset_x
-    py0 = y0 + inset_y
-    px1 = x1 - inset_x
-    py1 = y1 - inset_y
-    pr = int(r * 0.85)
-    draw.rounded_rectangle([px0, py0, px1, py1], radius=pr, fill=white)
-
-    # 3. Top header banner (vibrant green)
-    header_h = int(ch * 0.32)
-    top_mask = Image.new("L", (s, s), 0)
-    tm_draw = ImageDraw.Draw(top_mask)
-    tm_draw.rounded_rectangle([px0, py0, px1, py1], radius=pr, fill=255)
-    tm_draw.rectangle([0, py0 + header_h, s, s], fill=0)
-
-    header_layer = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    h_draw = ImageDraw.Draw(header_layer)
-    h_draw.rectangle([px0, py0, px1, py0 + header_h], fill=green_main)
-
-    sw = max(2, int(s * 0.018))
-    h_draw.line([(px0, py0 + header_h), (px1, py0 + header_h)], fill=green_crease, width=sw)
-
-    im.paste(header_layer, (0, 0), top_mask)
-
-    # Binder rings / hanging tabs at top (2 rounded tabs)
-    ring_w = int(s * 0.07)
-    ring_h = int(s * 0.11)
-    ring_y0 = y0 - int(ring_h * 0.30)
-    ring_y1 = ring_y0 + ring_h
-    rr = ring_w // 2
-
-    rx1 = px0 + int((px1 - px0) * 0.28)
-    rx2 = px0 + int((px1 - px0) * 0.72)
-
-    draw.rounded_rectangle([rx1 - rr, ring_y0, rx1 + rr, ring_y1], radius=rr, fill=white, outline=green_dark, width=max(2, int(s * 0.015)))
-    draw.rounded_rectangle([rx2 - rr, ring_y0, rx2 + rr, ring_y1], radius=rr, fill=white, outline=green_dark, width=max(2, int(s * 0.015)))
-
-    # 4. Bold '31' text in lower body of the white page
-    font_size = int((py1 - (py0 + header_h)) * 0.68)
-    font_path = "/mnt/c/Windows/Fonts/segoeuib.ttf"
-    if not os.path.exists(font_path):
-        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-    font = ImageFont.truetype(font_path, font_size)
-
-    text = "31"
-    bbox = font.getbbox(text)
-    tw = bbox[2] - bbox[0]
-    th = bbox[3] - bbox[1]
-
-    center_y = py0 + header_h + (py1 - (py0 + header_h)) / 2
-    tx = (s - tw) / 2 - bbox[0]
-    ty = center_y - th / 2 - bbox[1]
-    draw.text((tx, ty), text, font=font, fill=green_text)
-
-    return im.resize((size, size), Image.Resampling.LANCZOS)
+from PIL import Image, ImageDraw, ImageFont, ImageChops
 
 def render_mail(size):
     # Professional tactile envelope with white letter card
@@ -101,7 +15,6 @@ def render_mail(size):
     white = (255, 255, 255, 255)
     gray_line = (203, 213, 225, 255)     # #cbd5e1
 
-    # Geometry relative to s
     pad_x = int(s * 0.09)
     ew = s - 2 * pad_x
     eh = int(ew * 0.88)
@@ -112,10 +25,10 @@ def render_mail(size):
     y1 = y0 + eh
     r = int(s * 0.16)
 
-    # 1. Back flap / envelope back in deep orange (frames white letter against white explorer bg)
+    # 1. Back flap / envelope back in deep orange
     draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=orange_dark)
 
-    # 2. White letter peeking out at top (inset slightly so dark back frames it)
+    # 2. White letter peeking out at top
     inset_x = int(s * 0.06)
     lx0 = x0 + inset_x
     ly0 = y0 + int(s * 0.04)
@@ -140,11 +53,7 @@ def render_mail(size):
         fill=gray_line,
     )
 
-    # 3. Front pocket (clipped to envelope rounded bounds)
-    mask = Image.new("L", (s, s), 0)
-    m_draw = ImageDraw.Draw(mask)
-    m_draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=255)
-
+    # 3. Front pocket (properly composited without erasing the top)
     front = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     f_draw = ImageDraw.Draw(front)
 
@@ -161,12 +70,99 @@ def render_mail(size):
         fill=orange_main,
     )
 
-    # Crease line
     sw = max(2, int(s * 0.022))
     f_draw.line([(x0, y0 + int(eh * 0.28)), (cx, notch_y)], fill=orange_crease, width=sw)
     f_draw.line([(x1, y0 + int(eh * 0.28)), (cx, notch_y)], fill=orange_crease, width=sw)
 
-    im.paste(front, (0, 0), mask)
+    # Clip front pocket to rounded bounds using mask intersection
+    round_mask = Image.new("L", (s, s), 0)
+    rm_draw = ImageDraw.Draw(round_mask)
+    rm_draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=255)
+
+    final_mask = ImageChops.multiply(front.getchannel('A'), round_mask)
+    im.paste(front, (0, 0), final_mask)
+
+    return im.resize((size, size), Image.Resampling.LANCZOS)
+
+def render_calendar(size):
+    scale = 4
+    s = size * scale
+    im = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(im)
+
+    green_main = (34, 197, 94, 255)     # #22c55e (vibrant green header)
+    green_dark = (21, 128, 61, 255)     # #15803d (deep green base/back)
+    green_crease = (18, 107, 51, 255)   # #126b33
+    green_text = (21, 128, 61, 255)     # #15803d
+    white = (255, 255, 255, 255)
+
+    pad_x = int(s * 0.09)
+    cw = s - 2 * pad_x
+    ch = int(cw * 0.88)
+
+    x0 = pad_x
+    y0 = int(s * 0.10)
+    x1 = x0 + cw
+    y1 = y0 + ch
+    r = int(s * 0.16)
+
+    # 1. Back plate / base in dark green
+    draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=green_dark)
+
+    # 2. White calendar tear-off page (solid white body)
+    inset_x = int(s * 0.06)
+    px0 = x0 + inset_x
+    py0 = y0 + int(s * 0.04)
+    px1 = x1 - inset_x
+    py1 = y1 - int(s * 0.04)
+    pr = int(r * 0.7)
+    draw.rounded_rectangle([px0, py0, px1, py1], radius=pr, fill=white)
+
+    # 3. Top header banner (vibrant green)
+    header_h = int(ch * 0.34)
+    header_layer = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    h_draw = ImageDraw.Draw(header_layer)
+    h_draw.rectangle([px0, py0, px1, py0 + header_h], fill=green_main)
+    sw = max(2, int(s * 0.022))
+    h_draw.line([(px0, py0 + header_h), (px1, py0 + header_h)], fill=green_crease, width=sw)
+
+    # Clip header to top rounded corners of the white page
+    page_mask = Image.new("L", (s, s), 0)
+    pm_draw = ImageDraw.Draw(page_mask)
+    pm_draw.rounded_rectangle([px0, py0, px1, py1], radius=pr, fill=255)
+
+    final_header_mask = ImageChops.multiply(header_layer.getchannel('A'), page_mask)
+    im.paste(header_layer, (0, 0), final_header_mask)
+
+    # 4. Binder rings / hanging tabs at top
+    ring_w = int(s * 0.07)
+    ring_h = int(s * 0.11)
+    ring_y0 = y0 - int(ring_h * 0.25)
+    ring_y1 = ring_y0 + ring_h
+    rr = ring_w // 2
+
+    rx1 = px0 + int((px1 - px0) * 0.28)
+    rx2 = px0 + int((px1 - px0) * 0.72)
+
+    draw.rounded_rectangle([rx1 - rr, ring_y0, rx1 + rr, ring_y1], radius=rr, fill=white, outline=green_dark, width=max(2, int(s * 0.015)))
+    draw.rounded_rectangle([rx2 - rr, ring_y0, rx2 + rr, ring_y1], radius=rr, fill=white, outline=green_dark, width=max(2, int(s * 0.015)))
+
+    # 5. Bold '31' text in lower body of the white page
+    font_size = int((py1 - (py0 + header_h)) * 0.68)
+    font_path = "/mnt/c/Windows/Fonts/segoeuib.ttf"
+    if not os.path.exists(font_path):
+        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+    font = ImageFont.truetype(font_path, font_size)
+
+    text = "31"
+    bbox = font.getbbox(text)
+    tw = bbox[2] - bbox[0]
+    th = bbox[3] - bbox[1]
+
+    center_y = py0 + header_h + (py1 - (py0 + header_h)) / 2
+    tx = (s - tw) / 2 - bbox[0]
+    ty = center_y - th / 2 - bbox[1]
+    draw.text((tx, ty), text, font=font, fill=green_text)
 
     return im.resize((size, size), Image.Resampling.LANCZOS)
 
@@ -191,11 +187,11 @@ def generate():
         img_256.save(os.path.join(out_dir, "128x128@2x.png"))
         img_512.save(os.path.join(out_dir, "icon.png"))
 
-        # Save true multi-resolution Windows ICO (16, 32, 48, 64, 128, 256)
+        # Save true multi-resolution Windows ICO (16, 24, 32, 48, 64, 128, 256)
         img_256.save(
             os.path.join(out_dir, "icon.ico"),
             format="ICO",
-            sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)],
+            sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)],
         )
 
     print("Icons successfully generated for Desktop Mail and Desktop Calendar.")
