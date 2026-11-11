@@ -13,6 +13,8 @@
       host === 'mail.google.com' ||
       host === 'calendar.google.com' ||
       host === 'accounts.google.com' ||
+      host.startsWith('accounts.google.') ||
+      host === 'accounts.youtube.com' ||
       host === 'myaccount.google.com' ||
       host === 'contacts.google.com' ||
       host === 'chat.google.com' ||
@@ -22,7 +24,7 @@
       host === 'googleusercontent.com' ||
       host.endsWith('.googleusercontent.com') ||
       ((host === 'google.com' || host === 'www.google.com') &&
-        (path.startsWith('/accounts') || path.startsWith('/signin') || path.startsWith('/gmail') || path.startsWith('/calendar') || path.includes('signinchooser')))
+        (path.startsWith('/accounts') || path.startsWith('/signin') || path.startsWith('/gmail') || path.startsWith('/calendar') || path.startsWith('/ServiceLogin') || path.startsWith('/CheckCookie') || path.startsWith('/SetOSID') || path.startsWith('/_/signin') || path.includes('signinchooser')))
     );
   }
 
@@ -32,6 +34,23 @@
       window.location.reload();
     }
   }, true);
+
+  // Override window.open to keep internal URLs within the single desktop window
+  try {
+    const originalOpen = window.open;
+    window.open = function(url, target, features) {
+      if (url) {
+        try {
+          const parsed = new URL(url, window.location.href);
+          if (isInternalUrl(parsed)) {
+            window.location.href = parsed.href;
+            return window;
+          }
+        } catch (_) {}
+      }
+      return originalOpen.apply(this, arguments);
+    };
+  } catch (_) {}
 
   // Intercept clicks on links
   document.addEventListener('click', function(event) {

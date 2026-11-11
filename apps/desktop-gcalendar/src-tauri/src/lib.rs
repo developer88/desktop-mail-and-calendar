@@ -198,7 +198,10 @@ pub fn run() {
                         let _ = app_win.shell().open(url_str, None);
                         tauri::webview::NewWindowResponse::Deny
                     } else {
-                        tauri::webview::NewWindowResponse::Allow
+                        if let Some(w) = app_win.get_webview_window("main") {
+                            let _ = w.navigate(url);
+                        }
+                        tauri::webview::NewWindowResponse::Deny
                     }
                 })
                 .build()?;

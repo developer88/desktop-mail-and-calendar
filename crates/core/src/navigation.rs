@@ -32,6 +32,7 @@ pub fn classify_url(raw_url: &str, app_kind: AppKind) -> UrlCategory {
     // Authentication & identity domains must remain in-app
     if host == "accounts.google.com"
         || host.starts_with("accounts.google.")
+        || host == "accounts.youtube.com"
         || host == "myaccount.google.com"
         || host == "oauth2.googleapis.com"
         || host == "apis.google.com"
@@ -44,6 +45,10 @@ pub fn classify_url(raw_url: &str, app_kind: AppKind) -> UrlCategory {
                 || parsed.path().starts_with("/signin")
                 || parsed.path().starts_with("/gmail")
                 || parsed.path().starts_with("/calendar")
+                || parsed.path().starts_with("/ServiceLogin")
+                || parsed.path().starts_with("/CheckCookie")
+                || parsed.path().starts_with("/SetOSID")
+                || parsed.path().starts_with("/_/signin")
                 || parsed.path().contains("signinchooser")))
     {
         return UrlCategory::GoogleAuth;
@@ -94,17 +99,26 @@ mod tests {
 
     #[test]
     fn test_auth_keeps_in_app() {
-        assert_eq!(
-            classify_url(
-                "https://accounts.google.com/signin/v2/identifier",
-                AppKind::Gmail
-            ),
-            UrlCategory::GoogleAuth
-        );
-        assert!(!should_open_in_external_browser(
+        let auth_urls = [
             "https://accounts.google.com/signin/v2/identifier",
-            AppKind::Gmail
-        ));
+            "https://accounts.google.de/signin/challenge/pwd",
+            "https://accounts.youtube.com/accounts/SetSID",
+            "https://www.google.com/accounts/SetOSID?continue=https://mail.google.com",
+            "https://www.google.com/CheckCookie?continue=https://mail.google.com",
+            "https://www.google.com/ServiceLogin?service=mail",
+        ];
+
+        for url in auth_urls {
+            assert_eq!(
+                classify_url(url, AppKind::Gmail),
+                UrlCategory::GoogleAuth,
+                "Expected {url} to be classified as GoogleAuth for Gmail"
+            );
+            assert!(
+                !should_open_in_external_browser(url, AppKind::Gmail),
+                "Expected {url} to stay in-app"
+            );
+        }
     }
 
     #[test]
