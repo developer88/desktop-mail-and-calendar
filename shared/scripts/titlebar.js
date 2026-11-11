@@ -387,6 +387,7 @@
     }
 
     function renderContent(tabId) {
+      contentArea.className = 'desktop-settings-content' + (tabId === 'about' ? ' about-view' : '');
       while (contentArea.firstChild) {
         contentArea.removeChild(contentArea.firstChild);
       }

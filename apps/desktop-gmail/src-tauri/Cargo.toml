@@ -5,6 +5,10 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 
+[[bin]]
+name = "desktop-mail"
+path = "src/main.rs"
+
 [build-dependencies]
 tauri-build = { workspace = true }
 

@@ -226,7 +226,7 @@ body, input, textarea, select, button {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2) !important;
   width: 700px !important;
   max-width: 92vw !important;
-  height: 540px !important;
+  height: 560px !important;
   max-height: 88vh !important;
   font-family: "Google Sans", Roboto, "Segoe UI Variable Text", "Segoe UI", -apple-system, sans-serif !important;
   overflow: hidden !important;
@@ -381,6 +381,10 @@ body, input, textarea, select, button {
   overflow-y: auto !important;
   display: flex !important;
   flex-direction: column !important;
+}
+
+.desktop-settings-content.about-view {
+  overflow-y: hidden !important;
 }
 
 .desktop-settings-section-title {
@@ -568,8 +572,8 @@ body, input, textarea, select, button {
   display: flex !important;
   align-items: center !important;
   gap: 16px !important;
-  margin-bottom: 24px !important;
-  padding-bottom: 20px !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 14px !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
@@ -606,9 +610,9 @@ body, input, textarea, select, button {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 12px 0 20px 0 !important;
+  padding: 8px 0 14px 0 !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-  margin-bottom: 20px !important;
+  margin-bottom: 16px !important;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -664,9 +668,9 @@ body, input, textarea, select, button {
   background: #f0f4f9 !important;
   border: 1px solid #e0e2ec !important;
   border-radius: 16px !important;
-  padding: 16px 20px !important;
-  font-size: 13px !important;
-  line-height: 1.5 !important;
+  padding: 12px 18px !important;
+  font-size: 12.5px !important;
+  line-height: 1.45 !important;
   color: #444746 !important;
 }
 

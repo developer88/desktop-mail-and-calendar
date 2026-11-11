@@ -105,16 +105,16 @@ function main() {
       appId: 'DesktopMail',
       appName: 'Desktop Mail',
       installDirName: 'DesktopMail',
-      binaryName: 'desktop-gmail.exe',
-      installerName: 'desktop-gmail-setup.exe',
+      binaryName: 'desktop-mail.exe',
+      installerName: 'desktop-mail-setup.exe',
       iconRelPath: 'apps/desktop-gmail/src-tauri/icons/icon.ico'
     },
     {
       appId: 'DesktopCalendar',
       appName: 'Desktop Calendar',
       installDirName: 'DesktopCalendar',
-      binaryName: 'desktop-gcalendar.exe',
-      installerName: 'desktop-gcalendar-setup.exe',
+      binaryName: 'desktop-calendar.exe',
+      installerName: 'desktop-calendar-setup.exe',
       iconRelPath: 'apps/desktop-gcalendar/src-tauri/icons/icon.ico'
     }
   ];

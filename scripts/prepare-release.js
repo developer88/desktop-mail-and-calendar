@@ -32,10 +32,10 @@ function main() {
   }
 
   const targets = [
-    { app: 'desktop-gmail', bName: 'desktop-gmail.exe' },
-    { app: 'desktop-gmail', bName: 'desktop-gmail-setup.exe' },
-    { app: 'desktop-gcalendar', bName: 'desktop-gcalendar.exe' },
-    { app: 'desktop-gcalendar', bName: 'desktop-gcalendar-setup.exe' }
+    { app: 'desktop-mail', bName: 'desktop-mail.exe' },
+    { app: 'desktop-mail', bName: 'desktop-mail-setup.exe' },
+    { app: 'desktop-calendar', bName: 'desktop-calendar.exe' },
+    { app: 'desktop-calendar', bName: 'desktop-calendar-setup.exe' }
   ];
 
   const releaseFiles = [];
