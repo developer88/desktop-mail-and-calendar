@@ -139,10 +139,21 @@ The compiled setup installers are generated in `dist/`:
 
 Desktop Mail and Desktop Calendar are independent open-source projects created solely to provide focused desktop window experiences for Gmail and Google Calendar. 
 
-They have **no affiliation, association, sponsorship, or endorsement with Google LLC or Alphabet Inc.** All Google trademarks, service marks, logos, interfaces, and intellectual property remain the exclusive property of Google LLC.
+* **No Affiliation:** They have **no affiliation, association, sponsorship, or endorsement with Google LLC or Alphabet Inc.** All Google trademarks, service marks, logos, interfaces, and intellectual property remain the exclusive property of Google LLC.
+* **100% Untouched Authentication Flow:** To ensure maximum user security and full compliance with Google's Terms of Service, the authentication flow is completely untouched. When navigating Google Accounts (`accounts.google.com`) or OAuth sign-in pages, no custom scripts, DOM alterations, or styles are injected, and no User-Agent spoofing is performed. The app relies on the standard, genuine Microsoft Edge WebView2 runtime.
 
 ---
 
-## 📄 License
+## 📄 License & Limitation of Liability
 
 This project is licensed under the [MIT License](LICENSE).
+
+```text
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```

@@ -731,8 +731,15 @@
           ? 'Desktop Calendar is an independent open-source wrapper created solely to provide a focused desktop window for Google Calendar. It has no affiliation, connection, or endorsement with Google LLC or Alphabet Inc. All Google Calendar trademarks, logos, web interfaces, and intellectual property remain the exclusive property of Google LLC.'
           : 'Desktop Mail is an independent open-source wrapper created solely to provide a focused desktop window for Gmail. It has no affiliation, connection, or endorsement with Google LLC or Alphabet Inc. All Gmail trademarks, logos, web interfaces, and intellectual property remain the exclusive property of Google LLC.';
 
+        const discLiability = document.createElement('div');
+        discLiability.style.marginTop = '8px';
+        discLiability.style.fontSize = '11px';
+        discLiability.style.opacity = '0.85';
+        discLiability.textContent = 'NO WARRANTY: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, MISSED NOTIFICATIONS, OR OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.';
+
         discBox.appendChild(discTitle);
         discBox.appendChild(discText);
+        discBox.appendChild(discLiability);
 
         const noticeLink = document.createElement('button');
         noticeLink.className = 'desktop-about-link-btn';
