@@ -37,64 +37,68 @@ body, input, textarea, select, button {
 
 /* Custom Frameless Titlebar Styling */
 #desktop-custom-titlebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  z-index: 2147483647;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: transparent;
-  user-select: none;
-  -webkit-app-region: drag;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 32px !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0)) !important;
+  user-select: none !important;
+  -webkit-app-region: drag !important;
+  pointer-events: auto !important;
 }
 
 #desktop-custom-titlebar-drag {
-  flex: 1;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  padding-left: 14px;
-  cursor: default;
-  -webkit-app-region: drag;
+  flex: 1 !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  padding-left: 14px !important;
+  cursor: default !important;
+  -webkit-app-region: drag !important;
 }
 
 #desktop-custom-titlebar-title {
-  font-size: 11px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.75);
-  letter-spacing: 0.3px;
-  pointer-events: none;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  letter-spacing: 0.3px !important;
+  pointer-events: none !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
 }
 
 #desktop-custom-titlebar-controls {
-  display: flex;
-  height: 100%;
-  -webkit-app-region: no-drag;
+  display: flex !important;
+  height: 100% !important;
+  -webkit-app-region: no-drag !important;
+  pointer-events: auto !important;
 }
 
 .desktop-caption-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 46px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.85);
-  cursor: pointer;
-  transition: background-color 0.12s ease, color 0.12s ease;
-  padding: 0;
-  margin: 0;
-  outline: none;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 46px !important;
+  height: 32px !important;
+  border: none !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  cursor: pointer !important;
+  transition: background-color 0.12s ease, color 0.12s ease !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important;
+  -webkit-app-region: no-drag !important;
+  pointer-events: auto !important;
 }
 
 .desktop-caption-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
 }
 
 .desktop-caption-btn.close:hover {
@@ -103,8 +107,8 @@ body, input, textarea, select, button {
 }
 
 .desktop-caption-btn svg {
-  width: 10px;
-  height: 10px;
+  width: 10px !important;
+  height: 10px !important;
 }
 
 /* Offset Gmail top header so it sits cleanly below the titlebar */

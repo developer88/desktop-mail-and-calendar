@@ -123,6 +123,11 @@ pub fn run() {
                     if url.scheme() == "desktop-app" {
                         if url.host_str() == Some("window") {
                             match url.path() {
+                                "/drag" => {
+                                    if let Some(w) = app_nav.get_webview_window("main") {
+                                        let _ = w.start_dragging();
+                                    }
+                                }
                                 "/minimize" => {
                                     if let Some(w) = app_nav.get_webview_window("main") {
                                         let _ = w.minimize();
