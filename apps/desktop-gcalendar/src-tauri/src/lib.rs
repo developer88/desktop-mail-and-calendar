@@ -1,7 +1,5 @@
 use desktop_google_core::{scripts::get_injected_bundle, DesktopAppConfig};
-use tauri::{
-    AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder, WindowEvent,
-};
+use tauri::{AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 // Standard Microsoft Edge on Windows 11 User-Agent required by Google Calendar and Google Services
 const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0";
@@ -49,7 +47,10 @@ pub fn run() {
     let mut start_url = config.initial_url.clone();
     for arg in std::env::args().skip(1) {
         let clean = arg.trim_matches('"').trim_matches('\'');
-        if clean.starts_with("webcal://") || clean.starts_with("webcals://") || clean.ends_with(".ics") {
+        if clean.starts_with("webcal://")
+            || clean.starts_with("webcals://")
+            || clean.ends_with(".ics")
+        {
             let http_url = if let Some(stripped) = clean.strip_prefix("webcal://") {
                 format!("http://{}", stripped)
             } else if let Some(stripped) = clean.strip_prefix("webcals://") {

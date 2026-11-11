@@ -36,10 +36,6 @@ pub fn classify_url(raw_url: &str, app_kind: AppKind) -> UrlCategory {
         || host == "myaccount.google.com"
         || host == "oauth2.googleapis.com"
         || host == "apis.google.com"
-        || host == "gstatic.com"
-        || host.ends_with(".gstatic.com")
-        || host == "googleusercontent.com"
-        || host.ends_with(".googleusercontent.com")
         || ((host == "google.com" || host == "www.google.com")
             && (parsed.path().starts_with("/accounts")
                 || parsed.path().starts_with("/signin")
@@ -54,21 +50,33 @@ pub fn classify_url(raw_url: &str, app_kind: AppKind) -> UrlCategory {
         return UrlCategory::Auth;
     }
 
+    // Google API, static resources, and companion services required by web clients
+    if host.ends_with(".googleapis.com")
+        || host == "googleapis.com"
+        || host.ends_with(".gstatic.com")
+        || host == "gstatic.com"
+        || host.ends_with(".googleusercontent.com")
+        || host == "googleusercontent.com"
+        || host.starts_with("clients") && host.ends_with(".google.com")
+        || host == "ogs.google.com"
+        || host == "play.google.com"
+        || host == "contacts.google.com"
+        || host == "tasks.google.com"
+        || host == "keep.google.com"
+        || host == "meet.google.com"
+    {
+        return UrlCategory::InApp;
+    }
+
     // App-specific internal domains
     match app_kind {
         AppKind::Mail => {
-            if host == "mail.google.com"
-                || host == "contacts.google.com"
-                || host == "chat.google.com"
-            {
+            if host == "mail.google.com" || host == "chat.google.com" {
                 return UrlCategory::InApp;
             }
         }
         AppKind::Calendar => {
-            if host == "calendar.google.com"
-                || host == "meet.google.com"
-                || host == "contacts.google.com"
-            {
+            if host == "calendar.google.com" {
                 return UrlCategory::InApp;
             }
         }
@@ -172,5 +180,42 @@ mod tests {
             classify_url("https://zoom.us/j/123456", AppKind::Calendar),
             UrlCategory::External
         );
+    }
+
+    #[test]
+    fn test_google_infrastructure_endpoints_stay_in_app() {
+        let infra_urls = [
+            "https://clients6.google.com/calendar/v3/users/me/calendarList",
+            "https://clients4.google.com/inbox/sync",
+            "https://tasks.google.com/embed",
+            "https://keep.google.com/u/0",
+            "https://contacts.google.com/widget",
+            "https://ogs.google.com/widget/app",
+            "https://play.google.com/log",
+            "https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxK.woff2",
+            "https://lh3.googleusercontent.com/a/default-user=s64",
+        ];
+
+        for url in infra_urls {
+            assert_eq!(
+                classify_url(url, AppKind::Calendar),
+                UrlCategory::InApp,
+                "Expected {url} to be classified as InApp for Calendar"
+            );
+            assert!(
+                !should_open_in_external_browser(url, AppKind::Calendar),
+                "Expected {url} to stay in-app for Calendar"
+            );
+
+            assert_eq!(
+                classify_url(url, AppKind::Mail),
+                UrlCategory::InApp,
+                "Expected {url} to be classified as InApp for Mail"
+            );
+            assert!(
+                !should_open_in_external_browser(url, AppKind::Mail),
+                "Expected {url} to stay in-app for Mail"
+            );
+        }
     }
 }

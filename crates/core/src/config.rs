@@ -39,8 +39,8 @@ impl DesktopAppConfig {
             kind: AppKind::Calendar,
             title: "Desktop Calendar".to_string(),
             initial_url: "https://calendar.google.com/calendar/u/0/r".to_string(),
-            width: 1180.0,
-            height: 760.0,
+            width: 1200.0,
+            height: 860.0,
             min_width: 720.0,
             min_height: 520.0,
             start_minimized: false,
@@ -59,6 +59,10 @@ mod tests {
         assert_eq!(cfg.kind, AppKind::Mail);
         assert_eq!(cfg.title, "Desktop Mail");
         assert!(cfg.initial_url.starts_with("https://mail.google.com"));
+        assert_eq!(cfg.width, 1280.0);
+        assert_eq!(cfg.height, 800.0);
+        assert_eq!(cfg.min_width, 800.0);
+        assert_eq!(cfg.min_height, 600.0);
     }
 
     #[test]
@@ -67,5 +71,9 @@ mod tests {
         assert_eq!(cfg.kind, AppKind::Calendar);
         assert_eq!(cfg.title, "Desktop Calendar");
         assert!(cfg.initial_url.starts_with("https://calendar.google.com"));
+        assert_eq!(cfg.width, 1200.0);
+        assert_eq!(cfg.height, 860.0);
+        assert_eq!(cfg.min_width, 720.0);
+        assert_eq!(cfg.min_height, 520.0);
     }
 }

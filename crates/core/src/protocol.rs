@@ -128,5 +128,30 @@ mod tests {
     #[test]
     fn test_invalid_scheme() {
         assert!(parse_mailto_url("https://example.com").is_none());
+        assert!(parse_mailto_url("ftp://example.com").is_none());
+    }
+
+    #[test]
+    fn test_mailto_with_bcc_and_special_chars() {
+        let uri = "mailto:user%2Btest@example.com?subject=Hello%20World!&bcc=secret@example.com";
+        let parsed = parse_mailto_url(uri).unwrap();
+
+        assert_eq!(parsed.to, "user+test@example.com");
+        assert_eq!(parsed.subject.as_deref(), Some("Hello World!"));
+        assert_eq!(parsed.bcc.as_deref(), Some("secret@example.com"));
+
+        let compose_url = to_mail_compose_url(&parsed);
+        assert!(compose_url.contains("bcc=secret%40example.com"));
+        assert!(compose_url.contains("view=cm"));
+        assert!(compose_url.contains("fs=1"));
+    }
+
+    #[test]
+    fn test_empty_mailto_scheme() {
+        let parsed = parse_mailto_url("mailto:").unwrap();
+        assert_eq!(parsed.to, "");
+        assert!(parsed.subject.is_none());
+        let compose_url = to_mail_compose_url(&parsed);
+        assert!(compose_url.contains("view=cm"));
     }
 }

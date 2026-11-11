@@ -1,9 +1,7 @@
 use desktop_google_core::{
     parse_mailto_url, scripts::get_injected_bundle, to_mail_compose_url, DesktopAppConfig,
 };
-use tauri::{
-    AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder, WindowEvent,
-};
+use tauri::{AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 // Standard Microsoft Edge on Windows 11 User-Agent required by Google Services
 const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0";
@@ -134,9 +132,9 @@ pub fn run() {
                                 "maximize" => {
                                     if let Ok(is_max) = window.is_maximized() {
                                         if is_max {
-                                             let _ = window.unmaximize();
+                                            let _ = window.unmaximize();
                                         } else {
-                                             let _ = window.maximize();
+                                            let _ = window.maximize();
                                         }
                                     }
                                 }
@@ -208,7 +206,9 @@ pub fn run() {
                     if let Some(host) = url.host_str() {
                         if host == "workspace.google.com" {
                             if let Some(w) = app_nav.get_webview_window("main") {
-                                let _ = w.eval("window.location.replace('https://mail.google.com/mail/u/0/');");
+                                let _ = w.eval(
+                                    "window.location.replace('https://mail.google.com/mail/u/0/');",
+                                );
                             }
                             return false;
                         }
@@ -230,7 +230,9 @@ pub fn run() {
                     if let Some(host) = url.host_str() {
                         if host == "workspace.google.com" {
                             if let Some(w) = app_win.get_webview_window("main") {
-                                let _ = w.eval("window.location.replace('https://mail.google.com/mail/u/0/');");
+                                let _ = w.eval(
+                                    "window.location.replace('https://mail.google.com/mail/u/0/');",
+                                );
                             }
                             return tauri::webview::NewWindowResponse::Deny;
                         }
