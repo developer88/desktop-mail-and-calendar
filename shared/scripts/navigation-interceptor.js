@@ -1,8 +1,8 @@
 /**
  * Injected script that ensures:
- * 1. Links with target="_blank" that belong to Gmail or Google Auth open in the same window (not blocked popups).
- * 2. window.open calls for Google Auth / Sign In stay in the same window.
- * 3. mailto: links route to Gmail's compose window.
+ * 1. Links with target="_blank" that belong to Gmail or Google Auth open in the same window.
+ * 2. mailto: links route to Gmail's compose window.
+ * 3. F5 and Ctrl+R keyboard shortcuts reload the current page.
  */
 (function initNavigationInterceptor() {
   function isInternalUrl(url) {
@@ -26,20 +26,12 @@
     );
   }
 
-  // Intercept window.open so Google login popups stay in the main app window
-  const originalOpen = window.open;
-  window.open = function(url, target, features) {
-    if (url && typeof url === 'string') {
-      try {
-        const parsed = new URL(url, window.location.href);
-        if (isInternalUrl(parsed)) {
-          window.location.href = parsed.href;
-          return window;
-        }
-      } catch (_) {}
+  // Keyboard reload shortcut: F5 or Ctrl+R / Cmd+R
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R'))) {
+      window.location.reload();
     }
-    return originalOpen.apply(this, arguments);
-  };
+  }, true);
 
   // Intercept clicks on links
   document.addEventListener('click', function(event) {
@@ -63,7 +55,7 @@
     try {
       const url = new URL(href, window.location.href);
       if (isInternalUrl(url)) {
-        // If internal link requested a new window/tab, redirect in current window so WebView2 displays it
+        // If an internal link requested a new window/tab, redirect in current window so it doesn't get blocked
         if (target.target === '_blank' || target.getAttribute('target') === '_blank') {
           target.target = '_self';
         }
