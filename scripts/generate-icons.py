@@ -102,39 +102,40 @@ def render_mail(size):
     gray_line = (203, 213, 225, 255)     # #cbd5e1
 
     # Geometry relative to s
-    pad_x = int(s * 0.08)
+    pad_x = int(s * 0.09)
     ew = s - 2 * pad_x
-    eh = int(ew * 0.76)
+    eh = int(ew * 0.88)
 
     x0 = pad_x
-    y0 = int(s * 0.22)
+    y0 = int(s * 0.10)
     x1 = x0 + ew
     y1 = y0 + eh
     r = int(s * 0.16)
 
-    # 1. Back flap / envelope back
+    # 1. Back flap / envelope back in deep orange (frames white letter against white explorer bg)
     draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=orange_dark)
 
-    # 2. White letter peeking out at top
-    lw = int(ew * 0.80)
-    lh = int(eh * 0.72)
-    lx0 = (s - lw) // 2
-    ly0 = int(s * 0.10)
-    lx1 = lx0 + lw
-    ly1 = ly0 + lh
-    lr = int(s * 0.08)
+    # 2. White letter peeking out at top (inset slightly so dark back frames it)
+    inset_x = int(s * 0.06)
+    lx0 = x0 + inset_x
+    ly0 = y0 + int(s * 0.04)
+    lx1 = x1 - inset_x
+    ly1 = y1 - int(s * 0.04)
+    lr = int(r * 0.7)
     draw.rounded_rectangle([lx0, ly0, lx1, ly1], radius=lr, fill=white)
 
     # Text lines on the letter
+    lw = lx1 - lx0
+    lh = ly1 - ly0
     line_h = max(2, int(s * 0.025))
     line_r = line_h // 2
     draw.rounded_rectangle(
-        [lx0 + int(lw * 0.16), ly0 + int(lh * 0.28), lx0 + int(lw * 0.58), ly0 + int(lh * 0.28) + line_h],
+        [lx0 + int(lw * 0.16), ly0 + int(lh * 0.16), lx0 + int(lw * 0.58), ly0 + int(lh * 0.16) + line_h],
         radius=line_r,
         fill=gray_line,
     )
     draw.rounded_rectangle(
-        [lx0 + int(lw * 0.16), ly0 + int(lh * 0.48), lx0 + int(lw * 0.82), ly0 + int(lh * 0.48) + line_h],
+        [lx0 + int(lw * 0.16), ly0 + int(lh * 0.32), lx0 + int(lw * 0.84), ly0 + int(lh * 0.32) + line_h],
         radius=line_r,
         fill=gray_line,
     )
@@ -148,23 +149,22 @@ def render_mail(size):
     f_draw = ImageDraw.Draw(front)
 
     cx = s // 2
-    notch_y = y0 + int(eh * 0.44)
-    # Front pocket polygon
+    notch_y = y0 + int(eh * 0.54)
     f_draw.polygon(
         [
-            (x0, y0 + int(eh * 0.14)),
+            (x0, y0 + int(eh * 0.28)),
             (cx, notch_y),
-            (x1, y0 + int(eh * 0.14)),
+            (x1, y0 + int(eh * 0.28)),
             (x1, y1),
             (x0, y1),
         ],
         fill=orange_main,
     )
 
-    # Delicate crease line
+    # Crease line
     sw = max(2, int(s * 0.022))
-    f_draw.line([(x0, y0 + int(eh * 0.14)), (cx, notch_y)], fill=orange_crease, width=sw)
-    f_draw.line([(x1, y0 + int(eh * 0.14)), (cx, notch_y)], fill=orange_crease, width=sw)
+    f_draw.line([(x0, y0 + int(eh * 0.28)), (cx, notch_y)], fill=orange_crease, width=sw)
+    f_draw.line([(x1, y0 + int(eh * 0.28)), (cx, notch_y)], fill=orange_crease, width=sw)
 
     im.paste(front, (0, 0), mask)
 

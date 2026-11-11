@@ -212,22 +212,22 @@
     } else if (type === 'mail-logo') {
       const back = document.createElementNS(svgNS, 'rect');
       back.setAttribute('x', '1.5');
-      back.setAttribute('y', '4.5');
+      back.setAttribute('y', '1.5');
       back.setAttribute('width', '13');
-      back.setAttribute('height', '9.5');
-      back.setAttribute('rx', '2');
+      back.setAttribute('height', '13');
+      back.setAttribute('rx', '2.5');
       back.setAttribute('fill', '#d9530a');
 
       const letter = document.createElementNS(svgNS, 'rect');
-      letter.setAttribute('x', '3');
-      letter.setAttribute('y', '2');
-      letter.setAttribute('width', '10');
-      letter.setAttribute('height', '8');
-      letter.setAttribute('rx', '1.5');
+      letter.setAttribute('x', '2.5');
+      letter.setAttribute('y', '2.2');
+      letter.setAttribute('width', '11');
+      letter.setAttribute('height', '11');
+      letter.setAttribute('rx', '1.8');
       letter.setAttribute('fill', '#ffffff');
 
       const line1 = document.createElementNS(svgNS, 'line');
-      line1.setAttribute('x1', '4.5');
+      line1.setAttribute('x1', '4.2');
       line1.setAttribute('y1', '4.2');
       line1.setAttribute('x2', '8.5');
       line1.setAttribute('y2', '4.2');
@@ -236,20 +236,20 @@
       line1.setAttribute('stroke-linecap', 'round');
 
       const line2 = document.createElementNS(svgNS, 'line');
-      line2.setAttribute('x1', '4.5');
-      line2.setAttribute('y1', '6.2');
-      line2.setAttribute('x2', '10.5');
-      line2.setAttribute('y2', '6.2');
+      line2.setAttribute('x1', '4.2');
+      line2.setAttribute('y1', '6.0');
+      line2.setAttribute('x2', '11.2');
+      line2.setAttribute('y2', '6.0');
       line2.setAttribute('stroke', '#cbd5e1');
       line2.setAttribute('stroke-width', '1');
       line2.setAttribute('stroke-linecap', 'round');
 
       const front = document.createElementNS(svgNS, 'path');
-      front.setAttribute('d', 'M 1.5,7 L 8,10.8 L 14.5,7 L 14.5,12 C 14.5,13.1 13.6,14 12.5,14 L 3.5,14 C 2.4,14 1.5,13.1 1.5,12 Z');
+      front.setAttribute('d', 'M 1.5,5.5 L 8,9.5 L 14.5,5.5 L 14.5,12 C 14.5,13.4 13.4,14.5 12,14.5 L 4,14.5 C 2.6,14.5 1.5,13.4 1.5,12 Z');
       front.setAttribute('fill', '#f97316');
 
       const fold = document.createElementNS(svgNS, 'path');
-      fold.setAttribute('d', 'M 1.5,7 L 8,10.8 L 14.5,7');
+      fold.setAttribute('d', 'M 1.5,5.5 L 8,9.5 L 14.5,5.5');
       fold.setAttribute('stroke', '#c2410c');
       fold.setAttribute('stroke-width', '0.9');
       fold.setAttribute('fill', 'none');
@@ -263,27 +263,35 @@
     } else if (type === 'calendar-logo') {
       const back = document.createElementNS(svgNS, 'rect');
       back.setAttribute('x', '1.5');
-      back.setAttribute('y', '2');
+      back.setAttribute('y', '1.5');
       back.setAttribute('width', '13');
-      back.setAttribute('height', '12');
+      back.setAttribute('height', '13');
       back.setAttribute('rx', '2.5');
       back.setAttribute('fill', '#15803d');
 
       const page = document.createElementNS(svgNS, 'rect');
-      page.setAttribute('x', '2.2');
-      page.setAttribute('y', '2.6');
-      page.setAttribute('width', '11.6');
-      page.setAttribute('height', '10.8');
-      page.setAttribute('rx', '2');
+      page.setAttribute('x', '2.5');
+      page.setAttribute('y', '2.2');
+      page.setAttribute('width', '11');
+      page.setAttribute('height', '11');
+      page.setAttribute('rx', '1.8');
       page.setAttribute('fill', '#ffffff');
 
       const top = document.createElementNS(svgNS, 'path');
-      top.setAttribute('d', 'M 2.2,6 L 2.2,4.6 C 2.2,3.5 3.1,2.6 4.2,2.6 L 11.8,2.6 C 12.9,2.6 13.8,3.5 13.8,4.6 L 13.8,6 Z');
+      top.setAttribute('d', 'M 2.5,6.5 L 2.5,4.0 C 2.5,3.0 3.3,2.2 4.3,2.2 L 11.7,2.2 C 12.7,2.2 13.5,3.0 13.5,4.0 L 13.5,6.5 Z');
       top.setAttribute('fill', '#22c55e');
 
+      const crease = document.createElementNS(svgNS, 'line');
+      crease.setAttribute('x1', '2.5');
+      crease.setAttribute('y1', '6.5');
+      crease.setAttribute('x2', '13.5');
+      crease.setAttribute('y2', '6.5');
+      crease.setAttribute('stroke', '#126b33');
+      crease.setAttribute('stroke-width', '0.6');
+
       const ring1 = document.createElementNS(svgNS, 'rect');
-      ring1.setAttribute('x', '4.8');
-      ring1.setAttribute('y', '1.2');
+      ring1.setAttribute('x', '4.6');
+      ring1.setAttribute('y', '0.9');
       ring1.setAttribute('width', '1.4');
       ring1.setAttribute('height', '2.4');
       ring1.setAttribute('rx', '0.7');
@@ -292,8 +300,8 @@
       ring1.setAttribute('stroke-width', '0.4');
 
       const ring2 = document.createElementNS(svgNS, 'rect');
-      ring2.setAttribute('x', '9.8');
-      ring2.setAttribute('y', '1.2');
+      ring2.setAttribute('x', '10.0');
+      ring2.setAttribute('y', '0.9');
       ring2.setAttribute('width', '1.4');
       ring2.setAttribute('height', '2.4');
       ring2.setAttribute('rx', '0.7');
@@ -303,10 +311,10 @@
 
       const text = document.createElementNS(svgNS, 'text');
       text.setAttribute('x', '8');
-      text.setAttribute('y', '11.4');
+      text.setAttribute('y', '11.8');
       text.setAttribute('text-anchor', 'middle');
       text.setAttribute('fill', '#15803d');
-      text.setAttribute('font-size', '5.5');
+      text.setAttribute('font-size', '5.8');
       text.setAttribute('font-weight', 'bold');
       text.setAttribute('font-family', 'sans-serif');
       text.textContent = '31';
@@ -314,6 +322,7 @@
       svg.appendChild(back);
       svg.appendChild(page);
       svg.appendChild(top);
+      svg.appendChild(crease);
       svg.appendChild(ring1);
       svg.appendChild(ring2);
       svg.appendChild(text);
