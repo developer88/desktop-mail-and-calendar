@@ -9,10 +9,20 @@
   } catch (_) {
     return;
   }
+  const curHost = (window.location.hostname || '').toLowerCase();
+  const curSearch = (window.location.search || '').toLowerCase();
+  const curPath = (window.location.pathname || '').toLowerCase();
+  if (curSearch.includes('companion') || curSearch.includes('embed') || curPath.includes('/embed') || curPath.includes('/htmlembed')) {
+    return;
+  }
+  if (typeof PRIMARY_HOST !== 'undefined' && curHost && curHost !== PRIMARY_HOST && !curHost.includes('accounts.google.') && curHost !== 'accounts.google.com') {
+    return;
+  }
+
   const svgNS = 'http://www.w3.org/2000/svg';
-  const isCalendar = window.location.hostname.includes('calendar.google.com') ||
-    window.location.href.includes('calendar') ||
-    window.location.href.includes('service=cl');
+  const isCalendar = (typeof APP_KIND !== 'undefined')
+    ? (APP_KIND === 'calendar')
+    : (curHost.includes('calendar.google.com') || window.location.href.includes('calendar'));
 
   // Fast, CSP-proof native action trigger via document.title interceptor
   let lastNonCmdTitle = document.title || (isCalendar ? 'Desktop Calendar' : 'Desktop Mail');

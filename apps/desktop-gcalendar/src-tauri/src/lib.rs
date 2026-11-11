@@ -58,7 +58,7 @@ pub fn run() {
             commands::close_window
         ])
         .setup(move |app| {
-            let injected_script = get_injected_bundle();
+            let injected_script = get_injected_bundle(config.kind);
 
             let initial_url = WebviewUrl::External(
                 config
