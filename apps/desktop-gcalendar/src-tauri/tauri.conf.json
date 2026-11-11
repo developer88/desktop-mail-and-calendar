@@ -10,25 +10,19 @@
   },
   "app": {
     "withGlobalTauri": true,
-    "windows": [
-      {
-        "title": "Google Calendar",
-        "width": 1120,
-        "height": 760,
-        "minWidth": 720,
-        "minHeight": 520,
-        "resizable": true,
-        "fullscreen": false,
-        "url": "https://calendar.google.com"
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null
     }
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis"],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

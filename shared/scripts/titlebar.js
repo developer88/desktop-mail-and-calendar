@@ -228,9 +228,43 @@
       svg.appendChild(p2);
       svg.appendChild(p3);
       svg.appendChild(p4);
+    } else if (type === 'calendar-logo') {
+      const bg = document.createElementNS(svgNS, 'rect');
+      bg.setAttribute('x', '1.5');
+      bg.setAttribute('y', '1.5');
+      bg.setAttribute('width', '13');
+      bg.setAttribute('height', '13');
+      bg.setAttribute('rx', '3');
+      bg.setAttribute('fill', '#ffffff');
+      bg.setAttribute('stroke', '#4285f4');
+      bg.setAttribute('stroke-width', '1');
+
+      const top = document.createElementNS(svgNS, 'rect');
+      top.setAttribute('x', '1.5');
+      top.setAttribute('y', '1.5');
+      top.setAttribute('width', '13');
+      top.setAttribute('height', '4.5');
+      top.setAttribute('rx', '2');
+      top.setAttribute('fill', '#4285f4');
+
+      const text = document.createElementNS(svgNS, 'text');
+      text.setAttribute('x', '8');
+      text.setAttribute('y', '12');
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('fill', '#1a73e8');
+      text.setAttribute('font-size', '6.5');
+      text.setAttribute('font-weight', 'bold');
+      text.setAttribute('font-family', 'sans-serif');
+      text.textContent = '31';
+
+      svg.appendChild(bg);
+      svg.appendChild(top);
+      svg.appendChild(text);
     }
     return svg;
   }
+
+  const isCalendar = window.location.hostname.includes('calendar.google.com');
 
   // Preference Storage Helper
   function getPref(key, defaultVal) {
@@ -289,7 +323,7 @@
     const tabs = [
       { id: 'general', label: 'General', icon: 'gear' },
       { id: 'privacy', label: 'Privacy & permissions', icon: 'shield' },
-      { id: 'about', label: 'About Desktop Gmail', icon: 'info' }
+      { id: 'about', label: isCalendar ? 'About Desktop Calendar' : 'About Desktop Gmail', icon: 'info' }
     ];
 
     const contentArea = document.createElement('div');
@@ -371,7 +405,9 @@
           contentArea,
           'bell',
           'Desktop Notifications',
-          'Show system notifications for new unread incoming emails.',
+          isCalendar
+            ? 'Show system notifications for upcoming calendar events and reminders.'
+            : 'Show system notifications for new unread incoming emails.',
           'notifications_enabled',
           false,
           (enabled) => {
@@ -386,7 +422,9 @@
           contentArea,
           'login',
           'Open at login',
-          'Start Desktop Gmail automatically when you sign into Windows.',
+          isCalendar
+            ? 'Start Desktop Google Calendar automatically when you sign into Windows.'
+            : 'Start Desktop Gmail automatically when you sign into Windows.',
           'open_at_login',
           false,
           (enabled) => {
@@ -405,12 +443,14 @@
         contentArea.appendChild(secTitle);
         contentArea.appendChild(secDesc);
 
-        // Permissions needed by Gmail & Google Meet inside Gmail (all off by default)
+        // Permissions needed by Gmail/Calendar & Google Meet (all off by default)
         renderToggleCard(
           contentArea,
           'mic',
           'Microphone',
-          'Allow Gmail and Google Meet to access your microphone for audio and calls.',
+          isCalendar
+            ? 'Allow Google Meet inside Calendar to access your microphone for voice and calls.'
+            : 'Allow Gmail and Google Meet to access your microphone for audio and calls.',
           'perm_mic',
           false
         );
@@ -419,7 +459,9 @@
           contentArea,
           'camera',
           'Camera',
-          'Allow Google Meet inside Gmail to access your camera for video calls.',
+          isCalendar
+            ? 'Allow Google Meet inside Calendar to access your camera for video calls.'
+            : 'Allow Google Meet inside Gmail to access your camera for video calls.',
           'perm_camera',
           false
         );
@@ -428,7 +470,9 @@
           contentArea,
           'location',
           'Location',
-          'Allow Gmail to access approximate location for security alerts and sign-in verification.',
+          isCalendar
+            ? 'Allow Google Calendar to access approximate location for event addresses and directions.'
+            : 'Allow Gmail to access approximate location for security alerts and sign-in verification.',
           'perm_location',
           false
         );
@@ -456,7 +500,7 @@
 
         const logoWrap = document.createElement('div');
         logoWrap.className = 'desktop-about-logo';
-        const logoSvg = createSvgIcon('gmail-logo');
+        const logoSvg = createSvgIcon(isCalendar ? 'calendar-logo' : 'gmail-logo');
         logoSvg.setAttribute('viewBox', '0 0 16 16');
         logoSvg.setAttribute('width', '48');
         logoSvg.setAttribute('height', '48');
@@ -465,11 +509,13 @@
         const aboutTitles = document.createElement('div');
         const mainTitle = document.createElement('div');
         mainTitle.className = 'desktop-about-title';
-        mainTitle.textContent = 'About Desktop Gmail';
+        mainTitle.textContent = isCalendar ? 'About Desktop Calendar' : 'About Desktop Gmail';
 
         const subTitle = document.createElement('div');
         subTitle.className = 'desktop-about-sub';
-        subTitle.textContent = 'Unofficial desktop wrapper for Google Gmail.';
+        subTitle.textContent = isCalendar
+          ? 'Unofficial desktop wrapper for Google Calendar.'
+          : 'Unofficial desktop wrapper for Google Gmail.';
 
         aboutTitles.appendChild(mainTitle);
         aboutTitles.appendChild(subTitle);
@@ -518,8 +564,9 @@
         discTitle.textContent = 'Disclaimer & Legal Notice';
 
         const discText = document.createElement('div');
-        discText.textContent =
-          'Desktop Gmail is an independent open-source wrapper created solely to provide a focused desktop window for Gmail. It has no affiliation, connection, or endorsement with Google LLC or Alphabet Inc. All Gmail trademarks, logos, web interfaces, and intellectual property remain the exclusive property of Google LLC.';
+        discText.textContent = isCalendar
+          ? 'Desktop Google Calendar is an independent open-source wrapper created solely to provide a focused desktop window for Google Calendar. It has no affiliation, connection, or endorsement with Google LLC or Alphabet Inc. All Google Calendar trademarks, logos, web interfaces, and intellectual property remain the exclusive property of Google LLC.'
+          : 'Desktop Gmail is an independent open-source wrapper created solely to provide a focused desktop window for Gmail. It has no affiliation, connection, or endorsement with Google LLC or Alphabet Inc. All Gmail trademarks, logos, web interfaces, and intellectual property remain the exclusive property of Google LLC.';
 
         discBox.appendChild(discTitle);
         discBox.appendChild(discText);

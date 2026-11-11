@@ -14,6 +14,7 @@
     "build:gmail": "cargo build --target x86_64-pc-windows-msvc --package desktop-gmail --release",
     "build:calendar": "cargo build --target x86_64-pc-windows-msvc --package desktop-gcalendar --release",
     "ci": "bash scripts/ci.sh",
+    "build:installers": "node scripts/build-installers.js",
     "release:prepare": "node scripts/prepare-release.js"
   },
   "devDependencies": {

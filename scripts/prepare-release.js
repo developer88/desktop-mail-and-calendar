@@ -31,33 +31,30 @@ function main() {
     fs.mkdirSync(distDir, { recursive: true });
   }
 
-  const apps = [
-    { name: 'desktop-gmail', binaryNames: ['desktop-gmail.exe', 'desktop-gmail'] },
-    { name: 'desktop-gcalendar', binaryNames: ['desktop-gcalendar.exe', 'desktop-gcalendar'] }
+  const targets = [
+    { app: 'desktop-gmail', bName: 'desktop-gmail.exe' },
+    { app: 'desktop-gmail', bName: 'desktop-gmail-setup.exe' },
+    { app: 'desktop-gcalendar', bName: 'desktop-gcalendar.exe' },
+    { app: 'desktop-gcalendar', bName: 'desktop-gcalendar-setup.exe' }
   ];
 
   const releaseFiles = [];
   const checksums = [];
 
-  for (const app of apps) {
+  for (const item of targets) {
     let foundPath = null;
-    let foundName = null;
 
     for (const dir of searchDirs) {
       if (!fs.existsSync(dir)) continue;
-      for (const bName of app.binaryNames) {
-        const candidate = path.join(dir, bName);
-        if (fs.existsSync(candidate)) {
-          foundPath = candidate;
-          foundName = bName;
-          break;
-        }
+      const candidate = path.join(dir, item.bName);
+      if (fs.existsSync(candidate)) {
+        foundPath = candidate;
+        break;
       }
-      if (foundPath) break;
     }
 
     if (foundPath) {
-      const destPath = path.join(distDir, foundName);
+      const destPath = path.join(distDir, item.bName);
       if (foundPath !== destPath) {
         fs.copyFileSync(foundPath, destPath);
       }
@@ -65,15 +62,15 @@ function main() {
       const stats = fs.statSync(destPath);
 
       releaseFiles.push({
-        app: app.name,
-        filename: foundName,
+        app: item.app,
+        filename: item.bName,
         sizeBytes: stats.size,
         sha256: sha256
       });
-      checksums.push(`${sha256}  ${foundName}`);
-      console.log(`[Release] Staged ${app.name} -> dist/${foundName} (${stats.size} bytes)`);
+      checksums.push(`${sha256}  ${item.bName}`);
+      console.log(`[Release] Staged ${item.app} -> dist/${item.bName} (${stats.size} bytes)`);
     } else {
-      console.log(`[Release] Info: Binary for ${app.name} not compiled yet.`);
+      console.log(`[Release] Info: Artifact ${item.bName} not generated yet.`);
     }
   }
 
