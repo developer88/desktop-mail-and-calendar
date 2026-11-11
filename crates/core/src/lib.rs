@@ -2,7 +2,6 @@ pub mod config;
 pub mod navigation;
 pub mod protocol;
 pub mod scripts;
-pub mod tray;
 
 pub use config::{AppKind, DesktopAppConfig};
 pub use navigation::{classify_url, should_open_in_external_browser, UrlCategory};

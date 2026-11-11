@@ -15,7 +15,6 @@ pub struct DesktopAppConfig {
     pub height: f64,
     pub min_width: f64,
     pub min_height: f64,
-    pub close_to_tray: bool,
     pub start_minimized: bool,
     pub user_agent: Option<String>,
 }
@@ -30,7 +29,6 @@ impl DesktopAppConfig {
             height: 800.0,
             min_width: 800.0,
             min_height: 600.0,
-            close_to_tray: false,
             start_minimized: false,
             user_agent: None,
         }
@@ -45,7 +43,6 @@ impl DesktopAppConfig {
             height: 760.0,
             min_width: 720.0,
             min_height: 520.0,
-            close_to_tray: true,
             start_minimized: false,
             user_agent: None,
         }
@@ -62,7 +59,6 @@ mod tests {
         assert_eq!(cfg.kind, AppKind::Mail);
         assert_eq!(cfg.title, "Desktop Mail");
         assert!(cfg.initial_url.starts_with("https://mail.google.com"));
-        assert!(!cfg.close_to_tray);
     }
 
     #[test]
@@ -71,6 +67,5 @@ mod tests {
         assert_eq!(cfg.kind, AppKind::Calendar);
         assert_eq!(cfg.title, "Desktop Calendar");
         assert!(cfg.initial_url.starts_with("https://calendar.google.com"));
-        assert!(cfg.close_to_tray);
     }
 }

@@ -1,6 +1,6 @@
 /**
  * Watches document title and DOM changes to extract unread email count
- * and reports it to the Tauri backend to set Taskbar and Tray badges.
+ * and reports it to the Tauri backend to set Taskbar title and badge.
  */
 (function initUnreadObserver() {
   try {

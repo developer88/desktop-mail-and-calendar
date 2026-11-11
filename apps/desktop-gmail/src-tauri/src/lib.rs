@@ -2,8 +2,6 @@ use desktop_google_core::{
     parse_mailto_url, scripts::get_injected_bundle, to_mail_compose_url, DesktopAppConfig,
 };
 use tauri::{
-    menu::{Menu, MenuItem},
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder, WindowEvent,
 };
 
@@ -30,14 +28,6 @@ mod commands {
                 "Desktop Mail".to_string()
             };
             let _ = window.set_title(&title);
-        }
-        if let Some(tray) = app.tray_by_id("main-tray") {
-            let tooltip = if count > 0 {
-                format!("Desktop Mail - {} unread messages", count)
-            } else {
-                "Desktop Mail - Inbox zero".to_string()
-            };
-            let _ = tray.set_tooltip(Some(tooltip));
         }
         Ok(())
     }
@@ -248,89 +238,13 @@ pub fn run() {
                 })
                 .build()?;
 
-            // 2. Handle close button: exit immediately when close_to_tray is disabled
-            let window_clone = window.clone();
-            let app_handle = app.handle().clone();
-            let close_to_tray = config.close_to_tray;
+            // 2. Handle close button: exit application immediately
+            let app_handle_for_close = app.handle().clone();
             window.on_window_event(move |event| {
-                if let WindowEvent::CloseRequested { api, .. } = event {
-                    if close_to_tray {
-                        api.prevent_close();
-                        let _ = window_clone.hide();
-                    } else {
-                        app_handle.exit(0);
-                    }
+                if let WindowEvent::CloseRequested { .. } = event {
+                    app_handle_for_close.exit(0);
                 }
             });
-
-            // 3. Build System Tray Menu
-            let show_item = MenuItem::with_id(app, "show", "Show Desktop Mail", true, None::<&str>)?;
-            let compose_item =
-                MenuItem::with_id(app, "compose", "Compose New Mail", true, None::<&str>)?;
-            let reload_item = MenuItem::with_id(app, "reload", "Refresh Inbox", true, None::<&str>)?;
-            let quit_item = MenuItem::with_id(app, "quit", "Quit Desktop Mail", true, None::<&str>)?;
-
-            let tray_menu =
-                Menu::with_items(app, &[&show_item, &compose_item, &reload_item, &quit_item])?;
-
-            let tray_icon = app.default_window_icon().cloned();
-
-            let mut tray_builder = TrayIconBuilder::with_id("main-tray")
-                .menu(&tray_menu)
-                .tooltip("Desktop Mail")
-                .show_menu_on_left_click(false);
-
-            if let Some(icon) = tray_icon {
-                tray_builder = tray_builder.icon(icon);
-            }
-
-            let _tray = tray_builder
-                .on_menu_event(|app, event| match event.id.as_ref() {
-                    "show" => {
-                        if let Some(w) = app.get_webview_window("main") {
-                            let _ = w.show();
-                            let _ = w.unminimize();
-                            let _ = w.set_focus();
-                        }
-                    }
-                    "compose" => {
-                        if let Some(w) = app.get_webview_window("main") {
-                            let _ = w.show();
-                            let _ = w.unminimize();
-                            let _ = w.set_focus();
-                            let _ = w.eval("window.location.href = 'https://mail.google.com/mail/?view=cm&fs=1';");
-                        }
-                    }
-                    "reload" => {
-                        if let Some(w) = app.get_webview_window("main") {
-                            let _ = w.eval("window.location.reload();");
-                        }
-                    }
-                    "quit" => {
-                        app.exit(0);
-                    }
-                    _ => {}
-                })
-                .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click {
-                        button: MouseButton::Left,
-                        button_state: MouseButtonState::Up,
-                        ..
-                    } = event
-                    {
-                        let app = tray.app_handle();
-                        if let Some(w) = app.get_webview_window("main") {
-                            if w.is_visible().unwrap_or(false) {
-                                let _ = w.hide();
-                            } else {
-                                let _ = w.show();
-                                let _ = w.unminimize();
-                                let _ = w.set_focus();
-                            }
-                        }
-                    }
-                })
-                .build(app)?;
 
             Ok(())
         })
