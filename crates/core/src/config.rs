@@ -30,7 +30,7 @@ impl DesktopAppConfig {
             height: 800.0,
             min_width: 800.0,
             min_height: 600.0,
-            close_to_tray: true,
+            close_to_tray: false,
             start_minimized: false,
             user_agent: None,
         }
@@ -62,7 +62,7 @@ mod tests {
         assert_eq!(cfg.kind, AppKind::Gmail);
         assert_eq!(cfg.title, "Gmail");
         assert!(cfg.initial_url.starts_with("https://mail.google.com"));
-        assert!(cfg.close_to_tray);
+        assert!(!cfg.close_to_tray);
     }
 
     #[test]

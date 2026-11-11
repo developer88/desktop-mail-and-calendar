@@ -88,12 +88,18 @@ pub fn run() {
                 .initialization_script(&injected_script)
                 .build()?;
 
-            // 2. Intercept close button to hide window to system tray
+            // 2. Handle close button: exit immediately when close_to_tray is disabled
             let window_clone = window.clone();
+            let app_handle = app.handle().clone();
+            let close_to_tray = config.close_to_tray;
             window.on_window_event(move |event| {
                 if let WindowEvent::CloseRequested { api, .. } = event {
-                    api.prevent_close();
-                    let _ = window_clone.hide();
+                    if close_to_tray {
+                        api.prevent_close();
+                        let _ = window_clone.hide();
+                    } else {
+                        app_handle.exit(0);
+                    }
                 }
             });
 
