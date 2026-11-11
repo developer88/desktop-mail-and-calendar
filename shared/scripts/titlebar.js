@@ -652,16 +652,66 @@
         updateBtn.className = 'desktop-update-btn';
         updateBtn.textContent = 'Check for Updates';
 
+        let targetUpdateUrl = null;
+
         updateBtn.addEventListener('click', () => {
+          if (targetUpdateUrl) {
+            window.open(targetUpdateUrl, '_blank');
+            return;
+          }
+
           updateBtn.disabled = true;
           updateBtn.textContent = 'Checking for updates...';
-          setTimeout(() => {
-            updateBtn.textContent = 'You are on the latest version';
-            setTimeout(() => {
-              updateBtn.disabled = false;
-              updateBtn.textContent = 'Check for Updates';
-            }, 3000);
-          }, 900);
+
+          fetch('https://api.github.com/repos/developer88/desktop_gmail_and_gcalendar/releases/latest', {
+            headers: { 'Accept': 'application/vnd.github.v3+json' }
+          })
+            .then((res) => {
+              if (res.status === 404) {
+                return { tag_name: 'v0.1.0' };
+              }
+              if (!res.ok) throw new Error('Status ' + res.status);
+              return res.json();
+            })
+            .then((data) => {
+              const latestTag = (data && data.tag_name) || '';
+              const latestVer = latestTag.replace(/^v/, '');
+              const currentVer = '0.1.0';
+
+              function isNewer(latest, current) {
+                const p1 = latest.split('.').map((n) => parseInt(n, 10) || 0);
+                const p2 = current.split('.').map((n) => parseInt(n, 10) || 0);
+                for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
+                  const num1 = p1[i] || 0;
+                  const num2 = p2[i] || 0;
+                  if (num1 > num2) return true;
+                  if (num1 < num2) return false;
+                }
+                return false;
+              }
+
+              if (latestVer && isNewer(latestVer, currentVer)) {
+                targetUpdateUrl = data.html_url || ('https://github.com/developer88/desktop_gmail_and_gcalendar/releases/tag/' + latestTag);
+                updateBtn.disabled = false;
+                updateBtn.textContent = 'Download ' + latestTag + ' ↗';
+                updateBtn.style.background = isCalendar ? '#16a34a' : '#ea580c';
+                updateBtn.style.color = '#ffffff';
+                updateBtn.style.borderColor = 'transparent';
+              } else {
+                updateBtn.textContent = 'You are on the latest version (v0.1.0)';
+                setTimeout(() => {
+                  updateBtn.disabled = false;
+                  updateBtn.textContent = 'Check for Updates';
+                }, 3500);
+              }
+            })
+            .catch(() => {
+              updateBtn.textContent = 'You are on the latest version (v0.1.0)';
+              setTimeout(() => {
+                updateBtn.disabled = false;
+                updateBtn.textContent = 'Check for Updates';
+              }, 3000);
+            });
         });
 
         verRow.appendChild(verLeft);

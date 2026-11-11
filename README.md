@@ -1,18 +1,49 @@
-# Desktop Google Apps (Windows 11)
+# Desktop Mail & Desktop Calendar (Windows 11)
+
+[![Release](https://img.shields.io/badge/Release-v0.1.0-blue.svg)](https://github.com/developer88/desktop_gmail_and_gcalendar/releases)
+[![Rust](https://img.shields.io/badge/Rust-1.80+-orange.svg)](https://www.rust-lang.org/)
+[![Tauri](https://img.shields.io/badge/Tauri-v2.0-24C8DB.svg)](https://tauri.app/)
+[![Windows 11](https://img.shields.io/badge/Platform-Windows%2011-0078D4.svg)](https://www.microsoft.com/windows)
+[![Privacy First](https://img.shields.io/badge/Privacy-Zero%20Telemetry-success.svg)](#-privacy--security-guarantees)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 Native-feeling, standalone Windows 11 desktop applications for **Gmail** and **Google Calendar** powered by **Tauri 2.0** and **Microsoft Edge WebView2**.
 
-Designed to deliver the clean, responsive simplicity of Apple Mail and Calendar on Windows 11 while retaining the full web features of Google's email and calendar services.
+Engineered to provide a focused, lightweight desktop window for email and calendar management on Windows 11 without running a full Chromium browser or cluttering your daily tabs.
 
 ---
 
-## 🎯 Solved Usability Pain Points
+## 📥 Download (Release v0.1.0)
 
-* **Independent Lifecycle:** No longer tied to Google Chrome. If Chrome crashes or is closed, your email and calendar stay open and active.
-* **Smart Link Routing:** External web links automatically open in your default Windows browser (Edge, Chrome, Firefox, etc.) without losing your email or calendar state.
-* **Windows `mailto:` Association:** Clicking `mailto:` links across Windows opens directly in the Gmail app compose window instead of spawning a new browser tab.
-* **Windows 11 Visual Polish:** Styled with Windows 11 fonts (`Segoe UI Variable`), dark/light mode synchronization, and stripped Google web clutter.
-* **System Tray & Badges:** Minimize-to-tray background daemon with real-time unread email count badges on the Taskbar and Tray.
+Pre-built binaries and Windows NSIS setup installers are available in [GitHub Releases](https://github.com/developer88/desktop_gmail_and_gcalendar/releases):
+
+| Application | Installer (`.exe`) | Portable Executable | Size |
+| :--- | :--- | :--- | :--- |
+| **Desktop Mail** | [`desktop-mail-setup.exe`](https://github.com/developer88/desktop_gmail_and_gcalendar/releases/download/v0.1.0/desktop-mail-setup.exe) | [`desktop-mail.exe`](https://github.com/developer88/desktop_gmail_and_gcalendar/releases/download/v0.1.0/desktop-mail.exe) | ~4 MB / ~12.8 MB |
+| **Desktop Calendar** | [`desktop-calendar-setup.exe`](https://github.com/developer88/desktop_gmail_and_gcalendar/releases/download/v0.1.0/desktop-calendar-setup.exe) | [`desktop-calendar.exe`](https://github.com/developer88/desktop_gmail_and_gcalendar/releases/download/v0.1.0/desktop-calendar.exe) | ~4 MB / ~12.8 MB |
+
+*Every release includes cryptographic hashes in `SHA256SUMS.txt` and a machine-readable `release-manifest.json`.*
+
+---
+
+## 🔒 Privacy & Security Guarantees
+
+* **Zero Telemetry & Tracking:** No analytics libraries, no tracking pixels, and no diagnostic beacon calls.
+* **Zero Logging:** No user activity, keystrokes, or message contents are ever logged or sent to any third party.
+* **No Underlying Data Access:** The wrapper does not read, modify, or store your emails, calendar events, contacts, or passwords. Your session and credentials reside exclusively between your local Edge WebView2 sandbox and Google's official servers.
+* **100% Free & Open Source:** The entire source code is transparent, auditable, and freely available on GitHub.
+
+---
+
+## ✨ Features & Windows 11 Integration
+
+* **Independent Lifecycles:** Separate standalone executables. Closing your browser or encountering a tab crash does not interrupt your email or calendar.
+* **Windows 11 Fluent Design:** Custom frameless titlebar with native Windows 11 minimize, maximize, and close controls, full-window snapping, and theme sync (Dark/Light).
+* **Smart External Link Routing:** Links inside emails and calendar events automatically open in your default Windows browser (Edge, Chrome, Firefox), keeping your app focused.
+* **Windows `mailto:` Protocol Association:** Clicking `mailto:` links across Windows opens directly in the Desktop Mail compose view instead of spawning browser tabs.
+* **System Tray Daemon & Badges:** Minimize to tray with unread email badges on the Windows Taskbar and Notification Area.
+* **First-Run Welcome Notice:** Transparent splash modal informing first-time users of the privacy architecture and wrapper design.
+* **In-App Update Checker:** Direct integration with GitHub Releases to notify and link to new application versions.
 
 ---
 
@@ -21,103 +52,104 @@ Designed to deliver the clean, responsive simplicity of Apple Mail and Calendar 
 ```
 desktop-google-apps/
 ├── apps/
-│   ├── desktop-gmail/                  # Standalone Gmail application
-│   │   ├── tauri.conf.json             # Tauri v2 configuration (com.andrey.desktop-gmail)
-│   │   ├── src-tauri/                  # Tauri Rust entrypoint, capabilities, tray
+│   ├── desktop-gmail/                  # Desktop Mail (Tauri v2 application)
+│   │   ├── tauri.conf.json             # "Desktop Mail" product configuration
+│   │   ├── src-tauri/                  # Rust entrypoint, tray, commands, resources
 │   │   │   ├── Cargo.toml
 │   │   │   ├── build.rs
-│   │   │   ├── capabilities/default.json
-│   │   │   ├── icons/
+│   │   │   ├── icons/                  # High-DPI ICO & PNG assets
 │   │   │   └── src/ (main.rs, lib.rs)
-│   │   └── ui/                         # Offline fallback and loader UI
+│   │   └── ui/                         # Fallback offline & loader view
 │   │
-│   └── desktop-gcalendar/              # Standalone Google Calendar application
-│       ├── tauri.conf.json             # Tauri v2 configuration (com.andrey.desktop-gcalendar)
+│   └── desktop-gcalendar/              # Desktop Calendar (Tauri v2 application)
+│       ├── tauri.conf.json             # "Desktop Calendar" product configuration
 │       ├── src-tauri/
 │       │   ├── Cargo.toml
 │       │   ├── build.rs
-│       │   ├── capabilities/default.json
-│       │   ├── icons/
+│       │   ├── icons/                  # High-DPI ICO & PNG assets
 │       │   └── src/ (main.rs, lib.rs)
-│       └── ui/                         # Offline fallback and loader UI
+│       └── ui/                         # Fallback offline & loader view
 │
 ├── crates/
 │   └── core/                           # Shared Rust library (desktop-google-core)
 │       ├── Cargo.toml
 │       └── src/
-│           ├── config.rs               # App dimensions, user-agent & settings
+│           ├── config.rs               # Window dimensions, user-agent, app config
 │           ├── navigation.rs           # URL routing & classification engine
 │           ├── protocol.rs             # RFC 6068 mailto parser & compose converter
-│           ├── tray.rs                 # Tray action models & event dispatch
-│           └── scripts.rs              # Injected CSS & JS script assets
+│           ├── tray.rs                 # System tray event models
+│           └── scripts.rs              # Injected CSS & JS bundles
 │
 ├── shared/
 │   ├── scripts/
-│   │   ├── navigation-interceptor.js   # Client-side anchor click interceptor
-│   │   └── unread-observer.js          # DOM / title observer for unread count
+│   │   ├── navigation-interceptor.js   # Client-side link routing & reload shortcuts
+│   │   ├── titlebar.js                 # Frameless titlebar, settings dialog & updater
+│   │   └── unread-observer.js          # DOM observer for email badge counts
 │   └── styles/
-│       ├── win11-theme.css             # Windows 11 Segoe UI & scrollbar overrides
-│       └── declutter.css               # Google promotional banner removal
+│       ├── win11-theme.css             # Windows 11 typography, dialogs & splash
+│       └── declutter.css               # Clean web layout styling
 │
 ├── scripts/
-│   ├── ci.sh                           # Cross-platform / WSL local CI script
-│   ├── ci.ps1                          # Native Windows PowerShell CI runner
-│   ├── generate-icons.py               # PNG & ICO icon generator
-│   └── prepare-release.js              # Staging, checksums & manifest generator
+│   ├── build-installers.js             # NSIS setup installer compiler
+│   ├── generate-icons.py               # Multi-resolution ICO & PNG generator
+│   └── prepare-release.js              # Release manifest and SHA256 generator
 │
-├── Cargo.toml                          # Cargo workspace definition
-└── package.json                        # NPM workspace & developer scripts
+├── dist/                               # Staged release executables and installers
+├── Cargo.toml                          # Cargo workspace configuration
+└── package.json                        # Monorepo build and test scripts
 ```
 
 ---
 
-## 🛠️ Toolchain & Requirements
+## 🛠️ Building from Source
 
-* **Node & NPM:** Run via WSL per user environment configuration.
-* **Rust:** Rust 1.80+ (managed via Cargo / Rustup).
-* **WebView2:** Microsoft Edge WebView2 Evergreen runtime (pre-installed on Windows 11).
+### Prerequisites
+* **Rust 1.80+** (`rustup default stable`, target `x86_64-pc-windows-msvc`)
+* **Node.js 18+ & NPM** (run inside WSL per developer guidelines)
+* **NSIS** (`makensis` installed for packaging installers)
 
----
-
-## 🚀 Development & Workflow
-
-### 1. Install Dependencies
+### 1. Clone & Install Dependencies
 ```bash
-# Run inside WSL
+git clone https://github.com/developer88/desktop_gmail_and_gcalendar.git
+cd desktop_gmail_and_gcalendar
 npm install
 ```
 
-### 2. Run Local CI Pipeline
-The local CI script verifies code formatting, runs unit and integration tests, checks workspace packages, and prepares release bundles:
-
-* **From WSL / Bash:**
-  ```bash
-  bash scripts/ci.sh
-  ```
-* **From Windows PowerShell:**
-  ```powershell
-  .\scripts\ci.ps1
-  ```
-* **Via NPM:**
-  ```bash
-  npm run ci
-  ```
-
-### 3. Run Unit Tests Only
+### 2. Run Test Suite
 ```bash
 npm test
-# Or directly via cargo:
+# Or directly via Cargo:
 cargo test --package desktop-google-core
 ```
 
-### 4. Build Release Binaries
+### 3. Build Executables & Installers
 ```bash
-npm run build
-# Or build an individual app:
-npm run build:gmail
+# Compile release binaries
+npm run build:mail
 npm run build:calendar
-```
 
-Releases and SHA-256 checksums are staged into the `dist/` directory:
-* `dist/SHA256SUMS.txt`
-* `dist/release-manifest.json`
+# Package NSIS installers & prepare release hashes
+npm run build:installers
+npm run release:prepare
+```
+The compiled files are placed into the `dist/` directory:
+- `dist/desktop-mail.exe`
+- `dist/desktop-mail-setup.exe`
+- `dist/desktop-calendar.exe`
+- `dist/desktop-calendar-setup.exe`
+- `dist/SHA256SUMS.txt`
+- `dist/release-manifest.json`
+
+---
+
+## ⚖️ Legal Notice & Disclaimer
+
+Desktop Mail and Desktop Calendar are independent open-source projects created solely to provide focused desktop window experiences for Gmail and Google Calendar. 
+
+They have **no affiliation, association, sponsorship, or endorsement with Google LLC or Alphabet Inc.** All Google trademarks, service marks, logos, interfaces, and intellectual property remain the exclusive property of Google LLC.
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
