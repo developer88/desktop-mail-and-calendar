@@ -663,7 +663,7 @@
           updateBtn.disabled = true;
           updateBtn.textContent = 'Checking for updates...';
 
-          fetch('https://api.github.com/repos/developer88/desktop_gmail_and_gcalendar/releases/latest', {
+          fetch('https://api.github.com/repos/developer88/desktop-mail-and-calendar/releases/latest', {
             headers: { 'Accept': 'application/vnd.github.v3+json' }
           })
             .then((res) => {
@@ -691,7 +691,7 @@
               }
 
               if (latestVer && isNewer(latestVer, currentVer)) {
-                targetUpdateUrl = data.html_url || ('https://github.com/developer88/desktop_gmail_and_gcalendar/releases/tag/' + latestTag);
+                targetUpdateUrl = data.html_url || ('https://github.com/developer88/desktop-mail-and-calendar/releases/tag/' + latestTag);
                 updateBtn.disabled = false;
                 updateBtn.textContent = 'Download ' + latestTag + ' ↗';
                 updateBtn.style.background = isCalendar ? '#16a34a' : '#ea580c';

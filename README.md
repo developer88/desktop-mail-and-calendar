@@ -1,6 +1,6 @@
 # Desktop Mail & Desktop Calendar (Windows 11)
 
-[![Release](https://img.shields.io/badge/Release-v0.1.0-blue.svg)](https://github.com/developer88/desktop_gmail_and_gcalendar/releases)
+[![Release](https://img.shields.io/badge/Release-v0.1.0-blue.svg)](https://github.com/developer88/desktop-mail-and-calendar/releases)
 [![Rust](https://img.shields.io/badge/Rust-1.80+-orange.svg)](https://www.rust-lang.org/)
 [![Tauri](https://img.shields.io/badge/Tauri-v2.0-24C8DB.svg)](https://tauri.app/)
 [![Windows 11](https://img.shields.io/badge/Platform-Windows%2011-0078D4.svg)](https://www.microsoft.com/windows)
@@ -15,12 +15,12 @@ Engineered to provide a focused, lightweight desktop window for email and calend
 
 ## 📥 Download (Release v0.1.0)
 
-Windows NSIS setup installers are available in [GitHub Releases](https://github.com/developer88/desktop_gmail_and_gcalendar/releases):
+Windows NSIS setup installers are available in [GitHub Releases](https://github.com/developer88/desktop-mail-and-calendar/releases):
 
 | Application | Installer (`.exe`) | Size |
 | :--- | :--- | :--- |
-| **Desktop Mail** | [`desktop-mail-setup.exe`](https://github.com/developer88/desktop_gmail_and_gcalendar/releases/download/v0.1.0/desktop-mail-setup.exe) | ~4 MB |
-| **Desktop Calendar** | [`desktop-calendar-setup.exe`](https://github.com/developer88/desktop_gmail_and_gcalendar/releases/download/v0.1.0/desktop-calendar-setup.exe) | ~4 MB |
+| **Desktop Mail** | [`desktop-mail-setup.exe`](https://github.com/developer88/desktop-mail-and-calendar/releases/download/v0.1.0/desktop-mail-setup.exe) | ~4 MB |
+| **Desktop Calendar** | [`desktop-calendar-setup.exe`](https://github.com/developer88/desktop-mail-and-calendar/releases/download/v0.1.0/desktop-calendar-setup.exe) | ~4 MB |
 
 ---
 
@@ -108,8 +108,8 @@ desktop-google-apps/
 
 ### 1. Clone & Install Dependencies
 ```bash
-git clone https://github.com/developer88/desktop_gmail_and_gcalendar.git
-cd desktop_gmail_and_gcalendar
+git clone https://github.com/developer88/desktop-mail-and-calendar.git
+cd desktop-mail-and-calendar
 npm install
 ```
 
