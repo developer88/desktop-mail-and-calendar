@@ -14,8 +14,6 @@ def render_calendar(size):
     green_crease = (18, 107, 51, 255)   # #126b33
     green_text = (21, 128, 61, 255)     # #15803d
     white = (255, 255, 255, 255)
-    gray_binder = (226, 232, 240, 255)  # #e2e8f0
-    gray_line = (203, 213, 225, 255)    # #cbd5e1
 
     # Geometry relative to s (identical bounding proportions to mail)
     pad_x = int(s * 0.08)
@@ -31,9 +29,9 @@ def render_calendar(size):
     # 1. Back plate / base in dark green
     draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=green_dark)
 
-    # 2. White calendar tear-off page
-    inset_x = int(s * 0.03)
-    inset_y = int(s * 0.03)
+    # 2. White calendar tear-off page (solid white body)
+    inset_x = int(s * 0.025)
+    inset_y = int(s * 0.025)
     px0 = x0 + inset_x
     py0 = y0 + inset_y
     px1 = x1 - inset_x
@@ -41,37 +39,37 @@ def render_calendar(size):
     pr = int(r * 0.85)
     draw.rounded_rectangle([px0, py0, px1, py1], radius=pr, fill=white)
 
-    # 3. Top header banner (vibrant green, clipped to top rounded corners)
-    mask = Image.new("L", (s, s), 0)
-    m_draw = ImageDraw.Draw(mask)
-    m_draw.rounded_rectangle([px0, py0, px1, py1], radius=pr, fill=255)
+    # 3. Top header banner (vibrant green)
+    header_h = int(ch * 0.32)
+    top_mask = Image.new("L", (s, s), 0)
+    tm_draw = ImageDraw.Draw(top_mask)
+    tm_draw.rounded_rectangle([px0, py0, px1, py1], radius=pr, fill=255)
+    tm_draw.rectangle([0, py0 + header_h, s, s], fill=0)
 
-    header = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    h_draw = ImageDraw.Draw(header)
-    header_h = int(ch * 0.30)
+    header_layer = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    h_draw = ImageDraw.Draw(header_layer)
     h_draw.rectangle([px0, py0, px1, py0 + header_h], fill=green_main)
 
-    # Subtle horizontal crease under the header bar
     sw = max(2, int(s * 0.018))
     h_draw.line([(px0, py0 + header_h), (px1, py0 + header_h)], fill=green_crease, width=sw)
 
-    # Top binder rings / hanging tabs (2 rounded tabs at top)
-    ring_w = int(s * 0.065)
-    ring_h = int(s * 0.10)
-    ring_y0 = py0 - int(ring_h * 0.35)
+    im.paste(header_layer, (0, 0), top_mask)
+
+    # Binder rings / hanging tabs at top (2 rounded tabs)
+    ring_w = int(s * 0.07)
+    ring_h = int(s * 0.11)
+    ring_y0 = y0 - int(ring_h * 0.30)
     ring_y1 = ring_y0 + ring_h
     rr = ring_w // 2
 
     rx1 = px0 + int((px1 - px0) * 0.28)
     rx2 = px0 + int((px1 - px0) * 0.72)
 
-    h_draw.rounded_rectangle([rx1 - rr, ring_y0, rx1 + rr, ring_y1], radius=rr, fill=white, outline=green_dark, width=max(2, int(s * 0.015)))
-    h_draw.rounded_rectangle([rx2 - rr, ring_y0, rx2 + rr, ring_y1], radius=rr, fill=white, outline=green_dark, width=max(2, int(s * 0.015)))
-
-    im.paste(header, (0, 0), mask)
+    draw.rounded_rectangle([rx1 - rr, ring_y0, rx1 + rr, ring_y1], radius=rr, fill=white, outline=green_dark, width=max(2, int(s * 0.015)))
+    draw.rounded_rectangle([rx2 - rr, ring_y0, rx2 + rr, ring_y1], radius=rr, fill=white, outline=green_dark, width=max(2, int(s * 0.015)))
 
     # 4. Bold '31' text in lower body of the white page
-    font_size = int((py1 - (py0 + header_h)) * 0.65)
+    font_size = int((py1 - (py0 + header_h)) * 0.68)
     font_path = "/mnt/c/Windows/Fonts/segoeuib.ttf"
     if not os.path.exists(font_path):
         font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
@@ -84,7 +82,7 @@ def render_calendar(size):
 
     center_y = py0 + header_h + (py1 - (py0 + header_h)) / 2
     tx = (s - tw) / 2 - bbox[0]
-    ty = center_y - th / 2 - bbox[1] - int(s * 0.01)
+    ty = center_y - th / 2 - bbox[1]
     draw.text((tx, ty), text, font=font, fill=green_text)
 
     return im.resize((size, size), Image.Resampling.LANCZOS)

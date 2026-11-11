@@ -619,7 +619,7 @@
         subTitle.className = 'desktop-about-sub';
         subTitle.textContent = isCalendar
           ? 'Unofficial desktop wrapper for Google Calendar.'
-          : 'Unofficial desktop wrapper for Google Mail / Gmail.';
+          : 'Unofficial desktop wrapper for Gmail.';
 
         aboutTitles.appendChild(mainTitle);
         aboutTitles.appendChild(subTitle);
@@ -779,7 +779,7 @@
     desc.className = 'desktop-splash-desc';
     desc.textContent = isCalendar
       ? 'An independent, fast, and focused desktop experience for Google Calendar.'
-      : 'An independent, fast, and focused desktop experience for Google Mail.';
+      : 'An independent, fast, and focused desktop experience for Gmail.';
 
     // Disclaimer & Privacy Highlights Cards
     const cards = document.createElement('div');
@@ -791,7 +791,7 @@
         title: 'Independent Wrapper',
         desc: isCalendar
           ? 'Desktop Calendar is an unofficial desktop client created solely to provide a focused native window for Google Calendar.'
-          : 'Desktop Mail is an unofficial desktop client created solely to provide a focused native window for Google Mail.'
+          : 'Desktop Mail is an unofficial desktop client created solely to provide a focused native window for Gmail.'
       },
       {
         icon: 'shield',
