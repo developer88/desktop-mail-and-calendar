@@ -5,7 +5,8 @@ use tauri::{
     AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder, WindowEvent,
 };
 
-// No User-Agent spoofing: genuine Microsoft Edge WebView2 user-agent is preserved.
+// Standard Microsoft Edge on Windows 11 User-Agent required by Google Calendar and Google Services
+const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0";
 
 mod commands {
     use super::*;
@@ -76,6 +77,7 @@ pub fn run() {
                 .resizable(true)
                 .decorations(false)
                 .shadow(true)
+                .user_agent(USER_AGENT)
                 .initialization_script(&injected_script)
                 .on_document_title_changed({
                     let app_cmd = app.handle().clone();
