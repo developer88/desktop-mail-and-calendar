@@ -68,30 +68,26 @@
 
     const href = target.href;
 
-    // Handle mailto: links (only if user explicitly enabled this in Settings; off by default)
+    // In-app mailto: links route directly to compose
     if (href.startsWith('mailto:')) {
-      const handleMailto = localStorage.getItem('desktop_pref_handle_mailto_links') === 'true';
-      if (handleMailto) {
+      if (typeof APP_KIND !== 'undefined' && APP_KIND === 'mail') {
         event.preventDefault();
         event.stopPropagation();
         const mailtoQuery = href.slice(7);
         window.location.href = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(mailtoQuery);
         return;
       }
-      return;
     }
 
-    // Handle webcal: links (only if user explicitly enabled this in Settings; off by default)
+    // In-app webcal: links route to add calendar subscription
     if (href.startsWith('webcal:')) {
-      const handleCalendar = localStorage.getItem('desktop_pref_handle_calendar_links') === 'true';
-      if (handleCalendar) {
+      if (typeof APP_KIND !== 'undefined' && APP_KIND === 'calendar') {
         event.preventDefault();
         event.stopPropagation();
         const webcalUrl = 'https://calendar.google.com/calendar/u/0/r/settings/addcalendar?cid=' + encodeURIComponent(href);
         window.location.href = webcalUrl;
         return;
       }
-      return;
     }
 
     try {

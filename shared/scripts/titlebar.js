@@ -514,6 +514,43 @@
       parent.appendChild(card);
     }
 
+    function renderActionCard(parent, iconName, title, desc, btnText, onAction) {
+      const card = document.createElement('div');
+      card.className = 'desktop-settings-card';
+
+      const info = document.createElement('div');
+      info.className = 'desktop-card-info';
+
+      const iconWrap = document.createElement('div');
+      iconWrap.className = 'desktop-card-icon';
+      iconWrap.appendChild(createSvgIcon(iconName));
+
+      const textWrap = document.createElement('div');
+      textWrap.className = 'desktop-card-text';
+
+      const titleEl = document.createElement('div');
+      titleEl.className = 'desktop-card-title';
+      titleEl.textContent = title;
+
+      const descEl = document.createElement('div');
+      descEl.className = 'desktop-card-sub';
+      descEl.textContent = desc;
+
+      textWrap.appendChild(titleEl);
+      textWrap.appendChild(descEl);
+      info.appendChild(iconWrap);
+      info.appendChild(textWrap);
+
+      const btn = document.createElement('button');
+      btn.className = 'desktop-settings-action-btn';
+      btn.textContent = btnText;
+      btn.addEventListener('click', onAction);
+
+      card.appendChild(info);
+      card.appendChild(btn);
+      parent.appendChild(card);
+    }
+
     function renderContent(tabId) {
       contentArea.className = 'desktop-settings-content' + (tabId === 'about' ? ' about-view' : '');
       while (contentArea.firstChild) {
@@ -538,12 +575,12 @@
           'bell',
           'Desktop Notifications',
           isCalendar
-            ? 'Show system notifications for upcoming calendar events and reminders.'
-            : 'Show system notifications for new unread incoming emails.',
+            ? 'Allow notifications for upcoming calendar events and reminders.'
+            : 'Allow notifications for incoming emails.',
           'notifications_enabled',
           false,
           (enabled) => {
-            if (enabled && typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+            if (enabled && typeof Notification !== 'undefined') {
               Notification.requestPermission();
             }
           }
@@ -564,16 +601,18 @@
           }
         );
 
-        // 3. Handle external protocol links (off by default)
-        renderToggleCard(
+        // 3. Default app instruction with deep link to Windows Settings
+        renderActionCard(
           contentArea,
           'link',
-          isCalendar ? 'Handle calendar links' : 'Handle mailto: links',
+          isCalendar ? 'Default Calendar App' : 'Default Email App',
           isCalendar
-            ? 'Open webcal: calendar subscription links inside Desktop Calendar (off by default).'
-            : 'Open mailto: email compose links inside Desktop Mail (off by default).',
-          isCalendar ? 'handle_calendar_links' : 'handle_mailto_links',
-          false
+            ? 'To set as default for calendar links, select Desktop Calendar under Default apps in Windows Settings.'
+            : 'To set as default for mailto: links, select Desktop Mail under Default apps in Windows Settings.',
+          'Open Windows Settings',
+          () => {
+            triggerAction('open:defaultapps');
+          }
         );
       } else if (tabId === 'privacy') {
         const secTitle = document.createElement('div');

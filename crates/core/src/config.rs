@@ -39,7 +39,7 @@ impl DesktopAppConfig {
             kind: AppKind::Calendar,
             title: "Desktop Calendar".to_string(),
             initial_url: "https://calendar.google.com/calendar/u/0/r".to_string(),
-            width: 1120.0,
+            width: 1180.0,
             height: 760.0,
             min_width: 720.0,
             min_height: 520.0,

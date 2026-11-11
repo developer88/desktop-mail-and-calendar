@@ -76,6 +76,17 @@ mod commands {
 pub fn run() {
     let config = DesktopAppConfig::for_mail();
 
+    let mut start_url = config.initial_url.clone();
+    for arg in std::env::args().skip(1) {
+        let clean = arg.trim_matches('"').trim_matches('\'');
+        if clean.starts_with("mailto:") {
+            if let Some(data) = parse_mailto_url(clean) {
+                start_url = to_mail_compose_url(&data);
+                break;
+            }
+        }
+    }
+
     tauri::Builder::<tauri::Wry>::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
@@ -92,8 +103,7 @@ pub fn run() {
 
             // 1. Build main WebviewWindow with injected styles, scripts, and modern Windows 11 user-agent
             let initial_url = WebviewUrl::External(
-                config
-                    .initial_url
+                start_url
                     .parse()
                     .expect("Failed to parse initial URL for Mail"),
             );
@@ -124,9 +134,9 @@ pub fn run() {
                                 "maximize" => {
                                     if let Ok(is_max) = window.is_maximized() {
                                         if is_max {
-                                            let _ = window.unmaximize();
+                                             let _ = window.unmaximize();
                                         } else {
-                                            let _ = window.maximize();
+                                             let _ = window.maximize();
                                         }
                                     }
                                 }
@@ -143,6 +153,10 @@ pub fn run() {
                                 }
                                 "autostart:off" => {
                                     set_windows_autostart(false);
+                                }
+                                "open:defaultapps" => {
+                                    use tauri_plugin_shell::ShellExt;
+                                    let _ = app_cmd.shell().open("ms-settings:defaultapps", None);
                                 }
                                 _ => {}
                             }

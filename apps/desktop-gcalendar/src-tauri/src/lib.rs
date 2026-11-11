@@ -46,6 +46,25 @@ mod commands {
 pub fn run() {
     let config = DesktopAppConfig::for_calendar();
 
+    let mut start_url = config.initial_url.clone();
+    for arg in std::env::args().skip(1) {
+        let clean = arg.trim_matches('"').trim_matches('\'');
+        if clean.starts_with("webcal://") || clean.starts_with("webcals://") || clean.ends_with(".ics") {
+            let http_url = if let Some(stripped) = clean.strip_prefix("webcal://") {
+                format!("http://{}", stripped)
+            } else if let Some(stripped) = clean.strip_prefix("webcals://") {
+                format!("https://{}", stripped)
+            } else {
+                clean.to_string()
+            };
+            start_url = format!(
+                "https://calendar.google.com/calendar/u/0/r/settings/addcalendar?cid={}",
+                url::form_urlencoded::byte_serialize(http_url.as_bytes()).collect::<String>()
+            );
+            break;
+        }
+    }
+
     tauri::Builder::<tauri::Wry>::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
@@ -59,8 +78,7 @@ pub fn run() {
             let injected_script = get_injected_bundle(config.kind);
 
             let initial_url = WebviewUrl::External(
-                config
-                    .initial_url
+                start_url
                     .parse()
                     .expect("Failed to parse initial URL for Calendar"),
             );
@@ -110,6 +128,10 @@ pub fn run() {
                                 }
                                 "autostart:off" => {
                                     set_windows_autostart(false);
+                                }
+                                "open:defaultapps" => {
+                                    use tauri_plugin_shell::ShellExt;
+                                    let _ = app_cmd.shell().open("ms-settings:defaultapps", None);
                                 }
                                 _ => {}
                             }
