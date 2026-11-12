@@ -57,10 +57,102 @@ input[type="text"], input[type="search"] {
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0)) !important;
+  background: transparent !important;
   user-select: none !important;
   -webkit-app-region: drag !important;
   pointer-events: auto !important;
+}
+
+/* Calendar Titlebar: Matches Calendar exact light/dark mode */
+#desktop-custom-titlebar.calendar-titlebar {
+  background: transparent !important;
+}
+
+#desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn {
+  color: #444746 !important;
+}
+
+#desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn:hover {
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #1f1f1f !important;
+}
+
+#desktop-custom-titlebar.calendar-titlebar #desktop-custom-titlebar-title {
+  color: #444746 !important;
+  text-shadow: none !important;
+}
+
+/* Calendar Dark Mode */
+#desktop-custom-titlebar.calendar-titlebar.dark-mode {
+  background: transparent !important;
+}
+
+#desktop-custom-titlebar.calendar-titlebar.dark-mode .desktop-caption-btn {
+  color: #e3e3e3 !important;
+}
+
+#desktop-custom-titlebar.calendar-titlebar.dark-mode .desktop-caption-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+#desktop-custom-titlebar.calendar-titlebar.dark-mode #desktop-custom-titlebar-title {
+  color: #e3e3e3 !important;
+  text-shadow: none !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  #desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn {
+    color: #e3e3e3 !important;
+  }
+
+  #desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+  }
+
+  #desktop-custom-titlebar.calendar-titlebar #desktop-custom-titlebar-title {
+    color: #e3e3e3 !important;
+    text-shadow: none !important;
+  }
+}
+
+/* Gmail Titlebar: Transparent to seamlessly blend with custom themes & wallpapers */
+#desktop-custom-titlebar.mail-titlebar {
+  background: transparent !important;
+}
+
+#desktop-custom-titlebar.mail-titlebar .desktop-caption-btn {
+  color: #444746 !important;
+}
+
+#desktop-custom-titlebar.mail-titlebar .desktop-caption-btn:hover {
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #1f1f1f !important;
+}
+
+#desktop-custom-titlebar.mail-titlebar #desktop-custom-titlebar-title {
+  color: #444746 !important;
+  text-shadow: none !important;
+}
+
+/* Gmail Adaptive Dark Mode / Photo Wallpaper with light text */
+#desktop-custom-titlebar.mail-titlebar.dark-mode {
+  background: transparent !important;
+}
+
+#desktop-custom-titlebar.mail-titlebar.dark-mode .desktop-caption-btn {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+#desktop-custom-titlebar.mail-titlebar.dark-mode .desktop-caption-btn:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+#desktop-custom-titlebar.mail-titlebar.dark-mode #desktop-custom-titlebar-title {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
 }
 
 #desktop-custom-titlebar-drag {
@@ -97,7 +189,7 @@ input[type="text"], input[type="search"] {
   height: 32px !important;
   border: none !important;
   background: transparent !important;
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: inherit !important;
   cursor: pointer !important;
   transition: background-color 0.12s ease, color 0.12s ease !important;
   padding: 0 !important;
@@ -105,11 +197,6 @@ input[type="text"], input[type="search"] {
   outline: none !important;
   -webkit-app-region: no-drag !important;
   pointer-events: auto !important;
-}
-
-.desktop-caption-btn:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
 }
 
 .desktop-caption-btn.close:hover {
@@ -1046,9 +1133,22 @@ input[type="text"], input[type="search"] {
   }
 }
 
-/* Ensure Google top-right icons have horizontal clearance from the window control buttons */
-header.gb_Ja, header[role="banner"] {
+/* Shift Google's rightmost absolute icon cluster (avatar, settings) away from window controls */
+header,
+header.gb_Ja,
+header[role="banner"] {
   padding-right: 184px !important;
+  box-sizing: border-box !important;
+}
+
+header > div:last-child,
+header[role="banner"] > div:last-child,
+header.gb_Ja > div:last-child,
+header .gb_Ld,
+header .gb_Fe,
+header .gb_De {
+  right: 184px !important;
+  margin-right: 184px !important;
 }
 
 /* Dark mode enhancements when system prefers dark */

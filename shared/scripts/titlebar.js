@@ -42,6 +42,77 @@
 
   window.addEventListener('scroll', preventRootScroll, { passive: true });
 
+  // Shift Google's rightmost icon cluster away from custom window caption buttons
+  function adjustHeaderOffset() {
+    const header = document.querySelector('header') || document.querySelector('[role="banner"]');
+    if (!header) return;
+
+    header.style.setProperty('padding-right', '184px', 'important');
+    header.style.setProperty('box-sizing', 'border-box', 'important');
+
+    const children = header.children;
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      const style = window.getComputedStyle(child);
+      if (style.position === 'absolute' || style.position === 'fixed') {
+        const rightVal = parseFloat(style.right);
+        if (!isNaN(rightVal) && rightVal < 150) {
+          child.style.setProperty('right', '184px', 'important');
+        }
+      }
+    }
+
+    const lastChild = header.lastElementChild;
+    if (lastChild) {
+      const style = window.getComputedStyle(lastChild);
+      if (style.position === 'absolute' || style.position === 'fixed') {
+        lastChild.style.setProperty('right', '184px', 'important');
+      } else {
+        lastChild.style.setProperty('margin-right', '184px', 'important');
+      }
+    }
+  }
+
+  // Dynamic adaptive theme update for Calendar and Gmail titlebars
+  function updateAdaptiveTheme() {
+    adjustHeaderOffset();
+    const titlebar = document.getElementById('desktop-custom-titlebar');
+    if (!titlebar) return;
+
+    if (isCalendar) {
+      titlebar.classList.add('calendar-titlebar');
+      titlebar.classList.remove('mail-titlebar');
+      const isDark = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        || (document.documentElement && document.documentElement.getAttribute('data-theme') === 'dark')
+        || (document.body && (document.body.classList.contains('dark-mode') || document.body.classList.contains('dark-theme')));
+      titlebar.classList.toggle('dark-mode', isDark);
+    } else {
+      titlebar.classList.add('mail-titlebar');
+      titlebar.classList.remove('calendar-titlebar');
+
+      // Adaptive brightness detection for Gmail
+      const header = document.querySelector('header') || document.querySelector('[role="banner"]');
+      let isDark = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+      if (header) {
+        const sampleEl = header.querySelector('[role="button"] svg, button svg, [role="search"], span') || header;
+        const computedColor = window.getComputedStyle(sampleEl).color;
+        const rgb = computedColor.match(/\d+/g);
+        if (rgb && rgb.length >= 3) {
+          const brightness = (parseInt(rgb[0], 10) * 299 + parseInt(rgb[1], 10) * 587 + parseInt(rgb[2], 10) * 114) / 1000;
+          // Light text/icons indicate a dark theme or wallpaper
+          isDark = brightness > 140;
+        }
+      }
+
+      titlebar.classList.toggle('dark-mode', isDark);
+    }
+  }
+
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateAdaptiveTheme);
+  }
+
   // Fast, CSP-proof native action trigger via document.title interceptor
   let lastNonCmdTitle = document.title || (isCalendar ? 'Desktop Calendar' : 'Desktop Mail');
   function triggerAction(action) {
@@ -1263,7 +1334,10 @@
 
   function createTitlebar() {
     checkFirstRunSplash();
-    if (document.getElementById('desktop-custom-titlebar')) return;
+    if (document.getElementById('desktop-custom-titlebar')) {
+      updateAdaptiveTheme();
+      return;
+    }
 
     const titlebar = document.createElement('div');
     titlebar.id = 'desktop-custom-titlebar';
@@ -1313,6 +1387,7 @@
     if (root) {
       root.appendChild(titlebar);
     }
+    updateAdaptiveTheme();
 
     // Action handlers
     menuBtn.addEventListener('click', (e) => {
