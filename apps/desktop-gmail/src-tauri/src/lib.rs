@@ -22,31 +22,12 @@ mod commands {
         app: AppHandle<R>,
         count: u32,
         icon_rgba: Option<Vec<u8>>,
+        overlay_rgba: Option<Vec<u8>>,
         width: Option<u32>,
         height: Option<u32>,
     ) -> Result<(), String> {
         if let Some(window) = app.get_webview_window("main") {
-            let title = if count > 0 {
-                format!("Desktop Mail ({})", count)
-            } else {
-                "Desktop Mail".to_string()
-            };
-            let _ = window.set_title(&title);
-
-            if count > 0 {
-                if let (Some(rgba), Some(w), Some(h)) = (icon_rgba, width, height) {
-                    if rgba.len() == (w * h * 4) as usize {
-                        let img = tauri::image::Image::new_owned(rgba, w, h);
-                        let _ = window.set_icon(img);
-                    }
-                }
-            } else {
-                if let Ok(img) =
-                    tauri::image::Image::from_bytes(include_bytes!("../icons/128x128.png"))
-                {
-                    let _ = window.set_icon(img);
-                }
-            }
+            apply_unread_count(&window, count, icon_rgba, overlay_rgba, width, height);
         }
         Ok(())
     }
@@ -89,6 +70,82 @@ mod commands {
     #[tauri::command]
     pub fn close_window<R: Runtime>(app: AppHandle<R>) {
         app.exit(0);
+    }
+}
+
+fn apply_unread_count<R: Runtime>(
+    window: &tauri::WebviewWindow<R>,
+    count: u32,
+    icon_rgba: Option<Vec<u8>>,
+    overlay_rgba: Option<Vec<u8>>,
+    width: Option<u32>,
+    height: Option<u32>,
+) {
+    let title = if count > 0 {
+        format!("Desktop Mail ({})", count)
+    } else {
+        "Desktop Mail".to_string()
+    };
+    let _ = window.set_title(&title);
+
+    #[cfg(target_os = "windows")]
+    if let Ok(hwnd_obj) = window.hwnd() {
+        let hwnd = hwnd_obj.0 as isize;
+        unsafe {
+            if count > 0 {
+                if let (Some(rgba), Some(w), Some(h)) = (icon_rgba, width, height) {
+                    let hicon =
+                        desktop_google_core::icon::windows::create_hicon_from_rgba(&rgba, w, h);
+                    if hicon != 0 {
+                        desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
+                    }
+                } else if let Ok(img) =
+                    tauri::image::Image::from_bytes(include_bytes!("../icons/128x128.png"))
+                {
+                    let hicon = desktop_google_core::icon::windows::render_mail_badged_hicon(
+                        img.rgba(),
+                        count,
+                    );
+                    if hicon != 0 {
+                        desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
+                    }
+                }
+
+                if let Some(ol_rgba) = overlay_rgba {
+                    let ol_hicon = desktop_google_core::icon::windows::create_hicon_from_rgba(
+                        &ol_rgba, 32, 32,
+                    );
+                    if ol_hicon != 0 {
+                        let desc = format!("{} unread", count);
+                        desktop_google_core::icon::windows::set_taskbar_overlay_icon(
+                            hwnd, ol_hicon, &desc,
+                        );
+                    }
+                } else {
+                    let ol_hicon = desktop_google_core::icon::windows::render_overlay_hicon(count);
+                    if ol_hicon != 0 {
+                        let desc = format!("{} unread", count);
+                        desktop_google_core::icon::windows::set_taskbar_overlay_icon(
+                            hwnd, ol_hicon, &desc,
+                        );
+                    }
+                }
+            } else {
+                desktop_google_core::icon::windows::set_taskbar_overlay_icon(hwnd, 0, "");
+                if let Ok(img) =
+                    tauri::image::Image::from_bytes(include_bytes!("../icons/128x128.png"))
+                {
+                    let hicon = desktop_google_core::icon::windows::create_hicon_from_rgba(
+                        img.rgba(),
+                        img.width(),
+                        img.height(),
+                    );
+                    if hicon != 0 {
+                        desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -144,6 +201,12 @@ pub fn run() {
                     let app_cmd = app.handle().clone();
                     move |window, title| {
                         if let Some(cmd) = title.strip_prefix("__desktop_cmd__:") {
+                            if let Some(unread_str) = cmd.strip_prefix("unread:") {
+                                if let Ok(count) = unread_str.parse::<u32>() {
+                                    apply_unread_count(&window, count, None, None, None, None);
+                                }
+                                return;
+                            }
                             match cmd {
                                 "drag" => {
                                     let _ = window.start_dragging();
@@ -179,6 +242,27 @@ pub fn run() {
                                     let _ = app_cmd.shell().open("ms-settings:defaultapps", None);
                                 }
                                 _ => {}
+                            }
+                        } else {
+                            // Extract unread count from natural Gmail title: e.g. "Inbox (66) - ...", "(66) Inbox", "Posteingang (12)"
+                            if let Some(start) = title.find('(') {
+                                if let Some(end) = title[start..].find(')') {
+                                    let inner = &title[start + 1..start + end];
+                                    let raw = inner.replace(',', "");
+                                    let parsed_count = if raw.ends_with('+') {
+                                        raw[..raw.len() - 1].parse::<u32>().ok()
+                                    } else if raw.to_lowercase().ends_with('k') {
+                                        raw[..raw.len() - 1]
+                                            .parse::<f32>()
+                                            .ok()
+                                            .map(|k| (k * 1000.0) as u32)
+                                    } else {
+                                        raw.parse::<u32>().ok()
+                                    };
+                                    if let Some(count) = parsed_count {
+                                        apply_unread_count(&window, count, None, None, None, None);
+                                    }
+                                }
                             }
                         }
                     }

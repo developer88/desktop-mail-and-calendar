@@ -39,23 +39,36 @@ mod commands {
     pub fn close_window<R: Runtime>(app: AppHandle<R>) {
         app.exit(0);
     }
+
+    #[tauri::command]
+    pub fn update_calendar_date_icon<R: Runtime>(
+        app: AppHandle<R>,
+        _day: u32,
+        icon_rgba: Option<Vec<u8>>,
+        width: Option<u32>,
+        height: Option<u32>,
+    ) -> Result<(), String> {
+        if let Some(window) = app.get_webview_window("main") {
+            #[cfg(target_os = "windows")]
+            if let Ok(hwnd_obj) = window.hwnd() {
+                let hwnd = hwnd_obj.0 as isize;
+                if let (Some(rgba), Some(w), Some(h)) = (icon_rgba, width, height) {
+                    unsafe {
+                        let hicon =
+                            desktop_google_core::icon::windows::create_hicon_from_rgba(&rgba, w, h);
+                        if hicon != 0 {
+                            desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 pub fn run() {
     let config = DesktopAppConfig::for_calendar();
-
-    // Self-healing: Clear volatile offline caches (Service Worker & IndexedDB) on startup
-    // to eliminate stale/corrupt calendar sync cursors, while preserving user session
-    // (Cookies, LocalStorage, Login Data).
-    #[cfg(target_os = "windows")]
-    if let Some(local_app_data) = std::env::var_os("LOCALAPPDATA") {
-        let base_dir = std::path::PathBuf::from(local_app_data)
-            .join("com.andrey.desktop-gcalendar")
-            .join("EBWebView")
-            .join("Default");
-        let _ = std::fs::remove_dir_all(base_dir.join("Service Worker"));
-        let _ = std::fs::remove_dir_all(base_dir.join("IndexedDB"));
-    }
 
     let mut start_url = config.initial_url.clone();
     for arg in std::env::args().skip(1) {
@@ -84,6 +97,7 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             commands::open_external_url,
+            commands::update_calendar_date_icon,
             commands::minimize_window,
             commands::maximize_window,
             commands::close_window
@@ -243,6 +257,66 @@ pub fn run() {
                     }
                 })
                 .build()?;
+
+            #[cfg(target_os = "windows")]
+            {
+                let win_handle = window.clone();
+                std::thread::spawn(move || {
+                    let mut last_day = 0u32;
+                    let base_img = tauri::image::Image::from_bytes(include_bytes!(
+                        "../icons/128x128.png"
+                    ))
+                    .ok();
+
+                    for _ in 0..100 {
+                        if let Ok(hwnd_obj) = win_handle.hwnd() {
+                            let hwnd = hwnd_obj.0 as isize;
+                            if hwnd != 0 {
+                                unsafe {
+                                    let day = desktop_google_core::icon::windows::get_local_day();
+                                    if day != last_day {
+                                        last_day = day;
+                                        if let Some(ref img) = base_img {
+                                            let hicon = desktop_google_core::icon::windows::render_calendar_date_hicon(
+                                                img.rgba(), day,
+                                            );
+                                            if hicon != 0 {
+                                                desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                        std::thread::sleep(std::time::Duration::from_millis(50));
+                    }
+
+                    // Background loop: check every 30s for date change across midnight
+                    loop {
+                        std::thread::sleep(std::time::Duration::from_secs(30));
+                        if let Ok(hwnd_obj) = win_handle.hwnd() {
+                            let hwnd = hwnd_obj.0 as isize;
+                            if hwnd != 0 {
+                                unsafe {
+                                    let day = desktop_google_core::icon::windows::get_local_day();
+                                    if day != last_day {
+                                        last_day = day;
+                                        if let Some(ref img) = base_img {
+                                            let hicon = desktop_google_core::icon::windows::render_calendar_date_hicon(
+                                                img.rgba(), day,
+                                            );
+                                            if hicon != 0 {
+                                                desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
 
             // Exit application directly when window close button (X) is clicked
             let app_handle_for_close = app.handle().clone();

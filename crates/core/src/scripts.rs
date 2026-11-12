@@ -5,6 +5,8 @@ pub const DECLUTTER_CSS: &str = include_str!("../../../shared/styles/declutter.c
 pub const NAVIGATION_INTERCEPTOR_SCRIPT: &str =
     include_str!("../../../shared/scripts/navigation-interceptor.js");
 pub const UNREAD_OBSERVER_SCRIPT: &str = include_str!("../../../shared/scripts/unread-observer.js");
+pub const CALENDAR_DATE_SCRIPT: &str =
+    include_str!("../../../shared/scripts/calendar-date-observer.js");
 pub const TITLEBAR_SCRIPT: &str = include_str!("../../../shared/scripts/titlebar.js");
 
 /// Constructs the complete consolidated JavaScript bundle injected into the webview on page initialization
@@ -22,7 +24,7 @@ pub fn get_injected_bundle(app_kind: AppKind) -> String {
     let escaped_declutter = DECLUTTER_CSS.replace('\\', "\\\\").replace('`', "\\`");
     let unread_script = match app_kind {
         AppKind::Mail => UNREAD_OBSERVER_SCRIPT,
-        AppKind::Calendar => "",
+        AppKind::Calendar => CALENDAR_DATE_SCRIPT,
     };
 
     format!(

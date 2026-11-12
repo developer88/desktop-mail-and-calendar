@@ -1,0 +1,723 @@
+#[cfg(target_os = "windows")]
+pub mod windows {
+    use std::ffi::c_void;
+    use std::sync::atomic::{AtomicIsize, Ordering};
+    use windows_sys::core::GUID;
+    use windows_sys::Win32::Foundation::{HWND, RECT};
+    use windows_sys::Win32::Graphics::Gdi::*;
+    use windows_sys::Win32::System::Com::{CoCreateInstance, CLSCTX_INPROC_SERVER};
+    use windows_sys::Win32::UI::WindowsAndMessaging::*;
+
+    type HRESULT = i32;
+    type BOOL = i32;
+
+    static LAST_MAIN_HICON: AtomicIsize = AtomicIsize::new(0);
+    static LAST_OVERLAY_HICON: AtomicIsize = AtomicIsize::new(0);
+
+    const CLSID_TASKBAR_LIST: GUID = GUID {
+        data1: 0x56FDF344,
+        data2: 0xFD6D,
+        data3: 0x11D0,
+        data4: [0x95, 0x8A, 0x00, 0x60, 0x97, 0xC9, 0xA0, 0x90],
+    };
+
+    const IID_ITASKBAR_LIST3: GUID = GUID {
+        data1: 0xEA1AFB91,
+        data2: 0x9E28,
+        data3: 0x4B86,
+        data4: [0x90, 0xE9, 0x9E, 0x9F, 0x8A, 0x5E, 0xEF, 0xAF],
+    };
+
+    #[repr(C)]
+    struct ITaskbarList3Vtbl {
+        pub query_interface: unsafe extern "system" fn(
+            this: *mut c_void,
+            riid: *const GUID,
+            ppv: *mut *mut c_void,
+        ) -> HRESULT,
+        pub add_ref: unsafe extern "system" fn(this: *mut c_void) -> u32,
+        pub release: unsafe extern "system" fn(this: *mut c_void) -> u32,
+        pub hr_init: unsafe extern "system" fn(this: *mut c_void) -> HRESULT,
+        pub add_tab: unsafe extern "system" fn(this: *mut c_void, hwnd: HWND) -> HRESULT,
+        pub delete_tab: unsafe extern "system" fn(this: *mut c_void, hwnd: HWND) -> HRESULT,
+        pub activate_tab: unsafe extern "system" fn(this: *mut c_void, hwnd: HWND) -> HRESULT,
+        pub set_active_alt: unsafe extern "system" fn(this: *mut c_void, hwnd: HWND) -> HRESULT,
+        pub mark_fullscreen_window:
+            unsafe extern "system" fn(this: *mut c_void, hwnd: HWND, f_fullscreen: BOOL) -> HRESULT,
+        pub set_progress_value: unsafe extern "system" fn(
+            this: *mut c_void,
+            hwnd: HWND,
+            ull_completed: u64,
+            ull_total: u64,
+        ) -> HRESULT,
+        pub set_progress_state:
+            unsafe extern "system" fn(this: *mut c_void, hwnd: HWND, tbp_flags: i32) -> HRESULT,
+        pub register_tab:
+            unsafe extern "system" fn(this: *mut c_void, hwnd_tab: HWND, hwnd_mdi: HWND) -> HRESULT,
+        pub unregister_tab: unsafe extern "system" fn(this: *mut c_void, hwnd_tab: HWND) -> HRESULT,
+        pub set_tab_order: unsafe extern "system" fn(
+            this: *mut c_void,
+            hwnd_tab: HWND,
+            hwnd_insert_before: HWND,
+        ) -> HRESULT,
+        pub set_tab_active: unsafe extern "system" fn(
+            this: *mut c_void,
+            hwnd_tab: HWND,
+            hwnd_mdi: HWND,
+            tbat_flags: u32,
+        ) -> HRESULT,
+        pub thumb_bar_add_buttons: unsafe extern "system" fn(
+            this: *mut c_void,
+            hwnd: HWND,
+            c_buttons: u32,
+            p_button: *const c_void,
+        ) -> HRESULT,
+        pub thumb_bar_update_buttons: unsafe extern "system" fn(
+            this: *mut c_void,
+            hwnd: HWND,
+            c_buttons: u32,
+            p_button: *const c_void,
+        ) -> HRESULT,
+        pub thumb_bar_set_image_list:
+            unsafe extern "system" fn(this: *mut c_void, hwnd: HWND, himl: *mut c_void) -> HRESULT,
+        pub set_overlay_icon: unsafe extern "system" fn(
+            this: *mut c_void,
+            hwnd: HWND,
+            hicon: HICON,
+            psz_description: *const u16,
+        ) -> HRESULT,
+        pub set_thumbnail_tooltip: unsafe extern "system" fn(
+            this: *mut c_void,
+            hwnd: HWND,
+            psz_tip: *const u16,
+        ) -> HRESULT,
+        pub set_thumbnail_clip: unsafe extern "system" fn(
+            this: *mut c_void,
+            hwnd: HWND,
+            prc_clip: *const c_void,
+        ) -> HRESULT,
+    }
+
+    #[repr(C)]
+    struct ITaskbarList3 {
+        pub vtbl: *const ITaskbarList3Vtbl,
+    }
+
+    /// Creates an HICON from 32-bit RGBA pixel buffer (with full 8-bit alpha channel).
+    pub unsafe fn create_hicon_from_rgba(rgba: &[u8], width: u32, height: u32) -> isize {
+        if rgba.len() != (width * height * 4) as usize {
+            return 0;
+        }
+
+        let bi = BITMAPV5HEADER {
+            bV5Size: std::mem::size_of::<BITMAPV5HEADER>() as u32,
+            bV5Width: width as i32,
+            bV5Height: -(height as i32), // top-down
+            bV5Planes: 1,
+            bV5BitCount: 32,
+            bV5Compression: BI_BITFIELDS,
+            bV5SizeImage: (width * height * 4) as u32,
+            bV5XPelsPerMeter: 0,
+            bV5YPelsPerMeter: 0,
+            bV5ClrUsed: 0,
+            bV5ClrImportant: 0,
+            bV5RedMask: 0x00FF0000,
+            bV5GreenMask: 0x0000FF00,
+            bV5BlueMask: 0x000000FF,
+            bV5AlphaMask: 0xFF000000,
+            bV5CSType: 0x73524742, // sRGB
+            bV5Endpoints: std::mem::zeroed(),
+            bV5GammaRed: 0,
+            bV5GammaGreen: 0,
+            bV5GammaBlue: 0,
+            bV5Intent: 0,
+            bV5ProfileData: 0,
+            bV5ProfileSize: 0,
+            bV5Reserved: 0,
+        };
+
+        let hdc = GetDC(0 as _);
+        let mut bits: *mut u8 = std::ptr::null_mut();
+        let hbm_color = CreateDIBSection(
+            hdc,
+            &bi as *const _ as *const BITMAPINFO,
+            DIB_RGB_COLORS,
+            &mut bits as *mut _ as *mut *mut c_void,
+            0 as _,
+            0,
+        );
+
+        if !bits.is_null() && !hbm_color.is_null() {
+            let pixel_count = (width * height) as usize;
+            let dest = std::slice::from_raw_parts_mut(bits, pixel_count * 4);
+            for i in 0..pixel_count {
+                let src_idx = i * 4;
+                let a = rgba[src_idx + 3] as u32;
+                let r = rgba[src_idx] as u32;
+                let g = rgba[src_idx + 1] as u32;
+                let b = rgba[src_idx + 2] as u32;
+                dest[src_idx] = ((b * a + 127) / 255) as u8;
+                dest[src_idx + 1] = ((g * a + 127) / 255) as u8;
+                dest[src_idx + 2] = ((r * a + 127) / 255) as u8;
+                dest[src_idx + 3] = a as u8;
+            }
+        }
+
+        let hbm_mask = CreateBitmap(width as i32, height as i32, 1, 1, std::ptr::null());
+        ReleaseDC(0 as _, hdc);
+
+        let icon_info = ICONINFO {
+            fIcon: 1, // TRUE
+            xHotspot: 0,
+            yHotspot: 0,
+            hbmMask: hbm_mask,
+            hbmColor: hbm_color,
+        };
+
+        let hicon = CreateIconIndirect(&icon_info);
+        if !hbm_color.is_null() {
+            DeleteObject(hbm_color as _);
+        }
+        if !hbm_mask.is_null() {
+            DeleteObject(hbm_mask as _);
+        }
+
+        hicon as isize
+    }
+
+    /// Returns the local day of the month (1-31).
+    pub unsafe fn get_local_day() -> u32 {
+        let mut st: windows_sys::Win32::Foundation::SYSTEMTIME = std::mem::zeroed();
+        windows_sys::Win32::System::SystemInformation::GetLocalTime(&mut st);
+        st.wDay as u32
+    }
+
+    /// Renders the current day of the month (1-31) onto the base 128x128 Calendar icon.
+    pub unsafe fn render_calendar_date_hicon(base_rgba: &[u8], day: u32) -> isize {
+        let width = 128u32;
+        let height = 128u32;
+        if base_rgba.len() != (width * height * 4) as usize {
+            return 0;
+        }
+
+        let bi = BITMAPV5HEADER {
+            bV5Size: std::mem::size_of::<BITMAPV5HEADER>() as u32,
+            bV5Width: width as i32,
+            bV5Height: -(height as i32),
+            bV5Planes: 1,
+            bV5BitCount: 32,
+            bV5Compression: BI_BITFIELDS,
+            bV5SizeImage: (width * height * 4) as u32,
+            bV5XPelsPerMeter: 0,
+            bV5YPelsPerMeter: 0,
+            bV5ClrUsed: 0,
+            bV5ClrImportant: 0,
+            bV5RedMask: 0x00FF0000,
+            bV5GreenMask: 0x0000FF00,
+            bV5BlueMask: 0x000000FF,
+            bV5AlphaMask: 0xFF000000,
+            bV5CSType: 0x73524742,
+            bV5Endpoints: std::mem::zeroed(),
+            bV5GammaRed: 0,
+            bV5GammaGreen: 0,
+            bV5GammaBlue: 0,
+            bV5Intent: 0,
+            bV5ProfileData: 0,
+            bV5ProfileSize: 0,
+            bV5Reserved: 0,
+        };
+
+        let screen_dc = GetDC(0 as _);
+        let mut bits: *mut u8 = std::ptr::null_mut();
+        let hbm_color = CreateDIBSection(
+            screen_dc,
+            &bi as *const _ as *const BITMAPINFO,
+            DIB_RGB_COLORS,
+            &mut bits as *mut _ as *mut *mut c_void,
+            0 as _,
+            0,
+        );
+        ReleaseDC(0 as _, screen_dc);
+
+        if bits.is_null() || hbm_color.is_null() {
+            return 0;
+        }
+
+        let dest = std::slice::from_raw_parts_mut(bits, (width * height * 4) as usize);
+        for i in 0..(width * height) as usize {
+            let src_idx = i * 4;
+            let a = base_rgba[src_idx + 3] as u32;
+            let r = base_rgba[src_idx] as u32;
+            let g = base_rgba[src_idx + 1] as u32;
+            let b = base_rgba[src_idx + 2] as u32;
+            dest[src_idx] = ((b * a + 127) / 255) as u8;
+            dest[src_idx + 1] = ((g * a + 127) / 255) as u8;
+            dest[src_idx + 2] = ((r * a + 127) / 255) as u8;
+            dest[src_idx + 3] = a as u8;
+        }
+
+        let mem_dc = CreateCompatibleDC(0 as _);
+        let old_bm = SelectObject(mem_dc, hbm_color as _);
+
+        // Fill white card over the static "31"
+        let white_brush = CreateSolidBrush(0x00FFFFFF);
+        let rect = RECT {
+            left: 26,
+            top: 52,
+            right: 102,
+            bottom: 104,
+        };
+        FillRect(mem_dc, &rect, white_brush);
+        DeleteObject(white_brush as _);
+
+        // Render day number with Segoe UI bold in Google Calendar green (#15803d -> BGR: 0x003D8015)
+        let font_name: Vec<u16> = "Segoe UI\0".encode_utf16().collect();
+        let hfont = CreateFontW(
+            44,
+            0,
+            0,
+            0,
+            FW_BOLD as i32,
+            0,
+            0,
+            0,
+            DEFAULT_CHARSET as u32,
+            OUT_DEFAULT_PRECIS as u32,
+            CLIP_DEFAULT_PRECIS as u32,
+            CLEARTYPE_QUALITY as u32,
+            (DEFAULT_PITCH | FF_DONTCARE) as u32,
+            font_name.as_ptr(),
+        );
+        let old_font = SelectObject(mem_dc, hfont as _);
+        SetBkMode(mem_dc, TRANSPARENT as i32);
+        SetTextColor(mem_dc, 0x003D8015);
+
+        let day_str = format!("{}\0", day);
+        let day_wide: Vec<u16> = day_str.encode_utf16().collect();
+        let mut text_rect = RECT {
+            left: 26,
+            top: 54,
+            right: 102,
+            bottom: 104,
+        };
+        DrawTextW(
+            mem_dc,
+            day_wide.as_ptr(),
+            -1,
+            &mut text_rect,
+            DT_CENTER | DT_VCENTER | DT_SINGLELINE,
+        );
+
+        // Ensure alpha channel is 255 for the white card area
+        for y in 52..104 {
+            for x in 26..102 {
+                let idx = ((y * 128 + x) * 4) as usize;
+                dest[idx + 3] = 255;
+            }
+        }
+
+        SelectObject(mem_dc, old_font);
+        DeleteObject(hfont as _);
+        SelectObject(mem_dc, old_bm);
+        DeleteDC(mem_dc);
+
+        let hbm_mask = CreateBitmap(width as i32, height as i32, 1, 1, std::ptr::null());
+        let icon_info = ICONINFO {
+            fIcon: 1,
+            xHotspot: 0,
+            yHotspot: 0,
+            hbmMask: hbm_mask,
+            hbmColor: hbm_color,
+        };
+        let hicon = CreateIconIndirect(&icon_info);
+        DeleteObject(hbm_color as _);
+        if !hbm_mask.is_null() {
+            DeleteObject(hbm_mask as _);
+        }
+
+        hicon as isize
+    }
+
+    /// Renders the Telegram-style unread badge onto the 128x128 Mail icon.
+    pub unsafe fn render_mail_badged_hicon(base_rgba: &[u8], count: u32) -> isize {
+        if count == 0 {
+            return create_hicon_from_rgba(base_rgba, 128, 128);
+        }
+
+        let width = 128u32;
+        let height = 128u32;
+        if base_rgba.len() != (width * height * 4) as usize {
+            return 0;
+        }
+
+        let label = if count >= 1_000_000 {
+            format!("{}M", count / 1_000_000)
+        } else if count >= 1_000 {
+            format!("{}K", count / 1_000)
+        } else {
+            count.to_string()
+        };
+
+        let bi = BITMAPV5HEADER {
+            bV5Size: std::mem::size_of::<BITMAPV5HEADER>() as u32,
+            bV5Width: width as i32,
+            bV5Height: -(height as i32),
+            bV5Planes: 1,
+            bV5BitCount: 32,
+            bV5Compression: BI_BITFIELDS,
+            bV5SizeImage: (width * height * 4) as u32,
+            bV5XPelsPerMeter: 0,
+            bV5YPelsPerMeter: 0,
+            bV5ClrUsed: 0,
+            bV5ClrImportant: 0,
+            bV5RedMask: 0x00FF0000,
+            bV5GreenMask: 0x0000FF00,
+            bV5BlueMask: 0x000000FF,
+            bV5AlphaMask: 0xFF000000,
+            bV5CSType: 0x73524742,
+            bV5Endpoints: std::mem::zeroed(),
+            bV5GammaRed: 0,
+            bV5GammaGreen: 0,
+            bV5GammaBlue: 0,
+            bV5Intent: 0,
+            bV5ProfileData: 0,
+            bV5ProfileSize: 0,
+            bV5Reserved: 0,
+        };
+
+        let screen_dc = GetDC(0 as _);
+        let mut bits: *mut u8 = std::ptr::null_mut();
+        let hbm_color = CreateDIBSection(
+            screen_dc,
+            &bi as *const _ as *const BITMAPINFO,
+            DIB_RGB_COLORS,
+            &mut bits as *mut _ as *mut *mut c_void,
+            0 as _,
+            0,
+        );
+        ReleaseDC(0 as _, screen_dc);
+
+        if bits.is_null() || hbm_color.is_null() {
+            return 0;
+        }
+
+        let dest = std::slice::from_raw_parts_mut(bits, (width * height * 4) as usize);
+        for i in 0..(width * height) as usize {
+            let src_idx = i * 4;
+            let a = base_rgba[src_idx + 3] as u32;
+            let r = base_rgba[src_idx] as u32;
+            let g = base_rgba[src_idx + 1] as u32;
+            let b = base_rgba[src_idx + 2] as u32;
+            dest[src_idx] = ((b * a + 127) / 255) as u8;
+            dest[src_idx + 1] = ((g * a + 127) / 255) as u8;
+            dest[src_idx + 2] = ((r * a + 127) / 255) as u8;
+            dest[src_idx + 3] = a as u8;
+        }
+
+        let mem_dc = CreateCompatibleDC(0 as _);
+        let old_bm = SelectObject(mem_dc, hbm_color as _);
+
+        let bh = 38i32;
+        let bw = (22 + label.len() as i32 * 14).max(42).min(86);
+        let bx = 128 - bw - 2;
+        let by = 2i32;
+
+        // Dark shadow / outline
+        let dark_brush = CreateSolidBrush(0x00141414);
+        let dark_pen = CreatePen(PS_SOLID as i32, 1, 0x00141414);
+        let old_brush = SelectObject(mem_dc, dark_brush as _);
+        let old_pen = SelectObject(mem_dc, dark_pen as _);
+        RoundRect(mem_dc, bx - 2, by - 2, bx + bw + 2, by + bh + 2, 22, 22);
+
+        // Vivid red pill (#eb4034 -> BGR: 0x003440EB)
+        let red_brush = CreateSolidBrush(0x003440EB);
+        let red_pen = CreatePen(PS_SOLID as i32, 1, 0x003440EB);
+        SelectObject(mem_dc, red_brush as _);
+        SelectObject(mem_dc, red_pen as _);
+        RoundRect(mem_dc, bx, by, bx + bw, by + bh, 20, 20);
+
+        // White centered text
+        let font_size = if label.len() <= 2 {
+            24
+        } else if label.len() <= 3 {
+            20
+        } else {
+            16
+        };
+        let font_name: Vec<u16> = "Segoe UI\0".encode_utf16().collect();
+        let hfont = CreateFontW(
+            font_size,
+            0,
+            0,
+            0,
+            FW_BOLD as i32,
+            0,
+            0,
+            0,
+            DEFAULT_CHARSET as u32,
+            OUT_DEFAULT_PRECIS as u32,
+            CLIP_DEFAULT_PRECIS as u32,
+            CLEARTYPE_QUALITY as u32,
+            (DEFAULT_PITCH | FF_DONTCARE) as u32,
+            font_name.as_ptr(),
+        );
+        let old_font = SelectObject(mem_dc, hfont as _);
+        SetBkMode(mem_dc, TRANSPARENT as i32);
+        SetTextColor(mem_dc, 0x00FFFFFF);
+
+        let label_wide: Vec<u16> = format!("{}\0", label).encode_utf16().collect();
+        let mut text_rect = RECT {
+            left: bx,
+            top: by + 1,
+            right: bx + bw,
+            bottom: by + bh + 1,
+        };
+        DrawTextW(
+            mem_dc,
+            label_wide.as_ptr(),
+            -1,
+            &mut text_rect,
+            DT_CENTER | DT_VCENTER | DT_SINGLELINE,
+        );
+
+        // Set alpha channel for badge region
+        for y in (by - 2).max(0)..(by + bh + 2).min(128) {
+            for x in (bx - 2).max(0)..(bx + bw + 2).min(128) {
+                let idx = ((y * 128 + x) * 4) as usize;
+                dest[idx + 3] = 255;
+            }
+        }
+
+        SelectObject(mem_dc, old_font);
+        DeleteObject(hfont as _);
+        SelectObject(mem_dc, old_brush);
+        DeleteObject(dark_brush as _);
+        DeleteObject(red_brush as _);
+        SelectObject(mem_dc, old_pen);
+        DeleteObject(dark_pen as _);
+        DeleteObject(red_pen as _);
+        SelectObject(mem_dc, old_bm);
+        DeleteDC(mem_dc);
+
+        let hbm_mask = CreateBitmap(width as i32, height as i32, 1, 1, std::ptr::null());
+        let icon_info = ICONINFO {
+            fIcon: 1,
+            xHotspot: 0,
+            yHotspot: 0,
+            hbmMask: hbm_mask,
+            hbmColor: hbm_color,
+        };
+        let hicon = CreateIconIndirect(&icon_info);
+        DeleteObject(hbm_color as _);
+        if !hbm_mask.is_null() {
+            DeleteObject(hbm_mask as _);
+        }
+
+        hicon as isize
+    }
+
+    /// Renders a 32x32 overlay icon for taskbar overlay badges.
+    pub unsafe fn render_overlay_hicon(count: u32) -> isize {
+        if count == 0 {
+            return 0;
+        }
+
+        let width = 32u32;
+        let height = 32u32;
+        let label = if count >= 1_000_000 {
+            format!("{}M", count / 1_000_000)
+        } else if count >= 1_000 {
+            format!("{}K", count / 1_000)
+        } else {
+            count.to_string()
+        };
+
+        let bi = BITMAPV5HEADER {
+            bV5Size: std::mem::size_of::<BITMAPV5HEADER>() as u32,
+            bV5Width: width as i32,
+            bV5Height: -(height as i32),
+            bV5Planes: 1,
+            bV5BitCount: 32,
+            bV5Compression: BI_BITFIELDS,
+            bV5SizeImage: (width * height * 4) as u32,
+            bV5XPelsPerMeter: 0,
+            bV5YPelsPerMeter: 0,
+            bV5ClrUsed: 0,
+            bV5ClrImportant: 0,
+            bV5RedMask: 0x00FF0000,
+            bV5GreenMask: 0x0000FF00,
+            bV5BlueMask: 0x000000FF,
+            bV5AlphaMask: 0xFF000000,
+            bV5CSType: 0x73524742,
+            bV5Endpoints: std::mem::zeroed(),
+            bV5GammaRed: 0,
+            bV5GammaGreen: 0,
+            bV5GammaBlue: 0,
+            bV5Intent: 0,
+            bV5ProfileData: 0,
+            bV5ProfileSize: 0,
+            bV5Reserved: 0,
+        };
+
+        let screen_dc = GetDC(0 as _);
+        let mut bits: *mut u8 = std::ptr::null_mut();
+        let hbm_color = CreateDIBSection(
+            screen_dc,
+            &bi as *const _ as *const BITMAPINFO,
+            DIB_RGB_COLORS,
+            &mut bits as *mut _ as *mut *mut c_void,
+            0 as _,
+            0,
+        );
+        ReleaseDC(0 as _, screen_dc);
+
+        if bits.is_null() || hbm_color.is_null() {
+            return 0;
+        }
+
+        let dest = std::slice::from_raw_parts_mut(bits, (width * height * 4) as usize);
+        dest.fill(0);
+
+        let mem_dc = CreateCompatibleDC(0 as _);
+        let old_bm = SelectObject(mem_dc, hbm_color as _);
+
+        // Red circle with dark border
+        let dark_pen = CreatePen(PS_SOLID as i32, 1, 0x00141414);
+        let red_brush = CreateSolidBrush(0x003440EB);
+        let old_brush = SelectObject(mem_dc, red_brush as _);
+        let old_pen = SelectObject(mem_dc, dark_pen as _);
+        Ellipse(mem_dc, 1, 1, 31, 31);
+
+        // White centered text
+        let font_size = if label.len() <= 2 {
+            16
+        } else if label.len() <= 3 {
+            12
+        } else {
+            10
+        };
+        let font_name: Vec<u16> = "Segoe UI\0".encode_utf16().collect();
+        let hfont = CreateFontW(
+            font_size,
+            0,
+            0,
+            0,
+            FW_BOLD as i32,
+            0,
+            0,
+            0,
+            DEFAULT_CHARSET as u32,
+            OUT_DEFAULT_PRECIS as u32,
+            CLIP_DEFAULT_PRECIS as u32,
+            CLEARTYPE_QUALITY as u32,
+            (DEFAULT_PITCH | FF_DONTCARE) as u32,
+            font_name.as_ptr(),
+        );
+        let old_font = SelectObject(mem_dc, hfont as _);
+        SetBkMode(mem_dc, TRANSPARENT as i32);
+        SetTextColor(mem_dc, 0x00FFFFFF);
+
+        let label_wide: Vec<u16> = format!("{}\0", label).encode_utf16().collect();
+        let mut text_rect = RECT {
+            left: 1,
+            top: 1,
+            right: 31,
+            bottom: 31,
+        };
+        DrawTextW(
+            mem_dc,
+            label_wide.as_ptr(),
+            -1,
+            &mut text_rect,
+            DT_CENTER | DT_VCENTER | DT_SINGLELINE,
+        );
+
+        // Set alpha channel for the circle
+        for y in 0..32 {
+            for x in 0..32 {
+                let dx = x as f32 - 15.5;
+                let dy = y as f32 - 15.5;
+                if dx * dx + dy * dy <= 15.0 * 15.0 {
+                    let idx = ((y * 32 + x) * 4) as usize;
+                    dest[idx + 3] = 255;
+                }
+            }
+        }
+
+        SelectObject(mem_dc, old_font);
+        DeleteObject(hfont as _);
+        SelectObject(mem_dc, old_brush);
+        DeleteObject(red_brush as _);
+        SelectObject(mem_dc, old_pen);
+        DeleteObject(dark_pen as _);
+        SelectObject(mem_dc, old_bm);
+        DeleteDC(mem_dc);
+
+        let hbm_mask = CreateBitmap(width as i32, height as i32, 1, 1, std::ptr::null());
+        let icon_info = ICONINFO {
+            fIcon: 1,
+            xHotspot: 0,
+            yHotspot: 0,
+            hbmMask: hbm_mask,
+            hbmColor: hbm_color,
+        };
+        let hicon = CreateIconIndirect(&icon_info);
+        DeleteObject(hbm_color as _);
+        if !hbm_mask.is_null() {
+            DeleteObject(hbm_mask as _);
+        }
+
+        hicon as isize
+    }
+
+    /// Sets both ICON_BIG and ICON_SMALL on the window via SendMessageW.
+    /// ICON_BIG is what the Windows Taskbar uses for the taskbar button.
+    pub unsafe fn set_window_hicon(hwnd: isize, hicon: isize) {
+        if hwnd == 0 {
+            return;
+        }
+        // ICON_BIG = 1 (Windows Taskbar button icon)
+        SendMessageW(hwnd as _, WM_SETICON, 1, hicon as _);
+        // ICON_SMALL = 0 (Window titlebar and Alt+Tab)
+        SendMessageW(hwnd as _, WM_SETICON, 0, hicon as _);
+
+        let prev = LAST_MAIN_HICON.swap(hicon, Ordering::SeqCst);
+        if prev != 0 && prev != hicon {
+            DestroyIcon(prev as _);
+        }
+    }
+
+    /// Sets or clears the taskbar overlay icon via ITaskbarList3::SetOverlayIcon.
+    pub unsafe fn set_taskbar_overlay_icon(hwnd: isize, overlay_hicon: isize, description: &str) {
+        if hwnd == 0 {
+            return;
+        }
+
+        let mut taskbar: *mut c_void = std::ptr::null_mut();
+        let hr = CoCreateInstance(
+            &CLSID_TASKBAR_LIST,
+            std::ptr::null_mut(),
+            CLSCTX_INPROC_SERVER,
+            &IID_ITASKBAR_LIST3,
+            &mut taskbar,
+        );
+
+        if hr == 0 && !taskbar.is_null() {
+            let tbl = taskbar as *mut ITaskbarList3;
+            let vtbl = &*(*tbl).vtbl;
+            let _ = (vtbl.hr_init)(taskbar);
+
+            let wide: Vec<u16> = description
+                .encode_utf16()
+                .chain(std::iter::once(0))
+                .collect();
+            let _ = (vtbl.set_overlay_icon)(taskbar, hwnd as _, overlay_hicon as _, wide.as_ptr());
+            let _ = (vtbl.release)(taskbar);
+        }
+
+        let prev = LAST_OVERLAY_HICON.swap(overlay_hicon, Ordering::SeqCst);
+        if prev != 0 && prev != overlay_hicon {
+            DestroyIcon(prev as _);
+        }
+    }
+}

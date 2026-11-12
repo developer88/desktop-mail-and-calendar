@@ -1,6 +1,6 @@
 /**
  * Watches document title and DOM changes to extract unread email count
- * and reports it to the Tauri backend to set Taskbar title and badge.
+ * and reports it to the Tauri backend to set Taskbar title, main icon, and overlay badge.
  */
 (function initUnreadObserver() {
   try {
@@ -90,6 +90,38 @@
     return Array.from(ctx.getImageData(0, 0, 128, 128).data);
   }
 
+  function generateOverlayIcon(count) {
+    if (count <= 0) return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    const label = formatCountLabel(count);
+    const fontSize = label.length <= 2 ? 16 : (label.length <= 3 ? 12 : 10);
+    ctx.font = 'bold ' + fontSize + 'px "Segoe UI", -apple-system, sans-serif';
+
+    // Red circle / pill
+    ctx.beginPath();
+    ctx.arc(16, 16, 14, 0, Math.PI * 2);
+    ctx.fillStyle = '#eb4034';
+    ctx.fill();
+
+    // Dark outline
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.stroke();
+
+    // Centered white text
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, 16, 17);
+
+    return Array.from(ctx.getImageData(0, 0, 32, 32).data);
+  }
+
   function extractUnreadCount() {
     // 1. Check document.title: "Inbox (66) - ...", "(255K) Inbox...", "Posteingang (4)..."
     const titleMatch = document.title.match(/\(([\d,]+|\d+[KkMm\+]?)\)/);
@@ -109,7 +141,7 @@
     }
 
     // 2. Check sidebar inbox badge element
-    const sidebarEl = document.querySelector('a[href*="#inbox"] .bsU, .aio .bsU, [data-tooltip*="Inbox"] .bsU');
+    const sidebarEl = document.querySelector('a[href*="#inbox"] .bsU, .aio .bsU, [data-tooltip*="Inbox"] .bsU, [aria-label*="Inbox"] .bsU, div.bsU');
     if (sidebarEl && sidebarEl.textContent) {
       const clean = sidebarEl.textContent.trim().replace(/,/g, '');
       const parsed = parseInt(clean, 10);
@@ -126,11 +158,25 @@
     if (count === lastReportedCount) return;
     lastReportedCount = count;
 
+    // Fast, CSP-proof title command trigger for Rust backend
+    try {
+      const prevTitle = document.title;
+      if (!prevTitle.startsWith('__desktop_cmd__:')) {
+        document.title = '__desktop_cmd__:unread:' + count;
+        setTimeout(() => {
+          if (document.title.startsWith('__desktop_cmd__:')) {
+            document.title = prevTitle;
+          }
+        }, 40);
+      }
+    } catch (_) {}
+
     if (window.__TAURI__ && window.__TAURI__.core) {
       if (count <= 0) {
         window.__TAURI__.core.invoke('update_unread_badge', {
           count: 0,
           iconRgba: null,
+          overlayRgba: null,
           width: null,
           height: null
         }).catch(() => {});
@@ -138,17 +184,19 @@
         getBaseImage((baseImg) => {
           try {
             const rgba = generateBadgedIcon(baseImg, count);
+            const overlayRgba = generateOverlayIcon(count);
             window.__TAURI__.core.invoke('update_unread_badge', {
               count: count,
               iconRgba: rgba,
+              overlayRgba: overlayRgba,
               width: 128,
               height: 128
             }).catch(() => {});
           } catch (_) {
-            // Fallback: title update only
             window.__TAURI__.core.invoke('update_unread_badge', {
               count: count,
               iconRgba: null,
+              overlayRgba: null,
               width: null,
               height: null
             }).catch(() => {});
@@ -162,13 +210,35 @@
     inspectAndReport();
   });
 
-  const titleEl = document.querySelector('title');
-  if (titleEl) {
-    observer.observe(titleEl, { childList: true });
+  function attachObservers() {
+    const titleEl = document.querySelector('title');
+    if (titleEl) {
+      try {
+        observer.observe(titleEl, { childList: true, characterData: true, subtree: true });
+      } catch (_) {}
+    }
+    if (document.body) {
+      try {
+        observer.observe(document.body, { childList: true, subtree: true });
+      } catch (_) {}
+    }
   }
 
-  // Periodic fallback check
-  setInterval(inspectAndReport, 2500);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      attachObservers();
+      inspectAndReport();
+    });
+  } else {
+    attachObservers();
+  }
+
+  window.addEventListener('focus', inspectAndReport);
+  document.addEventListener('visibilitychange', inspectAndReport);
+
+  // Periodic fallback check (every 1s)
+  setInterval(inspectAndReport, 1000);
+
   // Pre-load base image
   getBaseImage(() => {
     inspectAndReport();

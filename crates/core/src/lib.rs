@@ -1,4 +1,5 @@
 pub mod config;
+pub mod icon;
 pub mod navigation;
 pub mod protocol;
 pub mod scripts;
