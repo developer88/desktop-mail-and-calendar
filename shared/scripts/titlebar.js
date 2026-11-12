@@ -42,33 +42,6 @@
 
   window.addEventListener('scroll', preventRootScroll, { passive: true });
 
-  // If clicking on or near the side panel toggle button triggers a browser focus scroll,
-  // ensure the root scroll is immediately reset back to (0, 0).
-  document.addEventListener('click', (e) => {
-    const target = e.target;
-    if (target && target.closest && target.closest('[aria-label*="side panel" i], [aria-label*="Side panel"]')) {
-      setTimeout(preventRootScroll, 0);
-      setTimeout(preventRootScroll, 50);
-      setTimeout(preventRootScroll, 150);
-    }
-  }, { capture: true });
-
-  // Lift the side panel button away from the bottom-right corner and ensure its parent has clearance
-  function fixSidePanelToggle() {
-    preventRootScroll();
-    const sideButtons = document.querySelectorAll(
-      '[aria-label*="Show side panel" i], [aria-label*="Hide side panel" i], [aria-label*="Side panel" i], [aria-label*="side panel" i]'
-    );
-    sideButtons.forEach((btn) => {
-      btn.style.setProperty('bottom', '14px', 'important');
-      btn.style.setProperty('right', '12px', 'important');
-      const parent = btn.parentElement;
-      if (parent && parent !== document.body && parent !== document.documentElement) {
-        parent.style.setProperty('padding-bottom', '8px', 'important');
-      }
-    });
-  }
-
   // Fast, CSP-proof native action trigger via document.title interceptor
   let lastNonCmdTitle = document.title || (isCalendar ? 'Desktop Calendar' : 'Desktop Mail');
   function triggerAction(action) {
@@ -1290,7 +1263,6 @@
 
   function createTitlebar() {
     checkFirstRunSplash();
-    fixSidePanelToggle();
     if (document.getElementById('desktop-custom-titlebar')) return;
 
     const titlebar = document.createElement('div');

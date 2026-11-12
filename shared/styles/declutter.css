@@ -1,17 +1,11 @@
 /* Declutter stylesheet: Hides promotional widgets and unnecessary web-only chrome */
 
-/* Hide promotional banners & widgets inside sidebars */
+/* Hide promotional app launcher buttons */
 div[aria-label="Google apps"],
 a[aria-label="Google apps"],
 .gb_A,
-.gb_B,
-div[role="complementary"] .aKw {
+.gb_B {
   display: none !important;
-}
-
-/* Hide top header clutter to maximize reading space */
-header.gb_Ja {
-  padding: 4px 8px !important;
 }
 
 /* Hide web-only promotional upsells */

@@ -12,22 +12,8 @@ html, body {
   overflow: hidden !important;
   height: 100% !important;
   max-height: 100vh !important;
-}
-
-/* Ensure Google Workspace companion side panel toggle button (expand/collapse sidebar)
-   is fully visible, never clipped by rounded corners, and never cut off at the bottom. */
-[aria-label*="Show side panel" i],
-[aria-label*="Hide side panel" i],
-[aria-label*="Side panel" i],
-[aria-label*="side panel" i] {
-  bottom: 14px !important;
-  right: 12px !important;
-  margin-bottom: 4px !important;
-}
-
-div[role="complementary"] {
-  padding-bottom: 14px !important;
-  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 body, input, textarea, select, button {
@@ -36,8 +22,8 @@ body, input, textarea, select, button {
   text-rendering: optimizeLegibility;
 }
 
-/* Rounded search bars and action buttons */
-.gb_fe, .gb_le, input[type="text"] {
+/* Rounded search bars */
+input[type="text"], input[type="search"] {
   border-radius: var(--win11-border-radius) !important;
 }
 
@@ -1060,9 +1046,9 @@ body, input, textarea, select, button {
   }
 }
 
-/* Offset Gmail top header so it sits cleanly below the titlebar */
+/* Ensure Google top-right icons have horizontal clearance from the window control buttons */
 header.gb_Ja, header[role="banner"] {
-  padding-top: 28px !important;
+  padding-right: 184px !important;
 }
 
 /* Dark mode enhancements when system prefers dark */
