@@ -44,6 +44,19 @@ mod commands {
 pub fn run() {
     let config = DesktopAppConfig::for_calendar();
 
+    // Self-healing: Clear volatile offline caches (Service Worker & IndexedDB) on startup
+    // to eliminate stale/corrupt calendar sync cursors, while preserving user session
+    // (Cookies, LocalStorage, Login Data).
+    #[cfg(target_os = "windows")]
+    if let Some(local_app_data) = std::env::var_os("LOCALAPPDATA") {
+        let base_dir = std::path::PathBuf::from(local_app_data)
+            .join("com.andrey.desktop-gcalendar")
+            .join("EBWebView")
+            .join("Default");
+        let _ = std::fs::remove_dir_all(base_dir.join("Service Worker"));
+        let _ = std::fs::remove_dir_all(base_dir.join("IndexedDB"));
+    }
+
     let mut start_url = config.initial_url.clone();
     for arg in std::env::args().skip(1) {
         let clean = arg.trim_matches('"').trim_matches('\'');

@@ -20,6 +20,10 @@ pub fn get_injected_bundle(app_kind: AppKind) -> String {
 
     let escaped_theme = WIN11_THEME_CSS.replace('\\', "\\\\").replace('`', "\\`");
     let escaped_declutter = DECLUTTER_CSS.replace('\\', "\\\\").replace('`', "\\`");
+    let unread_script = match app_kind {
+        AppKind::Mail => UNREAD_OBSERVER_SCRIPT,
+        AppKind::Calendar => "",
+    };
 
     format!(
         r#"
@@ -102,7 +106,7 @@ pub fn get_injected_bundle(app_kind: AppKind) -> String {
         theme = escaped_theme,
         declutter = escaped_declutter,
         nav = NAVIGATION_INTERCEPTOR_SCRIPT,
-        unread = UNREAD_OBSERVER_SCRIPT,
+        unread = unread_script,
         titlebar = TITLEBAR_SCRIPT,
     )
 }

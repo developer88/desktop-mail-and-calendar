@@ -145,6 +145,11 @@ pub fn classify_url(raw_url: &str, _app_kind: AppKind) -> UrlCategory {
     };
 
     let scheme = parsed.scheme();
+    // Browser-internal schemes must remain in-app
+    if scheme == "about" || scheme == "blob" || scheme == "data" || scheme == "javascript" {
+        return UrlCategory::InApp;
+    }
+
     if scheme != "http" && scheme != "https" {
         return UrlCategory::External;
     }

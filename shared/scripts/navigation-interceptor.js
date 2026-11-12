@@ -70,6 +70,10 @@
 
   function isInternalUrl(url) {
     if (!url) return false;
+    const proto = (url.protocol || '').toLowerCase();
+    if (proto === 'blob:' || proto === 'data:' || proto === 'about:' || proto === 'javascript:') {
+      return true;
+    }
     const host = (url.hostname || '').toLowerCase();
     const path = url.pathname || '';
     if (path === '/url') {
