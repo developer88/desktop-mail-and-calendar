@@ -77,7 +77,7 @@ function main() {
   fs.writeFileSync(path.join(distDir, 'SHA256SUMS.txt'), checksums.join('\n') + '\n');
 
   const manifest = {
-    version: '0.1.0',
+    version: '0.2.0',
     buildDate: new Date().toISOString(),
     gitCommit: getGitCommit(),
     artifacts: releaseFiles

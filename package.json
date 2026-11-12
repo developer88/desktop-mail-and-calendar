@@ -1,6 +1,6 @@
 {
   "name": "desktop-google-apps-monorepo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Native-feeling Windows 11 desktop applications for Gmail and Google Calendar built with Tauri v2",
   "workspaces": [

@@ -184,7 +184,7 @@ def create_complete_res(rc_path=None):
 
     # 3. Parse and build RT_VERSION (type 16, id 1)
     strings = {}
-    ver_nums = [0, 1, 0, 0]
+    ver_nums = [0, 2, 0, 0]
     if rc_content:
         # Parse version numbers
         vm = re.search(r'FILEVERSION\s+(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)', rc_content)
@@ -208,8 +208,8 @@ def create_complete_res(rc_path=None):
             strings["InternalName"] = "desktop-mail"
             strings["OriginalFilename"] = "desktop-mail.exe"
         strings["CompanyName"] = "Andrey Eremin"
-        strings["FileVersion"] = "0.1.0"
-        strings["ProductVersion"] = "0.1.0"
+        strings["FileVersion"] = "0.2.0"
+        strings["ProductVersion"] = "0.2.0"
 
     try:
         vinfo_data = make_vs_version_info(ver_nums[0], ver_nums[1], ver_nums[2], ver_nums[3], strings)

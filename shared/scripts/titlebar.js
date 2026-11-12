@@ -964,7 +964,7 @@
         verLeft.textContent = 'Build Version ';
         const verNum = document.createElement('span');
         verNum.className = 'desktop-version-num';
-        verNum.textContent = '0.1.0';
+        verNum.textContent = '0.2.0';
         verLeft.appendChild(verNum);
 
         const updateBtn = document.createElement('button');
@@ -987,7 +987,7 @@
           })
             .then((res) => {
               if (res.status === 404) {
-                return { tag_name: 'v0.1.0' };
+                return { tag_name: 'v0.2.0' };
               }
               if (!res.ok) throw new Error('Status ' + res.status);
               return res.json();
@@ -995,7 +995,7 @@
             .then((data) => {
               const latestTag = (data && data.tag_name) || '';
               const latestVer = latestTag.replace(/^v/, '');
-              const currentVer = '0.1.0';
+              const currentVer = '0.2.0';
 
               function isNewer(latest, current) {
                 const p1 = latest.split('.').map((n) => parseInt(n, 10) || 0);
@@ -1017,7 +1017,7 @@
                 updateBtn.style.color = '#ffffff';
                 updateBtn.style.borderColor = 'transparent';
               } else {
-                updateBtn.textContent = 'You are on the latest version (v0.1.0)';
+                updateBtn.textContent = 'You are on the latest version (v0.2.0)';
                 setTimeout(() => {
                   updateBtn.disabled = false;
                   updateBtn.textContent = 'Check for Updates';
@@ -1025,7 +1025,7 @@
               }
             })
             .catch(() => {
-              updateBtn.textContent = 'You are on the latest version (v0.1.0)';
+              updateBtn.textContent = 'You are on the latest version (v0.2.0)';
               setTimeout(() => {
                 updateBtn.disabled = false;
                 updateBtn.textContent = 'Check for Updates';

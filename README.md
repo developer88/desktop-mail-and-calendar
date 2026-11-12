@@ -1,6 +1,6 @@
 # Desktop Mail & Desktop Calendar (Windows 11)
 
-[![Release](https://img.shields.io/badge/Release-v0.1.0-blue.svg)](https://github.com/developer88/desktop-mail-and-calendar/releases)
+[![Release](https://img.shields.io/badge/Release-v0.2.0-blue.svg)](https://github.com/developer88/desktop-mail-and-calendar/releases)
 [![Rust](https://img.shields.io/badge/Rust-1.80+-orange.svg)](https://www.rust-lang.org/)
 [![Tauri](https://img.shields.io/badge/Tauri-v2.0-24C8DB.svg)](https://tauri.app/)
 [![Windows 11](https://img.shields.io/badge/Platform-Windows%2011-0078D4.svg)](https://www.microsoft.com/windows)
