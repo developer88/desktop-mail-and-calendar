@@ -5,7 +5,10 @@ pub mod windows {
     use windows_sys::core::GUID;
     use windows_sys::Win32::Foundation::{HWND, RECT};
     use windows_sys::Win32::Graphics::Gdi::*;
-    use windows_sys::Win32::System::Com::{CoCreateInstance, CLSCTX_INPROC_SERVER};
+    use windows_sys::Win32::System::Com::{
+        CoCreateInstance, CoTaskMemAlloc, CoTaskMemFree, CLSCTX_INPROC_SERVER,
+    };
+    use windows_sys::Win32::System::LibraryLoader::{GetModuleHandleA, GetProcAddress};
     use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
     type HRESULT = i32;
@@ -101,6 +104,218 @@ pub mod windows {
     #[repr(C)]
     struct ITaskbarList3 {
         pub vtbl: *const ITaskbarList3Vtbl,
+    }
+
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct PROPERTYKEY {
+        pub fmtid: GUID,
+        pub pid: u32,
+    }
+
+    #[repr(C)]
+    struct IPropertyStoreVtbl {
+        pub query_interface: unsafe extern "system" fn(
+            this: *mut c_void,
+            riid: *const GUID,
+            ppv: *mut *mut c_void,
+        ) -> HRESULT,
+        pub add_ref: unsafe extern "system" fn(this: *mut c_void) -> u32,
+        pub release: unsafe extern "system" fn(this: *mut c_void) -> u32,
+        pub get_count: unsafe extern "system" fn(this: *mut c_void, c_props: *mut u32) -> HRESULT,
+        pub get_at: unsafe extern "system" fn(
+            this: *mut c_void,
+            i_prop: u32,
+            pkey: *mut PROPERTYKEY,
+        ) -> HRESULT,
+        pub get_value: unsafe extern "system" fn(
+            this: *mut c_void,
+            key: *const PROPERTYKEY,
+            pv: *mut c_void,
+        ) -> HRESULT,
+        pub set_value: unsafe extern "system" fn(
+            this: *mut c_void,
+            key: *const PROPERTYKEY,
+            propvar: *const c_void,
+        ) -> HRESULT,
+        pub commit: unsafe extern "system" fn(this: *mut c_void) -> HRESULT,
+    }
+
+    #[repr(C)]
+    struct IPropertyStore {
+        pub vtbl: *const IPropertyStoreVtbl,
+    }
+
+    const PKEY_APP_USER_MODEL_ID: PROPERTYKEY = PROPERTYKEY {
+        fmtid: GUID {
+            data1: 0x9F4C2855,
+            data2: 0x9F79,
+            data3: 0x4B39,
+            data4: [0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3],
+        },
+        pid: 5,
+    };
+
+    const PKEY_APP_USER_MODEL_RELAUNCH_COMMAND: PROPERTYKEY = PROPERTYKEY {
+        fmtid: GUID {
+            data1: 0x9F4C2855,
+            data2: 0x9F79,
+            data3: 0x4B39,
+            data4: [0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3],
+        },
+        pid: 2,
+    };
+
+    const PKEY_APP_USER_MODEL_RELAUNCH_ICON_RESOURCE: PROPERTYKEY = PROPERTYKEY {
+        fmtid: GUID {
+            data1: 0x9F4C2855,
+            data2: 0x9F79,
+            data3: 0x4B39,
+            data4: [0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3],
+        },
+        pid: 3,
+    };
+
+    const PKEY_APP_USER_MODEL_RELAUNCH_DISPLAY_NAME_RESOURCE: PROPERTYKEY = PROPERTYKEY {
+        fmtid: GUID {
+            data1: 0x9F4C2855,
+            data2: 0x9F79,
+            data3: 0x4B39,
+            data4: [0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3],
+        },
+        pid: 4,
+    };
+
+    const IID_IPROPERTY_STORE: GUID = GUID {
+        data1: 0x886D8EEB,
+        data2: 0x8CF2,
+        data3: 0x4446,
+        data4: [0x8D, 0x02, 0xCD, 0xBA, 0x1D, 0xBD, 0xCF, 0x99],
+    };
+
+    #[repr(C)]
+    struct PropVariantStr {
+        vt: u16,
+        w_reserved1: u16,
+        w_reserved2: u16,
+        w_reserved3: u16,
+        pwsz_val: *mut u16,
+        _padding: [u8; 8],
+    }
+
+    unsafe fn make_propvariant_string(s: &str) -> Option<PropVariantStr> {
+        let wide: Vec<u16> = s.encode_utf16().chain(std::iter::once(0)).collect();
+        let bytes_needed = wide.len() * std::mem::size_of::<u16>();
+        let mem = CoTaskMemAlloc(bytes_needed) as *mut u16;
+        if mem.is_null() {
+            return None;
+        }
+        std::ptr::copy_nonoverlapping(wide.as_ptr(), mem, wide.len());
+        Some(PropVariantStr {
+            vt: 31, // VT_LPWSTR
+            w_reserved1: 0,
+            w_reserved2: 0,
+            w_reserved3: 0,
+            pwsz_val: mem,
+            _padding: [0; 8],
+        })
+    }
+
+    unsafe fn free_propvariant_string(pv: &mut PropVariantStr) {
+        if !pv.pwsz_val.is_null() {
+            CoTaskMemFree(pv.pwsz_val as *mut _);
+            pv.pwsz_val = std::ptr::null_mut();
+        }
+    }
+
+    /// Sets explicit Windows AppUserModelID and Taskbar Jump List relaunch properties
+    /// (display name, launch command, icon) on the window's IPropertyStore.
+    /// This ensures Windows Taskbar right-click shows the proper human-readable application name
+    /// (e.g. "Desktop Mail") instead of the executable filename ("desktop-mail.exe").
+    pub unsafe fn set_window_relaunch_properties(hwnd: isize, app_id: &str, display_name: &str) {
+        if hwnd == 0 {
+            return;
+        }
+
+        let shell32 = GetModuleHandleA(b"shell32.dll\0".as_ptr());
+        if shell32.is_null() {
+            return;
+        }
+
+        // 1. Set explicit process AppUserModelID
+        let set_aumid_proc = GetProcAddress(
+            shell32,
+            b"SetCurrentProcessExplicitAppUserModelID\0".as_ptr(),
+        );
+        if let Some(set_aumid) = set_aumid_proc {
+            type SetAumidFn = unsafe extern "system" fn(appid: *const u16) -> HRESULT;
+            let set_aumid_fn: SetAumidFn = std::mem::transmute(set_aumid);
+            let wide_id: Vec<u16> = app_id.encode_utf16().chain(std::iter::once(0)).collect();
+            let _ = set_aumid_fn(wide_id.as_ptr());
+        }
+
+        // 2. Set window-specific relaunch properties via IPropertyStore
+        let get_store_proc = GetProcAddress(shell32, b"SHGetPropertyStoreForWindow\0".as_ptr());
+        if let Some(get_store) = get_store_proc {
+            type GetStoreFn = unsafe extern "system" fn(
+                hwnd: HWND,
+                riid: *const GUID,
+                ppv: *mut *mut c_void,
+            ) -> HRESULT;
+            let get_store_fn: GetStoreFn = std::mem::transmute(get_store);
+            let mut store_ptr: *mut c_void = std::ptr::null_mut();
+            if get_store_fn(hwnd as HWND, &IID_IPROPERTY_STORE, &mut store_ptr) == 0
+                && !store_ptr.is_null()
+            {
+                let store = store_ptr as *mut IPropertyStore;
+                let vtbl = &*(*store).vtbl;
+
+                // AppUserModelID on window
+                if let Some(mut pv_id) = make_propvariant_string(app_id) {
+                    let _ = (vtbl.set_value)(
+                        store_ptr,
+                        &PKEY_APP_USER_MODEL_ID,
+                        &pv_id as *const _ as *const c_void,
+                    );
+                    free_propvariant_string(&mut pv_id);
+                }
+
+                // RelaunchDisplayNameResource -> Sets Taskbar right-click name!
+                if let Some(mut pv_name) = make_propvariant_string(display_name) {
+                    let _ = (vtbl.set_value)(
+                        store_ptr,
+                        &PKEY_APP_USER_MODEL_RELAUNCH_DISPLAY_NAME_RESOURCE,
+                        &pv_name as *const _ as *const c_void,
+                    );
+                    free_propvariant_string(&mut pv_name);
+                }
+
+                // RelaunchCommand and RelaunchIconResource pointing to current exe
+                if let Ok(exe_path) = std::env::current_exe() {
+                    let exe_str = exe_path.to_string_lossy();
+                    if let Some(mut pv_cmd) = make_propvariant_string(&exe_str) {
+                        let _ = (vtbl.set_value)(
+                            store_ptr,
+                            &PKEY_APP_USER_MODEL_RELAUNCH_COMMAND,
+                            &pv_cmd as *const _ as *const c_void,
+                        );
+                        free_propvariant_string(&mut pv_cmd);
+                    }
+                    let icon_res_str = format!("{},0", exe_str);
+                    if let Some(mut pv_icon) = make_propvariant_string(&icon_res_str) {
+                        let _ = (vtbl.set_value)(
+                            store_ptr,
+                            &PKEY_APP_USER_MODEL_RELAUNCH_ICON_RESOURCE,
+                            &pv_icon as *const _ as *const c_void,
+                        );
+                        free_propvariant_string(&mut pv_icon);
+                    }
+                }
+
+                let _ = (vtbl.commit)(store_ptr);
+                let _ = (vtbl.release)(store_ptr);
+            }
+        }
     }
 
     /// Creates an HICON from 32-bit RGBA pixel buffer (with full 8-bit alpha channel).

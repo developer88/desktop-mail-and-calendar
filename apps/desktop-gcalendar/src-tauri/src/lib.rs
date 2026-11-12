@@ -259,6 +259,18 @@ pub fn run() {
                 .build()?;
 
             #[cfg(target_os = "windows")]
+            if let Ok(hwnd_obj) = window.hwnd() {
+                let hwnd = hwnd_obj.0 as isize;
+                unsafe {
+                    desktop_google_core::icon::windows::set_window_relaunch_properties(
+                        hwnd,
+                        "com.andrey.desktop-gcalendar",
+                        "Desktop Calendar",
+                    );
+                }
+            }
+
+            #[cfg(target_os = "windows")]
             {
                 let win_handle = window.clone();
                 std::thread::spawn(move || {

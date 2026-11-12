@@ -362,6 +362,18 @@ pub fn run() {
                 })
                 .build()?;
 
+            #[cfg(target_os = "windows")]
+            if let Ok(hwnd_obj) = window.hwnd() {
+                let hwnd = hwnd_obj.0 as isize;
+                unsafe {
+                    desktop_google_core::icon::windows::set_window_relaunch_properties(
+                        hwnd,
+                        "com.andrey.desktop-gmail",
+                        "Desktop Mail",
+                    );
+                }
+            }
+
             // 2. Handle close button: exit application immediately
             let app_handle_for_close = app.handle().clone();
             window.on_window_event(move |event| {
