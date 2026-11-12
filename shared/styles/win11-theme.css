@@ -63,9 +63,10 @@ input[type="text"], input[type="search"] {
   pointer-events: auto !important;
 }
 
-/* Calendar Titlebar: Matches Calendar exact light/dark mode */
+/* Calendar Titlebar: Dedicated solid titlebar matching Calendar background */
 #desktop-custom-titlebar.calendar-titlebar {
-  background: transparent !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
 #desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn {
@@ -73,18 +74,21 @@ input[type="text"], input[type="search"] {
 }
 
 #desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn:hover {
-  background: rgba(0, 0, 0, 0.08) !important;
+  background: rgba(0, 0, 0, 0.06) !important;
   color: #1f1f1f !important;
 }
 
 #desktop-custom-titlebar.calendar-titlebar #desktop-custom-titlebar-title {
   color: #444746 !important;
   text-shadow: none !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
 }
 
 /* Calendar Dark Mode */
 #desktop-custom-titlebar.calendar-titlebar.dark-mode {
-  background: transparent !important;
+  background: #1f1f1f !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 #desktop-custom-titlebar.calendar-titlebar.dark-mode .desktop-caption-btn {
@@ -102,6 +106,11 @@ input[type="text"], input[type="search"] {
 }
 
 @media (prefers-color-scheme: dark) {
+  #desktop-custom-titlebar.calendar-titlebar {
+    background: #1f1f1f !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
   #desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn {
     color: #e3e3e3 !important;
   }
@@ -117,42 +126,67 @@ input[type="text"], input[type="search"] {
   }
 }
 
+/* Calendar page layout: Sits cleanly 32px below the dedicated titlebar */
+html.desktop-calendar-app {
+  background: #ffffff !important;
+  overflow: hidden !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  html.desktop-calendar-app {
+    background: #1f1f1f !important;
+  }
+}
+
+html.desktop-calendar-app body {
+  transform: translateY(32px) !important;
+  height: calc(100vh - 32px) !important;
+  max-height: calc(100vh - 32px) !important;
+  box-sizing: border-box !important;
+  background: #ffffff !important;
+  overflow: hidden !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  html.desktop-calendar-app body {
+    background: #1f1f1f !important;
+  }
+}
+
 /* Gmail Titlebar: Transparent to seamlessly blend with custom themes & wallpapers */
 #desktop-custom-titlebar.mail-titlebar {
   background: transparent !important;
 }
 
 #desktop-custom-titlebar.mail-titlebar .desktop-caption-btn {
-  color: #444746 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
 }
 
 #desktop-custom-titlebar.mail-titlebar .desktop-caption-btn:hover {
-  background: rgba(0, 0, 0, 0.08) !important;
-  color: #1f1f1f !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
 }
 
 #desktop-custom-titlebar.mail-titlebar #desktop-custom-titlebar-title {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Gmail Plain Default Light Theme (no wallpaper, light mode) */
+#desktop-custom-titlebar.mail-titlebar.mail-light-mode .desktop-caption-btn {
   color: #444746 !important;
   text-shadow: none !important;
 }
 
-/* Gmail Adaptive Dark Mode / Photo Wallpaper with light text */
-#desktop-custom-titlebar.mail-titlebar.dark-mode {
-  background: transparent !important;
+#desktop-custom-titlebar.mail-titlebar.mail-light-mode .desktop-caption-btn:hover {
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #1f1f1f !important;
 }
 
-#desktop-custom-titlebar.mail-titlebar.dark-mode .desktop-caption-btn {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-#desktop-custom-titlebar.mail-titlebar.dark-mode .desktop-caption-btn:hover {
-  background: rgba(255, 255, 255, 0.18) !important;
-  color: #ffffff !important;
-}
-
-#desktop-custom-titlebar.mail-titlebar.dark-mode #desktop-custom-titlebar-title {
-  color: rgba(255, 255, 255, 0.9) !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+#desktop-custom-titlebar.mail-titlebar.mail-light-mode #desktop-custom-titlebar-title {
+  color: #444746 !important;
+  text-shadow: none !important;
 }
 
 #desktop-custom-titlebar-drag {
@@ -1133,23 +1167,6 @@ input[type="text"], input[type="search"] {
   }
 }
 
-/* Shift Google's rightmost absolute icon cluster (avatar, settings) away from window controls */
-header,
-header.gb_Ja,
-header[role="banner"] {
-  padding-right: 184px !important;
-  box-sizing: border-box !important;
-}
-
-header > div:last-child,
-header[role="banner"] > div:last-child,
-header.gb_Ja > div:last-child,
-header .gb_Ld,
-header .gb_Fe,
-header .gb_De {
-  right: 184px !important;
-  margin-right: 184px !important;
-}
 
 /* Dark mode enhancements when system prefers dark */
 @media (prefers-color-scheme: dark) {

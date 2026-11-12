@@ -42,40 +42,21 @@
 
   window.addEventListener('scroll', preventRootScroll, { passive: true });
 
-  // Shift Google's rightmost icon cluster away from custom window caption buttons
-  function adjustHeaderOffset() {
-    const header = document.querySelector('header') || document.querySelector('[role="banner"]');
-    if (!header) return;
-
-    header.style.setProperty('padding-right', '184px', 'important');
-    header.style.setProperty('box-sizing', 'border-box', 'important');
-
-    const children = header.children;
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i];
-      const style = window.getComputedStyle(child);
-      if (style.position === 'absolute' || style.position === 'fixed') {
-        const rightVal = parseFloat(style.right);
-        if (!isNaN(rightVal) && rightVal < 150) {
-          child.style.setProperty('right', '184px', 'important');
-        }
+  // Tag calendar root so CSS can cleanly position Calendar content below the dedicated titlebar
+  function ensureAppRootClasses() {
+    if (isCalendar) {
+      if (document.documentElement && !document.documentElement.classList.contains('desktop-calendar-app')) {
+        document.documentElement.classList.add('desktop-calendar-app');
       }
-    }
-
-    const lastChild = header.lastElementChild;
-    if (lastChild) {
-      const style = window.getComputedStyle(lastChild);
-      if (style.position === 'absolute' || style.position === 'fixed') {
-        lastChild.style.setProperty('right', '184px', 'important');
-      } else {
-        lastChild.style.setProperty('margin-right', '184px', 'important');
+      if (document.body && !document.body.classList.contains('desktop-calendar-app')) {
+        document.body.classList.add('desktop-calendar-app');
       }
     }
   }
 
   // Dynamic adaptive theme update for Calendar and Gmail titlebars
   function updateAdaptiveTheme() {
-    adjustHeaderOffset();
+    ensureAppRootClasses();
     const titlebar = document.getElementById('desktop-custom-titlebar');
     if (!titlebar) return;
 
@@ -91,21 +72,33 @@
       titlebar.classList.remove('calendar-titlebar');
 
       // Adaptive brightness detection for Gmail
-      const header = document.querySelector('header') || document.querySelector('[role="banner"]');
-      let isDark = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      const isDarkSys = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      let isLightPlainTheme = false;
 
-      if (header) {
-        const sampleEl = header.querySelector('[role="button"] svg, button svg, [role="search"], span') || header;
-        const computedColor = window.getComputedStyle(sampleEl).color;
-        const rgb = computedColor.match(/\d+/g);
-        if (rgb && rgb.length >= 3) {
-          const brightness = (parseInt(rgb[0], 10) * 299 + parseInt(rgb[1], 10) * 587 + parseInt(rgb[2], 10) * 114) / 1000;
-          // Light text/icons indicate a dark theme or wallpaper
-          isDark = brightness > 140;
+      if (!isDarkSys) {
+        const bodyBgImg = document.body ? window.getComputedStyle(document.body).backgroundImage : 'none';
+        const hasBgImage = bodyBgImg && bodyBgImg !== 'none' && bodyBgImg.includes('url');
+
+        const header = document.querySelector('header') || document.querySelector('[role="banner"]');
+        let iconIsLight = false;
+        if (header) {
+          const sampleEl = header.querySelector('[role="button"] svg, button svg, [role="search"], span') || header;
+          const computedColor = window.getComputedStyle(sampleEl).color;
+          const rgb = computedColor.match(/\d+/g);
+          if (rgb && rgb.length >= 3) {
+            const brightness = (parseInt(rgb[0], 10) * 299 + parseInt(rgb[1], 10) * 587 + parseInt(rgb[2], 10) * 114) / 1000;
+            iconIsLight = brightness > 140;
+          }
+        }
+
+        // Only treat as light plain theme if NO background wallpaper image and icons are dark
+        if (!hasBgImage && !iconIsLight) {
+          isLightPlainTheme = true;
         }
       }
 
-      titlebar.classList.toggle('dark-mode', isDark);
+      titlebar.classList.toggle('mail-light-mode', isLightPlainTheme);
+      titlebar.classList.toggle('dark-mode', !isLightPlainTheme);
     }
   }
 
@@ -1346,6 +1339,11 @@
     const dragArea = document.createElement('div');
     dragArea.id = 'desktop-custom-titlebar-drag';
     dragArea.setAttribute('data-tauri-drag-region', 'deep');
+
+    const title = document.createElement('span');
+    title.id = 'desktop-custom-titlebar-title';
+    title.textContent = isCalendar ? 'Google Calendar' : '';
+    dragArea.appendChild(title);
 
     const controls = document.createElement('div');
     controls.id = 'desktop-custom-titlebar-controls';
