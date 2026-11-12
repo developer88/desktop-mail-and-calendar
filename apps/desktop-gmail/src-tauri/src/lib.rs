@@ -18,7 +18,13 @@ mod commands {
     }
 
     #[tauri::command]
-    pub fn update_unread_badge<R: Runtime>(app: AppHandle<R>, count: u32) -> Result<(), String> {
+    pub fn update_unread_badge<R: Runtime>(
+        app: AppHandle<R>,
+        count: u32,
+        icon_rgba: Option<Vec<u8>>,
+        width: Option<u32>,
+        height: Option<u32>,
+    ) -> Result<(), String> {
         if let Some(window) = app.get_webview_window("main") {
             let title = if count > 0 {
                 format!("Desktop Mail ({})", count)
@@ -26,6 +32,21 @@ mod commands {
                 "Desktop Mail".to_string()
             };
             let _ = window.set_title(&title);
+
+            if count > 0 {
+                if let (Some(rgba), Some(w), Some(h)) = (icon_rgba, width, height) {
+                    if rgba.len() == (w * h * 4) as usize {
+                        let img = tauri::image::Image::new_owned(rgba, w, h);
+                        let _ = window.set_icon(img);
+                    }
+                }
+            } else {
+                if let Ok(img) =
+                    tauri::image::Image::from_bytes(include_bytes!("../icons/128x128.png"))
+                {
+                    let _ = window.set_icon(img);
+                }
+            }
         }
         Ok(())
     }
