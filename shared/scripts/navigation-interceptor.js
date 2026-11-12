@@ -93,23 +93,6 @@
     }
   }, true);
 
-  // Override window.open to keep internal URLs within the single desktop window
-  try {
-    const originalOpen = window.open;
-    window.open = function(url, target, features) {
-      if (url) {
-        try {
-          const parsed = new URL(url, window.location.href);
-          if (isInternalUrl(parsed)) {
-            window.location.href = parsed.href;
-            return window;
-          }
-        } catch (_) {}
-      }
-      return originalOpen.apply(this, arguments);
-    };
-  } catch (_) {}
-
   // Intercept clicks on links
   document.addEventListener('click', function(event) {
     let target = event.target;
