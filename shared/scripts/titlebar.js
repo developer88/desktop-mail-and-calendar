@@ -71,34 +71,52 @@
       titlebar.classList.add('mail-titlebar');
       titlebar.classList.remove('calendar-titlebar');
 
-      // Adaptive brightness detection for Gmail
-      const isDarkSys = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      let isLightPlainTheme = false;
+      // Dynamic adaptive brightness & theme detection for Gmail
+      let isDarkTheme = false;
 
-      if (!isDarkSys) {
-        const bodyBgImg = document.body ? window.getComputedStyle(document.body).backgroundImage : 'none';
-        const hasBgImage = bodyBgImg && bodyBgImg !== 'none' && bodyBgImg.includes('url');
+      // 1. Check system prefers-color-scheme
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        isDarkTheme = true;
+      }
 
-        const header = document.querySelector('header') || document.querySelector('[role="banner"]');
-        let iconIsLight = false;
-        if (header) {
-          const sampleEl = header.querySelector('[role="button"] svg, button svg, [role="search"], span') || header;
-          const computedColor = window.getComputedStyle(sampleEl).color;
-          const rgb = computedColor.match(/\d+/g);
-          if (rgb && rgb.length >= 3) {
-            const brightness = (parseInt(rgb[0], 10) * 299 + parseInt(rgb[1], 10) * 587 + parseInt(rgb[2], 10) * 114) / 1000;
-            iconIsLight = brightness > 140;
+      // 2. Sample Google's own header icons (e.g. settings gear, support, menu)
+      const headerIcons = document.querySelectorAll('header svg, [role="banner"] svg, .gb_d svg');
+      for (let i = 0; i < headerIcons.length; i++) {
+        const svg = headerIcons[i];
+        const style = window.getComputedStyle(svg);
+        const fill = style.fill || '';
+        const color = style.color || '';
+        const val = (fill && fill !== 'none' && !fill.startsWith('rgba(0, 0, 0, 0)')) ? fill : color;
+        const rgb = val.match(/\d+/g);
+        if (rgb && rgb.length >= 3) {
+          const r = parseInt(rgb[0], 10);
+          const g = parseInt(rgb[1], 10);
+          const b = parseInt(rgb[2], 10);
+          const lum = (r * 299 + g * 587 + b * 114) / 1000;
+          if (lum > 130) {
+            isDarkTheme = true;
+            break;
           }
-        }
-
-        // Only treat as light plain theme if NO background wallpaper image and icons are dark
-        if (!hasBgImage && !iconIsLight) {
-          isLightPlainTheme = true;
         }
       }
 
-      titlebar.classList.toggle('mail-light-mode', isLightPlainTheme);
-      titlebar.classList.toggle('dark-mode', !isLightPlainTheme);
+      // 3. Check for custom wallpaper / background image on root containers
+      if (!isDarkTheme) {
+        const bgTargets = [document.body, document.querySelector('#canvas'), document.querySelector('.wl')];
+        for (let i = 0; i < bgTargets.length; i++) {
+          const el = bgTargets[i];
+          if (el) {
+            const bg = window.getComputedStyle(el).backgroundImage;
+            if (bg && bg !== 'none' && bg.includes('url')) {
+              isDarkTheme = true;
+              break;
+            }
+          }
+        }
+      }
+
+      titlebar.classList.toggle('mail-light-mode', !isDarkTheme);
+      titlebar.classList.toggle('dark-mode', isDarkTheme);
     }
   }
 

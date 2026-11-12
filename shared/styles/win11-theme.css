@@ -159,33 +159,33 @@ html.desktop-calendar-app body {
 }
 
 #desktop-custom-titlebar.mail-titlebar .desktop-caption-btn {
-  color: rgba(255, 255, 255, 0.9) !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
 }
 
 #desktop-custom-titlebar.mail-titlebar .desktop-caption-btn:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.22) !important;
   color: #ffffff !important;
 }
 
 #desktop-custom-titlebar.mail-titlebar #desktop-custom-titlebar-title {
-  color: rgba(255, 255, 255, 0.9) !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85) !important;
 }
 
 /* Gmail Plain Default Light Theme (no wallpaper, light mode) */
 #desktop-custom-titlebar.mail-titlebar.mail-light-mode .desktop-caption-btn {
-  color: #444746 !important;
-  text-shadow: none !important;
+  color: #1f1f1f !important;
+  filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.85)) !important;
 }
 
 #desktop-custom-titlebar.mail-titlebar.mail-light-mode .desktop-caption-btn:hover {
   background: rgba(0, 0, 0, 0.08) !important;
-  color: #1f1f1f !important;
+  color: #000000 !important;
 }
 
 #desktop-custom-titlebar.mail-titlebar.mail-light-mode #desktop-custom-titlebar-title {
-  color: #444746 !important;
+  color: #1f1f1f !important;
   text-shadow: none !important;
 }
 
