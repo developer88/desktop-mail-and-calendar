@@ -23,6 +23,9 @@
       host === 'accounts.youtube.com' ||
       host === 'myaccount.google.com' ||
       host === 'contacts.google.com' ||
+      host === 'tasks.google.com' ||
+      host === 'keep.google.com' ||
+      host === 'maps.google.com' ||
       host === 'chat.google.com' ||
       host === 'meet.google.com' ||
       host === 'gstatic.com' ||

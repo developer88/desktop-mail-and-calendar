@@ -63,6 +63,7 @@ pub fn classify_url(raw_url: &str, app_kind: AppKind) -> UrlCategory {
         || host == "contacts.google.com"
         || host == "tasks.google.com"
         || host == "keep.google.com"
+        || host == "maps.google.com"
         || host == "meet.google.com"
     {
         return UrlCategory::InApp;
