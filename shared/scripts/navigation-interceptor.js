@@ -11,30 +11,79 @@
     return;
   }
 
+  function isGoogleHost(host) {
+    if (!host) return false;
+    host = host.toLowerCase();
+    const googleBases = [
+      'google.com',
+      'googleapis.com',
+      'gstatic.com',
+      'googleusercontent.com',
+      'googlevideo.com',
+      'googlecode.com',
+      'googleblog.com',
+      'googletagmanager.com',
+      'googletagservices.com',
+      'google-analytics.com',
+      'googleadservices.com',
+      'appspot.com',
+      '1e100.net',
+      'ggpht.com',
+      'gvt1.com',
+      'gvt2.com',
+      'youtube.com',
+      'youtu.be',
+      'ytimg.com',
+      'g.co',
+      'goo.gl',
+    ];
+    for (let i = 0; i < googleBases.length; i++) {
+      const base = googleBases[i];
+      if (host === base || host.endsWith('.' + base)) {
+        return true;
+      }
+    }
+    if (host === 'google' || host.endsWith('.google')) {
+      return true;
+    }
+    const parts = host.split('.');
+    const n = parts.length;
+    if (n >= 2) {
+      if (parts[n - 2] === 'google') {
+        return true;
+      }
+      if (
+        n >= 3 &&
+        parts[n - 3] === 'google' &&
+        (parts[n - 2] === 'co' ||
+          parts[n - 2] === 'com' ||
+          parts[n - 2] === 'net' ||
+          parts[n - 2] === 'org' ||
+          parts[n - 2] === 'edu' ||
+          parts[n - 2] === 'ac')
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   function isInternalUrl(url) {
     if (!url) return false;
     const host = (url.hostname || '').toLowerCase();
     const path = url.pathname || '';
-    return (
-      host === 'mail.google.com' ||
-      host === 'calendar.google.com' ||
-      host === 'accounts.google.com' ||
-      host.startsWith('accounts.google.') ||
-      host === 'accounts.youtube.com' ||
-      host === 'myaccount.google.com' ||
-      host === 'contacts.google.com' ||
-      host === 'tasks.google.com' ||
-      host === 'keep.google.com' ||
-      host === 'maps.google.com' ||
-      host === 'chat.google.com' ||
-      host === 'meet.google.com' ||
-      host === 'gstatic.com' ||
-      host.endsWith('.gstatic.com') ||
-      host === 'googleusercontent.com' ||
-      host.endsWith('.googleusercontent.com') ||
-      ((host === 'google.com' || host === 'www.google.com') &&
-        (path.startsWith('/accounts') || path.startsWith('/signin') || path.startsWith('/gmail') || path.startsWith('/calendar') || path.startsWith('/ServiceLogin') || path.startsWith('/CheckCookie') || path.startsWith('/SetOSID') || path.startsWith('/_/signin') || path.includes('signinchooser')))
-    );
+    if (path === '/url') {
+      try {
+        const target = url.searchParams.get('q') || url.searchParams.get('url');
+        if (target) {
+          const targetUrl = new URL(target, window.location.href);
+          if (!isGoogleHost(targetUrl.hostname)) {
+            return false;
+          }
+        }
+      } catch (_) {}
+    }
+    return isGoogleHost(host);
   }
 
   // Keyboard reload shortcut: F5 or Ctrl+R / Cmd+R

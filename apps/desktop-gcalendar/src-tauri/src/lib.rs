@@ -196,7 +196,8 @@ pub fn run() {
                         desktop_google_core::AppKind::Calendar,
                     ) {
                         use tauri_plugin_shell::ShellExt;
-                        let _ = app_nav.shell().open(url_str, None);
+                        let target = desktop_google_core::get_external_browser_target(url_str);
+                        let _ = app_nav.shell().open(target, None);
                         false
                     } else {
                         true
@@ -218,7 +219,8 @@ pub fn run() {
                         desktop_google_core::AppKind::Calendar,
                     ) {
                         use tauri_plugin_shell::ShellExt;
-                        let _ = app_win.shell().open(url_str, None);
+                        let target = desktop_google_core::get_external_browser_target(url_str);
+                        let _ = app_win.shell().open(target, None);
                         tauri::webview::NewWindowResponse::Deny
                     } else {
                         if let Some(w) = app_win.get_webview_window("main") {
