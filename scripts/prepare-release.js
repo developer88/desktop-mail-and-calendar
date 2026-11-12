@@ -20,11 +20,11 @@ function main() {
   const rootDir = path.resolve(__dirname, '..');
   const distDir = path.join(rootDir, 'dist');
   const searchDirs = [
-    distDir,
-    path.join(rootDir, 'target', 'release'),
     path.join(rootDir, 'target', 'x86_64-pc-windows-msvc', 'release'),
+    path.join(rootDir, 'target', 'release'),
     path.join(rootDir, 'target', 'x86_64-pc-windows-msvc', 'debug'),
-    path.join(rootDir, 'target', 'debug')
+    path.join(rootDir, 'target', 'debug'),
+    distDir
   ];
 
   if (!fs.existsSync(distDir)) {
