@@ -23,17 +23,24 @@ fi
 
 # Step 2: Run Unit Tests
 echo ""
-echo "-> [2/4] Running unit and integration tests across workspace..."
+echo "-> [2/5] Running unit and integration tests across workspace..."
 cargo test --package desktop-google-core -- --nocapture
 
-# Step 3: Check Windows WebView2 Targets
+# Step 3: Run UI & Asset Verification Tests
 echo ""
-echo "-> [3/4] Verifying Windows compilation for Gmail and Calendar apps..."
+echo "-> [3/5] Verifying UI, icons up to 1024x1024, and Trusted Types CSP compliance..."
+node tests/about-dialog.test.js
+node tests/icon-assets.test.js
+node tests/observers.test.js
+
+# Step 4: Check Windows WebView2 Targets
+echo ""
+echo "-> [4/5] Verifying Windows compilation for Gmail and Calendar apps..."
 cargo check --target x86_64-pc-windows-msvc --workspace
 
-# Step 4: Prepare Release Artifacts
+# Step 5: Prepare Release Artifacts
 echo ""
-echo "-> [4/4] Staging release artifacts and calculating checksums..."
+echo "-> [5/5] Staging release artifacts and calculating checksums..."
 node scripts/prepare-release.js
 
 echo ""

@@ -334,87 +334,267 @@
       svg.appendChild(path);
     } else if (type === 'mail-logo') {
       svg.setAttribute('viewBox', '0 0 512 512');
-      svg.innerHTML = `
-        <defs>
-          <filter id="aboutMailShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="14" />
-          </filter>
-          <linearGradient id="aboutMailBack" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#ea580c" />
-            <stop offset="60%" stop-color="#c2410c" />
-            <stop offset="100%" stop-color="#9a3412" />
-          </linearGradient>
-          <linearGradient id="aboutLetter" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#ffffff" />
-            <stop offset="100%" stop-color="#f1f5f9" />
-          </linearGradient>
-          <linearGradient id="aboutMailFront" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#fb923c" />
-            <stop offset="20%" stop-color="#f97316" />
-            <stop offset="85%" stop-color="#ea580c" />
-            <stop offset="100%" stop-color="#c2410c" />
-          </linearGradient>
-          <clipPath id="aboutMailClip">
-            <rect x="56" y="80" width="400" height="370" rx="68" />
-          </clipPath>
-        </defs>
-        <rect x="80" y="420" width="352" height="42" rx="21" fill="#000000" opacity="0.25" filter="url(#aboutMailShadow)" />
-        <rect x="56" y="80" width="400" height="370" rx="68" fill="url(#aboutMailBack)" stroke="#9a3412" stroke-width="2" />
-        <rect x="84" y="92" width="344" height="320" rx="36" fill="url(#aboutLetter)" stroke="#e2e8f0" stroke-width="1.5" />
-        <rect x="132" y="136" width="144" height="18" rx="9" fill="#94a3b8" opacity="0.85" />
-        <rect x="132" y="172" width="248" height="18" rx="9" fill="#cbd5e1" opacity="0.9" />
-        <rect x="132" y="208" width="192" height="18" rx="9" fill="#e2e8f0" opacity="0.85" />
-        <g clip-path="url(#aboutMailClip)">
-          <path d="M 50,200 L 256,316 L 462,200 L 462,460 L 50,460 Z" fill="url(#aboutMailFront)" />
-          <path d="M 56,200 L 256,316 L 456,200" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M 56,203 L 256,319 L 456,203" fill="none" stroke="#9a3412" stroke-width="2.5" opacity="0.5" stroke-linecap="round" stroke-linejoin="round" />
-        </g>
-      `;
+      const defs = document.createElementNS(svgNS, 'defs');
+
+      const gBack = document.createElementNS(svgNS, 'linearGradient');
+      gBack.setAttribute('id', 'dtMailBack');
+      gBack.setAttribute('x1', '0%');
+      gBack.setAttribute('y1', '0%');
+      gBack.setAttribute('x2', '0%');
+      gBack.setAttribute('y2', '100%');
+      [['0%', '#ea580c'], ['60%', '#c2410c'], ['100%', '#9a3412']].forEach(([off, col]) => {
+        const s = document.createElementNS(svgNS, 'stop');
+        s.setAttribute('offset', off);
+        s.setAttribute('stop-color', col);
+        gBack.appendChild(s);
+      });
+
+      const gFront = document.createElementNS(svgNS, 'linearGradient');
+      gFront.setAttribute('id', 'dtMailFront');
+      gFront.setAttribute('x1', '0%');
+      gFront.setAttribute('y1', '0%');
+      gFront.setAttribute('x2', '0%');
+      gFront.setAttribute('y2', '100%');
+      [['0%', '#fb923c'], ['20%', '#f97316'], ['85%', '#ea580c'], ['100%', '#c2410c']].forEach(([off, col]) => {
+        const s = document.createElementNS(svgNS, 'stop');
+        s.setAttribute('offset', off);
+        s.setAttribute('stop-color', col);
+        gFront.appendChild(s);
+      });
+
+      const clip = document.createElementNS(svgNS, 'clipPath');
+      clip.setAttribute('id', 'dtMailClip');
+      const clipRect = document.createElementNS(svgNS, 'rect');
+      clipRect.setAttribute('x', '56');
+      clipRect.setAttribute('y', '80');
+      clipRect.setAttribute('width', '400');
+      clipRect.setAttribute('height', '370');
+      clipRect.setAttribute('rx', '68');
+      clip.appendChild(clipRect);
+
+      defs.appendChild(gBack);
+      defs.appendChild(gFront);
+      defs.appendChild(clip);
+      svg.appendChild(defs);
+
+      const back = document.createElementNS(svgNS, 'rect');
+      back.setAttribute('x', '56');
+      back.setAttribute('y', '80');
+      back.setAttribute('width', '400');
+      back.setAttribute('height', '370');
+      back.setAttribute('rx', '68');
+      back.setAttribute('fill', 'url(#dtMailBack)');
+      back.setAttribute('stroke', '#9a3412');
+      back.setAttribute('stroke-width', '2');
+      svg.appendChild(back);
+
+      const sheet = document.createElementNS(svgNS, 'rect');
+      sheet.setAttribute('x', '84');
+      sheet.setAttribute('y', '92');
+      sheet.setAttribute('width', '344');
+      sheet.setAttribute('height', '320');
+      sheet.setAttribute('rx', '36');
+      sheet.setAttribute('fill', '#ffffff');
+      sheet.setAttribute('stroke', '#e2e8f0');
+      sheet.setAttribute('stroke-width', '1.5');
+      svg.appendChild(sheet);
+
+      [[132, 136, 144, 18, 9, '#94a3b8', '0.85'],
+       [132, 172, 248, 18, 9, '#cbd5e1', '0.9'],
+       [132, 208, 192, 18, 9, '#e2e8f0', '0.85']].forEach(([x, y, w, h, rx, col, op]) => {
+        const line = document.createElementNS(svgNS, 'rect');
+        line.setAttribute('x', String(x));
+        line.setAttribute('y', String(y));
+        line.setAttribute('width', String(w));
+        line.setAttribute('height', String(h));
+        line.setAttribute('rx', String(rx));
+        line.setAttribute('fill', col);
+        line.setAttribute('opacity', op);
+        svg.appendChild(line);
+      });
+
+      const pocket = document.createElementNS(svgNS, 'g');
+      pocket.setAttribute('clip-path', 'url(#dtMailClip)');
+
+      const front = document.createElementNS(svgNS, 'path');
+      front.setAttribute('d', 'M 50,200 L 256,316 L 462,200 L 462,460 L 50,460 Z');
+      front.setAttribute('fill', 'url(#dtMailFront)');
+      pocket.appendChild(front);
+
+      const foldLight = document.createElementNS(svgNS, 'path');
+      foldLight.setAttribute('d', 'M 56,200 L 256,316 L 456,200');
+      foldLight.setAttribute('fill', 'none');
+      foldLight.setAttribute('stroke', 'rgba(255,255,255,0.75)');
+      foldLight.setAttribute('stroke-width', '3');
+      foldLight.setAttribute('stroke-linecap', 'round');
+      foldLight.setAttribute('stroke-linejoin', 'round');
+      pocket.appendChild(foldLight);
+
+      const foldDark = document.createElementNS(svgNS, 'path');
+      foldDark.setAttribute('d', 'M 56,203 L 256,319 L 456,203');
+      foldDark.setAttribute('fill', 'none');
+      foldDark.setAttribute('stroke', '#9a3412');
+      foldDark.setAttribute('stroke-width', '2.5');
+      foldDark.setAttribute('opacity', '0.5');
+      foldDark.setAttribute('stroke-linecap', 'round');
+      foldDark.setAttribute('stroke-linejoin', 'round');
+      pocket.appendChild(foldDark);
+
+      svg.appendChild(pocket);
     } else if (type === 'calendar-logo') {
       svg.setAttribute('viewBox', '0 0 512 512');
-      svg.innerHTML = `
-        <defs>
-          <filter id="aboutCalShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="14" />
-          </filter>
-          <linearGradient id="aboutCalBack" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#16a34a" />
-            <stop offset="60%" stop-color="#15803d" />
-            <stop offset="100%" stop-color="#14532d" />
-          </linearGradient>
-          <linearGradient id="aboutCalHeader" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#4ade80" />
-            <stop offset="20%" stop-color="#22c55e" />
-            <stop offset="80%" stop-color="#16a34a" />
-            <stop offset="100%" stop-color="#15803d" />
-          </linearGradient>
-          <linearGradient id="aboutRingMetal" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#cbd5e1" />
-            <stop offset="25%" stop-color="#f8fafc" />
-            <stop offset="50%" stop-color="#ffffff" />
-            <stop offset="75%" stop-color="#94a3b8" />
-            <stop offset="100%" stop-color="#64748b" />
-          </linearGradient>
-          <clipPath id="aboutCalClip">
-            <rect x="66" y="96" width="380" height="352" rx="60" />
-          </clipPath>
-        </defs>
-        <rect x="80" y="420" width="352" height="42" rx="21" fill="#000000" opacity="0.25" filter="url(#aboutCalShadow)" />
-        <rect x="56" y="86" width="400" height="364" rx="66" fill="url(#aboutCalBack)" stroke="#14532d" stroke-width="2" />
-        <rect x="66" y="96" width="380" height="352" rx="60" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
-        <g clip-path="url(#aboutCalClip)">
-          <rect x="66" y="96" width="380" height="126" fill="url(#aboutCalHeader)" />
-          <rect x="76" y="97" width="360" height="3.5" rx="1.75" fill="rgba(255,255,255,0.6)" />
-          <line x1="66" y1="222" x2="446" y2="222" stroke="#14532d" stroke-width="3" />
-        </g>
-        <rect x="146" y="104" width="28" height="36" rx="12" fill="#0f172a" opacity="0.5" />
-        <rect x="338" y="104" width="28" height="36" rx="12" fill="#0f172a" opacity="0.5" />
-        <rect x="142" y="54" width="36" height="78" rx="18" fill="url(#aboutRingMetal)" stroke="#64748b" stroke-width="1.5" />
-        <rect x="148" y="56" width="6" height="74" rx="3" fill="#ffffff" opacity="0.75" />
-        <rect x="334" y="54" width="36" height="78" rx="18" fill="url(#aboutRingMetal)" stroke="#64748b" stroke-width="1.5" />
-        <rect x="340" y="56" width="6" height="74" rx="3" fill="#ffffff" opacity="0.75" />
-        <text x="256" y="362" text-anchor="middle" font-family="Segoe UI, -apple-system, system-ui, sans-serif" font-weight="bold" font-size="142" fill="#15803d" letter-spacing="-3">31</text>
-      `;
+      const defs = document.createElementNS(svgNS, 'defs');
+
+      const gBack = document.createElementNS(svgNS, 'linearGradient');
+      gBack.setAttribute('id', 'dtCalBack');
+      gBack.setAttribute('x1', '0%');
+      gBack.setAttribute('y1', '0%');
+      gBack.setAttribute('x2', '0%');
+      gBack.setAttribute('y2', '100%');
+      [['0%', '#16a34a'], ['60%', '#15803d'], ['100%', '#14532d']].forEach(([off, col]) => {
+        const s = document.createElementNS(svgNS, 'stop');
+        s.setAttribute('offset', off);
+        s.setAttribute('stop-color', col);
+        gBack.appendChild(s);
+      });
+
+      const gHead = document.createElementNS(svgNS, 'linearGradient');
+      gHead.setAttribute('id', 'dtCalHead');
+      gHead.setAttribute('x1', '0%');
+      gHead.setAttribute('y1', '0%');
+      gHead.setAttribute('x2', '0%');
+      gHead.setAttribute('y2', '100%');
+      [['0%', '#4ade80'], ['20%', '#22c55e'], ['80%', '#16a34a'], ['100%', '#15803d']].forEach(([off, col]) => {
+        const s = document.createElementNS(svgNS, 'stop');
+        s.setAttribute('offset', off);
+        s.setAttribute('stop-color', col);
+        gHead.appendChild(s);
+      });
+
+      const gRing = document.createElementNS(svgNS, 'linearGradient');
+      gRing.setAttribute('id', 'dtCalRing');
+      gRing.setAttribute('x1', '0%');
+      gRing.setAttribute('y1', '0%');
+      gRing.setAttribute('x2', '100%');
+      gRing.setAttribute('y2', '0%');
+      [['0%', '#cbd5e1'], ['30%', '#ffffff'], ['70%', '#94a3b8'], ['100%', '#64748b']].forEach(([off, col]) => {
+        const s = document.createElementNS(svgNS, 'stop');
+        s.setAttribute('offset', off);
+        s.setAttribute('stop-color', col);
+        gRing.appendChild(s);
+      });
+
+      const clip = document.createElementNS(svgNS, 'clipPath');
+      clip.setAttribute('id', 'dtCalClip');
+      const clipRect = document.createElementNS(svgNS, 'rect');
+      clipRect.setAttribute('x', '66');
+      clipRect.setAttribute('y', '96');
+      clipRect.setAttribute('width', '380');
+      clipRect.setAttribute('height', '352');
+      clipRect.setAttribute('rx', '60');
+      clip.appendChild(clipRect);
+
+      defs.appendChild(gBack);
+      defs.appendChild(gHead);
+      defs.appendChild(gRing);
+      defs.appendChild(clip);
+      svg.appendChild(defs);
+
+      const back = document.createElementNS(svgNS, 'rect');
+      back.setAttribute('x', '56');
+      back.setAttribute('y', '86');
+      back.setAttribute('width', '400');
+      back.setAttribute('height', '364');
+      back.setAttribute('rx', '66');
+      back.setAttribute('fill', 'url(#dtCalBack)');
+      back.setAttribute('stroke', '#14532d');
+      back.setAttribute('stroke-width', '2');
+      svg.appendChild(back);
+
+      const face = document.createElementNS(svgNS, 'rect');
+      face.setAttribute('x', '66');
+      face.setAttribute('y', '96');
+      face.setAttribute('width', '380');
+      face.setAttribute('height', '352');
+      face.setAttribute('rx', '60');
+      face.setAttribute('fill', '#ffffff');
+      face.setAttribute('stroke', '#e2e8f0');
+      face.setAttribute('stroke-width', '1.5');
+      svg.appendChild(face);
+
+      const headG = document.createElementNS(svgNS, 'g');
+      headG.setAttribute('clip-path', 'url(#dtCalClip)');
+      const headBar = document.createElementNS(svgNS, 'rect');
+      headBar.setAttribute('x', '66');
+      headBar.setAttribute('y', '96');
+      headBar.setAttribute('width', '380');
+      headBar.setAttribute('height', '126');
+      headBar.setAttribute('fill', 'url(#dtCalHead)');
+      headG.appendChild(headBar);
+
+      const rimLine = document.createElementNS(svgNS, 'rect');
+      rimLine.setAttribute('x', '76');
+      rimLine.setAttribute('y', '97');
+      rimLine.setAttribute('width', '360');
+      rimLine.setAttribute('height', '3.5');
+      rimLine.setAttribute('rx', '1.75');
+      rimLine.setAttribute('fill', 'rgba(255,255,255,0.6)');
+      headG.appendChild(rimLine);
+
+      const divLine = document.createElementNS(svgNS, 'line');
+      divLine.setAttribute('x1', '66');
+      divLine.setAttribute('y1', '222');
+      divLine.setAttribute('x2', '446');
+      divLine.setAttribute('y2', '222');
+      divLine.setAttribute('stroke', '#14532d');
+      divLine.setAttribute('stroke-width', '3');
+      headG.appendChild(divLine);
+      svg.appendChild(headG);
+
+      [142, 334].forEach((x) => {
+        const hole = document.createElementNS(svgNS, 'rect');
+        hole.setAttribute('x', String(x + 4));
+        hole.setAttribute('y', '104');
+        hole.setAttribute('width', '28');
+        hole.setAttribute('height', '36');
+        hole.setAttribute('rx', '12');
+        hole.setAttribute('fill', '#0f172a');
+        hole.setAttribute('opacity', '0.4');
+        svg.appendChild(hole);
+
+        const ring = document.createElementNS(svgNS, 'rect');
+        ring.setAttribute('x', String(x));
+        ring.setAttribute('y', '54');
+        ring.setAttribute('width', '36');
+        ring.setAttribute('height', '78');
+        ring.setAttribute('rx', '18');
+        ring.setAttribute('fill', 'url(#dtCalRing)');
+        ring.setAttribute('stroke', '#64748b');
+        ring.setAttribute('stroke-width', '1.5');
+        svg.appendChild(ring);
+
+        const hl = document.createElementNS(svgNS, 'rect');
+        hl.setAttribute('x', String(x + 6));
+        hl.setAttribute('y', '56');
+        hl.setAttribute('width', '6');
+        hl.setAttribute('height', '74');
+        hl.setAttribute('rx', '3');
+        hl.setAttribute('fill', '#ffffff');
+        hl.setAttribute('opacity', '0.75');
+        svg.appendChild(hl);
+      });
+
+      const dateText = document.createElementNS(svgNS, 'text');
+      dateText.setAttribute('x', '256');
+      dateText.setAttribute('y', '362');
+      dateText.setAttribute('text-anchor', 'middle');
+      dateText.setAttribute('font-family', 'Segoe UI, -apple-system, sans-serif');
+      dateText.setAttribute('font-weight', 'bold');
+      dateText.setAttribute('font-size', '142');
+      dateText.setAttribute('fill', '#15803d');
+      dateText.setAttribute('letter-spacing', '-3');
+      dateText.textContent = '31';
+      svg.appendChild(dateText);
     } else if (type === 'window') {
       const rect = document.createElementNS(svgNS, 'rect');
       rect.setAttribute('x', '2');

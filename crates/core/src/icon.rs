@@ -410,7 +410,9 @@ pub mod windows {
     /// Renders the current day of the month (1-31) onto the Fluent Design Calendar template.
     /// Supports both 256x256 and 128x128 base templates.
     pub unsafe fn render_calendar_date_hicon(base_rgba: &[u8], day: u32) -> isize {
-        let width = if base_rgba.len() == (256 * 256 * 4) {
+        let width = if base_rgba.len() >= (512 * 512 * 4) {
+            512u32
+        } else if base_rgba.len() == (256 * 256 * 4) {
             256u32
         } else {
             128u32
@@ -480,7 +482,13 @@ pub mod windows {
         let old_bm = SelectObject(mem_dc, hbm_color as _);
 
         // Render day number with Segoe UI Variable / Segoe UI bold in Emerald Green (#15803d -> BGR: 0x003D8015)
-        let font_size = if width == 256 { 78 } else { 39 };
+        let font_size = if width >= 512 {
+            (78 * width as i32) / 256
+        } else if width == 256 {
+            78
+        } else {
+            39
+        };
         let font_name: Vec<u16> = "Segoe UI Variable Display\0".encode_utf16().collect();
         let mut hfont = CreateFontW(
             font_size,
@@ -524,20 +532,11 @@ pub mod windows {
 
         let day_str = format!("{}\0", day);
         let day_wide: Vec<u16> = day_str.encode_utf16().collect();
-        let mut text_rect = if width == 256 {
-            RECT {
-                left: 36,
-                top: 108,
-                right: 220,
-                bottom: 228,
-            }
-        } else {
-            RECT {
-                left: 18,
-                top: 54,
-                right: 110,
-                bottom: 114,
-            }
+        let mut text_rect = RECT {
+            left: (36 * width as i32) / 256,
+            top: (108 * height as i32) / 256,
+            right: (220 * width as i32) / 256,
+            bottom: (228 * height as i32) / 256,
         };
         DrawTextW(
             mem_dc,
@@ -572,7 +571,9 @@ pub mod windows {
     /// Renders the Telegram-style unread badge onto the Fluent Design Mail icon.
     /// Supports both 256x256 and 128x128 base templates.
     pub unsafe fn render_mail_badged_hicon(base_rgba: &[u8], count: u32) -> isize {
-        let width = if base_rgba.len() == (256 * 256 * 4) {
+        let width = if base_rgba.len() >= (512 * 512 * 4) {
+            512u32
+        } else if base_rgba.len() == (256 * 256 * 4) {
             256u32
         } else {
             128u32

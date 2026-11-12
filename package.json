@@ -7,7 +7,8 @@
     "apps/*"
   ],
   "scripts": {
-    "test": "cargo test --package desktop-google-core",
+    "test": "cargo test --package desktop-google-core && npm run test:ui",
+    "test:ui": "node tests/about-dialog.test.js && node tests/icon-assets.test.js && node tests/observers.test.js",
     "check": "cargo check --target x86_64-pc-windows-msvc --workspace",
     "fmt": "cargo fmt --all --check",
     "build": "cargo build --target x86_64-pc-windows-msvc --workspace --release",
@@ -18,7 +19,8 @@
     "release:prepare": "node scripts/prepare-release.js"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.2.0"
+    "@tauri-apps/cli": "^2.2.0",
+    "jsdom": "^29.1.1"
   },
   "engines": {
     "node": ">=18.0.0"
