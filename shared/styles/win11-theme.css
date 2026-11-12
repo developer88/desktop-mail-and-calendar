@@ -358,8 +358,8 @@ html.desktop-calendar-app body {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2) !important;
   width: 700px !important;
   max-width: 92vw !important;
-  height: 560px !important;
-  max-height: 88vh !important;
+  height: 640px !important;
+  max-height: 90vh !important;
   font-family: "Google Sans", Roboto, "Segoe UI Variable Text", "Segoe UI", -apple-system, sans-serif !important;
   overflow: hidden !important;
   display: flex !important;
@@ -1167,6 +1167,13 @@ html.desktop-calendar-app body {
   }
 }
 
+
+/* Offset Gmail top header so the frameless title row has clean dedicated space */
+body:not(.desktop-calendar-app) header.gb_Ja,
+body:not(.desktop-calendar-app) header[role="banner"],
+body:not(.desktop-calendar-app) header {
+  padding-top: 32px !important;
+}
 
 /* Dark mode enhancements when system prefers dark */
 @media (prefers-color-scheme: dark) {

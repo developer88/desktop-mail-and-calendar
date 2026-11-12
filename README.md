@@ -14,17 +14,6 @@ Engineered to provide a focused, lightweight desktop window for email and calend
 
 ---
 
-## 📥 Download (Release v0.1.0)
-
-Windows NSIS setup installers are available in [GitHub Releases](https://github.com/developer88/desktop-mail-and-calendar/releases):
-
-| Application | Installer (`.exe`) | Size |
-| :--- | :--- | :--- |
-| **Desktop Mail** | [`desktop-mail-setup.exe`](https://github.com/developer88/desktop-mail-and-calendar/releases/download/v0.1.0/desktop-mail-setup.exe) | ~4 MB |
-| **Desktop Calendar** | [`desktop-calendar-setup.exe`](https://github.com/developer88/desktop-mail-and-calendar/releases/download/v0.1.0/desktop-calendar-setup.exe) | ~4 MB |
-
----
-
 ## 🔒 Privacy & Security Guarantees
 
 * **Zero Telemetry & Tracking:** No analytics libraries, no tracking pixels, and no diagnostic beacon calls.
