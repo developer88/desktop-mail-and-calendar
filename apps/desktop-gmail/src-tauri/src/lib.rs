@@ -100,7 +100,7 @@ fn apply_unread_count<R: Runtime>(
                         desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
                     }
                 } else if let Ok(img) =
-                    tauri::image::Image::from_bytes(include_bytes!("../icons/128x128.png"))
+                    tauri::image::Image::from_bytes(include_bytes!("../icons/128x128@2x.png"))
                 {
                     let hicon = desktop_google_core::icon::windows::render_mail_badged_hicon(
                         img.rgba(),
@@ -133,7 +133,7 @@ fn apply_unread_count<R: Runtime>(
             } else {
                 desktop_google_core::icon::windows::set_taskbar_overlay_icon(hwnd, 0, "");
                 if let Ok(img) =
-                    tauri::image::Image::from_bytes(include_bytes!("../icons/128x128.png"))
+                    tauri::image::Image::from_bytes(include_bytes!("../icons/128x128@2x.png"))
                 {
                     let hicon = desktop_google_core::icon::windows::create_hicon_from_rgba(
                         img.rgba(),

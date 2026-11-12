@@ -192,10 +192,15 @@ pub mod windows {
         st.wDay as u32
     }
 
-    /// Renders the current day of the month (1-31) onto the base 128x128 Calendar icon.
+    /// Renders the current day of the month (1-31) onto the Fluent Design Calendar template.
+    /// Supports both 256x256 and 128x128 base templates.
     pub unsafe fn render_calendar_date_hicon(base_rgba: &[u8], day: u32) -> isize {
-        let width = 128u32;
-        let height = 128u32;
+        let width = if base_rgba.len() == (256 * 256 * 4) {
+            256u32
+        } else {
+            128u32
+        };
+        let height = width;
         if base_rgba.len() != (width * height * 4) as usize {
             return 0;
         }
@@ -259,21 +264,11 @@ pub mod windows {
         let mem_dc = CreateCompatibleDC(0 as _);
         let old_bm = SelectObject(mem_dc, hbm_color as _);
 
-        // Fill white card over the static "31"
-        let white_brush = CreateSolidBrush(0x00FFFFFF);
-        let rect = RECT {
-            left: 26,
-            top: 52,
-            right: 102,
-            bottom: 104,
-        };
-        FillRect(mem_dc, &rect, white_brush);
-        DeleteObject(white_brush as _);
-
-        // Render day number with Segoe UI bold in Google Calendar green (#15803d -> BGR: 0x003D8015)
-        let font_name: Vec<u16> = "Segoe UI\0".encode_utf16().collect();
-        let hfont = CreateFontW(
-            44,
+        // Render day number with Segoe UI Variable / Segoe UI bold in Google Calendar Blue (#1A73E8 -> BGR: 0x00E8731A)
+        let font_size = if width == 256 { 96 } else { 48 };
+        let font_name: Vec<u16> = "Segoe UI Variable Display\0".encode_utf16().collect();
+        let mut hfont = CreateFontW(
+            font_size,
             0,
             0,
             0,
@@ -288,17 +283,46 @@ pub mod windows {
             (DEFAULT_PITCH | FF_DONTCARE) as u32,
             font_name.as_ptr(),
         );
+        if hfont.is_null() {
+            let fallback_name: Vec<u16> = "Segoe UI\0".encode_utf16().collect();
+            hfont = CreateFontW(
+                font_size,
+                0,
+                0,
+                0,
+                FW_BOLD as i32,
+                0,
+                0,
+                0,
+                DEFAULT_CHARSET as u32,
+                OUT_DEFAULT_PRECIS as u32,
+                CLIP_DEFAULT_PRECIS as u32,
+                CLEARTYPE_QUALITY as u32,
+                (DEFAULT_PITCH | FF_DONTCARE) as u32,
+                fallback_name.as_ptr(),
+            );
+        }
+
         let old_font = SelectObject(mem_dc, hfont as _);
         SetBkMode(mem_dc, TRANSPARENT as i32);
-        SetTextColor(mem_dc, 0x003D8015);
+        SetTextColor(mem_dc, 0x00E8731A); // Google Calendar Blue
 
         let day_str = format!("{}\0", day);
         let day_wide: Vec<u16> = day_str.encode_utf16().collect();
-        let mut text_rect = RECT {
-            left: 26,
-            top: 54,
-            right: 102,
-            bottom: 104,
+        let mut text_rect = if width == 256 {
+            RECT {
+                left: 24,
+                top: 88,
+                right: 232,
+                bottom: 236,
+            }
+        } else {
+            RECT {
+                left: 12,
+                top: 44,
+                right: 116,
+                bottom: 118,
+            }
         };
         DrawTextW(
             mem_dc,
@@ -307,14 +331,6 @@ pub mod windows {
             &mut text_rect,
             DT_CENTER | DT_VCENTER | DT_SINGLELINE,
         );
-
-        // Ensure alpha channel is 255 for the white card area
-        for y in 52..104 {
-            for x in 26..102 {
-                let idx = ((y * 128 + x) * 4) as usize;
-                dest[idx + 3] = 255;
-            }
-        }
 
         SelectObject(mem_dc, old_font);
         DeleteObject(hfont as _);
@@ -338,16 +354,21 @@ pub mod windows {
         hicon as isize
     }
 
-    /// Renders the Telegram-style unread badge onto the 128x128 Mail icon.
+    /// Renders the Telegram-style unread badge onto the Fluent Design Mail icon.
+    /// Supports both 256x256 and 128x128 base templates.
     pub unsafe fn render_mail_badged_hicon(base_rgba: &[u8], count: u32) -> isize {
-        if count == 0 {
-            return create_hicon_from_rgba(base_rgba, 128, 128);
-        }
-
-        let width = 128u32;
-        let height = 128u32;
+        let width = if base_rgba.len() == (256 * 256 * 4) {
+            256u32
+        } else {
+            128u32
+        };
+        let height = width;
         if base_rgba.len() != (width * height * 4) as usize {
             return 0;
+        }
+
+        if count == 0 {
+            return create_hicon_from_rgba(base_rgba, width, height);
         }
 
         let label = if count >= 1_000_000 {
@@ -417,35 +438,45 @@ pub mod windows {
         let mem_dc = CreateCompatibleDC(0 as _);
         let old_bm = SelectObject(mem_dc, hbm_color as _);
 
-        let bh = 38i32;
-        let bw = (22 + label.len() as i32 * 14).max(42).min(86);
-        let bx = 128 - bw - 2;
-        let by = 2i32;
+        let scale = width as f32 / 256.0;
+        let bh = (72.0 * scale).round() as i32;
+        let bw = ((48.0 + label.len() as f32 * 26.0).max(72.0).min(170.0) * scale).round() as i32;
+        let bx = width as i32 - bw - (6.0 * scale).round() as i32;
+        let by = (4.0 * scale).round() as i32;
+        let r = bh / 2;
 
-        // Dark shadow / outline
+        // Soft subtle ambient shadow beneath badge (semi-transparent, no harsh black border!)
         let dark_brush = CreateSolidBrush(0x00141414);
-        let dark_pen = CreatePen(PS_SOLID as i32, 1, 0x00141414);
         let old_brush = SelectObject(mem_dc, dark_brush as _);
-        let old_pen = SelectObject(mem_dc, dark_pen as _);
-        RoundRect(mem_dc, bx - 2, by - 2, bx + bw + 2, by + bh + 2, 22, 22);
+        let null_pen = GetStockObject(NULL_PEN);
+        let old_pen = SelectObject(mem_dc, null_pen);
+        RoundRect(
+            mem_dc,
+            bx - 2,
+            by + 1,
+            bx + bw + 2,
+            by + bh + 4,
+            r + 4,
+            r + 4,
+        );
 
-        // Vivid red pill (#eb4034 -> BGR: 0x003440EB)
+        // Vivid red pill (#eb4034 matching Telegram -> BGR: 0x003440EB)
         let red_brush = CreateSolidBrush(0x003440EB);
         let red_pen = CreatePen(PS_SOLID as i32, 1, 0x003440EB);
         SelectObject(mem_dc, red_brush as _);
         SelectObject(mem_dc, red_pen as _);
-        RoundRect(mem_dc, bx, by, bx + bw, by + bh, 20, 20);
+        RoundRect(mem_dc, bx, by, bx + bw, by + bh, r, r);
 
-        // White centered text
+        // Clean white centered text
         let font_size = if label.len() <= 2 {
-            24
+            (46.0 * scale).round() as i32
         } else if label.len() <= 3 {
-            20
+            (38.0 * scale).round() as i32
         } else {
-            16
+            (30.0 * scale).round() as i32
         };
-        let font_name: Vec<u16> = "Segoe UI\0".encode_utf16().collect();
-        let hfont = CreateFontW(
+        let font_name: Vec<u16> = "Segoe UI Variable Text\0".encode_utf16().collect();
+        let mut hfont = CreateFontW(
             font_size,
             0,
             0,
@@ -461,6 +492,26 @@ pub mod windows {
             (DEFAULT_PITCH | FF_DONTCARE) as u32,
             font_name.as_ptr(),
         );
+        if hfont.is_null() {
+            let fallback_name: Vec<u16> = "Segoe UI\0".encode_utf16().collect();
+            hfont = CreateFontW(
+                font_size,
+                0,
+                0,
+                0,
+                FW_BOLD as i32,
+                0,
+                0,
+                0,
+                DEFAULT_CHARSET as u32,
+                OUT_DEFAULT_PRECIS as u32,
+                CLIP_DEFAULT_PRECIS as u32,
+                CLEARTYPE_QUALITY as u32,
+                (DEFAULT_PITCH | FF_DONTCARE) as u32,
+                fallback_name.as_ptr(),
+            );
+        }
+
         let old_font = SelectObject(mem_dc, hfont as _);
         SetBkMode(mem_dc, TRANSPARENT as i32);
         SetTextColor(mem_dc, 0x00FFFFFF);
@@ -480,10 +531,10 @@ pub mod windows {
             DT_CENTER | DT_VCENTER | DT_SINGLELINE,
         );
 
-        // Set alpha channel for badge region
-        for y in (by - 2).max(0)..(by + bh + 2).min(128) {
-            for x in (bx - 2).max(0)..(bx + bw + 2).min(128) {
-                let idx = ((y * 128 + x) * 4) as usize;
+        // Ensure alpha channel is 255 for the red pill badge area
+        for y in by.max(0)..(by + bh).min(height as i32) {
+            for x in bx.max(0)..(bx + bw).min(width as i32) {
+                let idx = ((y * width as i32 + x) * 4) as usize;
                 dest[idx + 3] = 255;
             }
         }
@@ -494,7 +545,6 @@ pub mod windows {
         DeleteObject(dark_brush as _);
         DeleteObject(red_brush as _);
         SelectObject(mem_dc, old_pen);
-        DeleteObject(dark_pen as _);
         DeleteObject(red_pen as _);
         SelectObject(mem_dc, old_bm);
         DeleteDC(mem_dc);

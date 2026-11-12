@@ -264,7 +264,7 @@ pub fn run() {
                 std::thread::spawn(move || {
                     let mut last_day = 0u32;
                     let base_img = tauri::image::Image::from_bytes(include_bytes!(
-                        "../icons/128x128.png"
+                        "../icons/blank_256.png"
                     ))
                     .ok();
 
