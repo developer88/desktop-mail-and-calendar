@@ -479,8 +479,8 @@ pub mod windows {
         let mem_dc = CreateCompatibleDC(0 as _);
         let old_bm = SelectObject(mem_dc, hbm_color as _);
 
-        // Render day number with Segoe UI Variable / Segoe UI bold in Google Calendar Blue (#1A73E8 -> BGR: 0x00E8731A)
-        let font_size = if width == 256 { 96 } else { 48 };
+        // Render day number with Segoe UI Variable / Segoe UI bold in Emerald Green (#15803d -> BGR: 0x003D8015)
+        let font_size = if width == 256 { 78 } else { 39 };
         let font_name: Vec<u16> = "Segoe UI Variable Display\0".encode_utf16().collect();
         let mut hfont = CreateFontW(
             font_size,
@@ -520,23 +520,23 @@ pub mod windows {
 
         let old_font = SelectObject(mem_dc, hfont as _);
         SetBkMode(mem_dc, TRANSPARENT as i32);
-        SetTextColor(mem_dc, 0x00E8731A); // Google Calendar Blue
+        SetTextColor(mem_dc, 0x003D8015); // Emerald green #15803d
 
         let day_str = format!("{}\0", day);
         let day_wide: Vec<u16> = day_str.encode_utf16().collect();
         let mut text_rect = if width == 256 {
             RECT {
-                left: 24,
-                top: 88,
-                right: 232,
-                bottom: 236,
+                left: 36,
+                top: 108,
+                right: 220,
+                bottom: 228,
             }
         } else {
             RECT {
-                left: 12,
-                top: 44,
-                right: 116,
-                bottom: 118,
+                left: 18,
+                top: 54,
+                right: 110,
+                bottom: 114,
             }
         };
         DrawTextW(

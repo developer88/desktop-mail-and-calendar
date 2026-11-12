@@ -333,122 +333,88 @@
       path.setAttribute('stroke-linecap', 'round');
       svg.appendChild(path);
     } else if (type === 'mail-logo') {
-      const back = document.createElementNS(svgNS, 'rect');
-      back.setAttribute('x', '1.5');
-      back.setAttribute('y', '1.5');
-      back.setAttribute('width', '13');
-      back.setAttribute('height', '13');
-      back.setAttribute('rx', '2.5');
-      back.setAttribute('fill', '#d9530a');
-
-      const letter = document.createElementNS(svgNS, 'rect');
-      letter.setAttribute('x', '2.5');
-      letter.setAttribute('y', '2.2');
-      letter.setAttribute('width', '11');
-      letter.setAttribute('height', '11');
-      letter.setAttribute('rx', '1.8');
-      letter.setAttribute('fill', '#ffffff');
-
-      const line1 = document.createElementNS(svgNS, 'line');
-      line1.setAttribute('x1', '4.2');
-      line1.setAttribute('y1', '4.2');
-      line1.setAttribute('x2', '8.5');
-      line1.setAttribute('y2', '4.2');
-      line1.setAttribute('stroke', '#cbd5e1');
-      line1.setAttribute('stroke-width', '1');
-      line1.setAttribute('stroke-linecap', 'round');
-
-      const line2 = document.createElementNS(svgNS, 'line');
-      line2.setAttribute('x1', '4.2');
-      line2.setAttribute('y1', '6.0');
-      line2.setAttribute('x2', '11.2');
-      line2.setAttribute('y2', '6.0');
-      line2.setAttribute('stroke', '#cbd5e1');
-      line2.setAttribute('stroke-width', '1');
-      line2.setAttribute('stroke-linecap', 'round');
-
-      const front = document.createElementNS(svgNS, 'path');
-      front.setAttribute('d', 'M 1.5,5.5 L 8,9.5 L 14.5,5.5 L 14.5,12 C 14.5,13.4 13.4,14.5 12,14.5 L 4,14.5 C 2.6,14.5 1.5,13.4 1.5,12 Z');
-      front.setAttribute('fill', '#f97316');
-
-      const fold = document.createElementNS(svgNS, 'path');
-      fold.setAttribute('d', 'M 1.5,5.5 L 8,9.5 L 14.5,5.5');
-      fold.setAttribute('stroke', '#c2410c');
-      fold.setAttribute('stroke-width', '0.9');
-      fold.setAttribute('fill', 'none');
-
-      svg.appendChild(back);
-      svg.appendChild(letter);
-      svg.appendChild(line1);
-      svg.appendChild(line2);
-      svg.appendChild(front);
-      svg.appendChild(fold);
+      svg.setAttribute('viewBox', '0 0 512 512');
+      svg.innerHTML = `
+        <defs>
+          <filter id="aboutMailShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="14" />
+          </filter>
+          <linearGradient id="aboutMailBack" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ea580c" />
+            <stop offset="60%" stop-color="#c2410c" />
+            <stop offset="100%" stop-color="#9a3412" />
+          </linearGradient>
+          <linearGradient id="aboutLetter" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#f1f5f9" />
+          </linearGradient>
+          <linearGradient id="aboutMailFront" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#fb923c" />
+            <stop offset="20%" stop-color="#f97316" />
+            <stop offset="85%" stop-color="#ea580c" />
+            <stop offset="100%" stop-color="#c2410c" />
+          </linearGradient>
+          <clipPath id="aboutMailClip">
+            <rect x="56" y="80" width="400" height="370" rx="68" />
+          </clipPath>
+        </defs>
+        <rect x="80" y="420" width="352" height="42" rx="21" fill="#000000" opacity="0.25" filter="url(#aboutMailShadow)" />
+        <rect x="56" y="80" width="400" height="370" rx="68" fill="url(#aboutMailBack)" stroke="#9a3412" stroke-width="2" />
+        <rect x="84" y="92" width="344" height="320" rx="36" fill="url(#aboutLetter)" stroke="#e2e8f0" stroke-width="1.5" />
+        <rect x="132" y="136" width="144" height="18" rx="9" fill="#94a3b8" opacity="0.85" />
+        <rect x="132" y="172" width="248" height="18" rx="9" fill="#cbd5e1" opacity="0.9" />
+        <rect x="132" y="208" width="192" height="18" rx="9" fill="#e2e8f0" opacity="0.85" />
+        <g clip-path="url(#aboutMailClip)">
+          <path d="M 50,200 L 256,316 L 462,200 L 462,460 L 50,460 Z" fill="url(#aboutMailFront)" />
+          <path d="M 56,200 L 256,316 L 456,200" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M 56,203 L 256,319 L 456,203" fill="none" stroke="#9a3412" stroke-width="2.5" opacity="0.5" stroke-linecap="round" stroke-linejoin="round" />
+        </g>
+      `;
     } else if (type === 'calendar-logo') {
-      const back = document.createElementNS(svgNS, 'rect');
-      back.setAttribute('x', '1.5');
-      back.setAttribute('y', '1.5');
-      back.setAttribute('width', '13');
-      back.setAttribute('height', '13');
-      back.setAttribute('rx', '2.5');
-      back.setAttribute('fill', '#15803d');
-
-      const page = document.createElementNS(svgNS, 'rect');
-      page.setAttribute('x', '2.5');
-      page.setAttribute('y', '2.2');
-      page.setAttribute('width', '11');
-      page.setAttribute('height', '11');
-      page.setAttribute('rx', '1.8');
-      page.setAttribute('fill', '#ffffff');
-
-      const top = document.createElementNS(svgNS, 'path');
-      top.setAttribute('d', 'M 2.5,6.5 L 2.5,4.0 C 2.5,3.0 3.3,2.2 4.3,2.2 L 11.7,2.2 C 12.7,2.2 13.5,3.0 13.5,4.0 L 13.5,6.5 Z');
-      top.setAttribute('fill', '#22c55e');
-
-      const crease = document.createElementNS(svgNS, 'line');
-      crease.setAttribute('x1', '2.5');
-      crease.setAttribute('y1', '6.5');
-      crease.setAttribute('x2', '13.5');
-      crease.setAttribute('y2', '6.5');
-      crease.setAttribute('stroke', '#126b33');
-      crease.setAttribute('stroke-width', '0.6');
-
-      const ring1 = document.createElementNS(svgNS, 'rect');
-      ring1.setAttribute('x', '4.6');
-      ring1.setAttribute('y', '0.9');
-      ring1.setAttribute('width', '1.4');
-      ring1.setAttribute('height', '2.4');
-      ring1.setAttribute('rx', '0.7');
-      ring1.setAttribute('fill', '#ffffff');
-      ring1.setAttribute('stroke', '#15803d');
-      ring1.setAttribute('stroke-width', '0.4');
-
-      const ring2 = document.createElementNS(svgNS, 'rect');
-      ring2.setAttribute('x', '10.0');
-      ring2.setAttribute('y', '0.9');
-      ring2.setAttribute('width', '1.4');
-      ring2.setAttribute('height', '2.4');
-      ring2.setAttribute('rx', '0.7');
-      ring2.setAttribute('fill', '#ffffff');
-      ring2.setAttribute('stroke', '#15803d');
-      ring2.setAttribute('stroke-width', '0.4');
-
-      const text = document.createElementNS(svgNS, 'text');
-      text.setAttribute('x', '8');
-      text.setAttribute('y', '11.8');
-      text.setAttribute('text-anchor', 'middle');
-      text.setAttribute('fill', '#15803d');
-      text.setAttribute('font-size', '5.8');
-      text.setAttribute('font-weight', 'bold');
-      text.setAttribute('font-family', 'sans-serif');
-      text.textContent = '31';
-
-      svg.appendChild(back);
-      svg.appendChild(page);
-      svg.appendChild(top);
-      svg.appendChild(crease);
-      svg.appendChild(ring1);
-      svg.appendChild(ring2);
-      svg.appendChild(text);
+      svg.setAttribute('viewBox', '0 0 512 512');
+      svg.innerHTML = `
+        <defs>
+          <filter id="aboutCalShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="14" />
+          </filter>
+          <linearGradient id="aboutCalBack" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#16a34a" />
+            <stop offset="60%" stop-color="#15803d" />
+            <stop offset="100%" stop-color="#14532d" />
+          </linearGradient>
+          <linearGradient id="aboutCalHeader" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#4ade80" />
+            <stop offset="20%" stop-color="#22c55e" />
+            <stop offset="80%" stop-color="#16a34a" />
+            <stop offset="100%" stop-color="#15803d" />
+          </linearGradient>
+          <linearGradient id="aboutRingMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#cbd5e1" />
+            <stop offset="25%" stop-color="#f8fafc" />
+            <stop offset="50%" stop-color="#ffffff" />
+            <stop offset="75%" stop-color="#94a3b8" />
+            <stop offset="100%" stop-color="#64748b" />
+          </linearGradient>
+          <clipPath id="aboutCalClip">
+            <rect x="66" y="96" width="380" height="352" rx="60" />
+          </clipPath>
+        </defs>
+        <rect x="80" y="420" width="352" height="42" rx="21" fill="#000000" opacity="0.25" filter="url(#aboutCalShadow)" />
+        <rect x="56" y="86" width="400" height="364" rx="66" fill="url(#aboutCalBack)" stroke="#14532d" stroke-width="2" />
+        <rect x="66" y="96" width="380" height="352" rx="60" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+        <g clip-path="url(#aboutCalClip)">
+          <rect x="66" y="96" width="380" height="126" fill="url(#aboutCalHeader)" />
+          <rect x="76" y="97" width="360" height="3.5" rx="1.75" fill="rgba(255,255,255,0.6)" />
+          <line x1="66" y1="222" x2="446" y2="222" stroke="#14532d" stroke-width="3" />
+        </g>
+        <rect x="146" y="104" width="28" height="36" rx="12" fill="#0f172a" opacity="0.5" />
+        <rect x="338" y="104" width="28" height="36" rx="12" fill="#0f172a" opacity="0.5" />
+        <rect x="142" y="54" width="36" height="78" rx="18" fill="url(#aboutRingMetal)" stroke="#64748b" stroke-width="1.5" />
+        <rect x="148" y="56" width="6" height="74" rx="3" fill="#ffffff" opacity="0.75" />
+        <rect x="334" y="54" width="36" height="78" rx="18" fill="url(#aboutRingMetal)" stroke="#64748b" stroke-width="1.5" />
+        <rect x="340" y="56" width="6" height="74" rx="3" fill="#ffffff" opacity="0.75" />
+        <text x="256" y="362" text-anchor="middle" font-family="Segoe UI, -apple-system, system-ui, sans-serif" font-weight="bold" font-size="142" fill="#15803d" letter-spacing="-3">31</text>
+      `;
     } else if (type === 'window') {
       const rect = document.createElementNS(svgNS, 'rect');
       rect.setAttribute('x', '2');
@@ -788,7 +754,6 @@
         const logoWrap = document.createElement('div');
         logoWrap.className = 'desktop-about-logo';
         const logoSvg = createSvgIcon(isCalendar ? 'calendar-logo' : 'mail-logo');
-        logoSvg.setAttribute('viewBox', '0 0 16 16');
         logoSvg.setAttribute('width', '48');
         logoSvg.setAttribute('height', '48');
         logoWrap.appendChild(logoSvg);
@@ -1004,7 +969,6 @@
     const badge = document.createElement('div');
     badge.className = 'desktop-splash-badge ' + (isCalendar ? 'calendar-theme' : 'mail-theme');
     const logoSvg = createSvgIcon(isCalendar ? 'calendar-logo' : 'mail-logo');
-    logoSvg.setAttribute('viewBox', '0 0 16 16');
     logoSvg.setAttribute('width', '36');
     logoSvg.setAttribute('height', '36');
     badge.appendChild(logoSvg);
