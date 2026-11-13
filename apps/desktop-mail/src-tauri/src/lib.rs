@@ -373,7 +373,7 @@ pub fn run() {
                 unsafe {
                     desktop_google_core::icon::windows::set_window_relaunch_properties(
                         hwnd,
-                        "com.andrey.desktop-gmail",
+                        "com.andrey.desktop-mail",
                         "Desktop Mail",
                     );
                 }

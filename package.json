@@ -7,13 +7,14 @@
     "apps/*"
   ],
   "scripts": {
-    "test": "cargo test --package desktop-google-core && npm run test:ui",
+    "test": "cargo test --package desktop-google-core && npm run test:ui && npm run test:e2e",
     "test:ui": "node tests/about-dialog.test.js && node tests/icon-assets.test.js && node tests/observers.test.js",
+    "test:e2e": "node tests/e2e-bundle.test.js && node tests/e2e-binaries.test.js",
     "check": "cargo check --target x86_64-pc-windows-msvc --workspace",
     "fmt": "cargo fmt --all --check",
     "build": "cargo build --target x86_64-pc-windows-msvc --workspace --release",
-    "build:mail": "cargo build --target x86_64-pc-windows-msvc --package desktop-gmail --bin desktop-mail --release",
-    "build:calendar": "cargo build --target x86_64-pc-windows-msvc --package desktop-gcalendar --bin desktop-calendar --release",
+    "build:mail": "cargo build --target x86_64-pc-windows-msvc --package desktop-mail --bin desktop-mail --release",
+    "build:calendar": "cargo build --target x86_64-pc-windows-msvc --package desktop-calendar --bin desktop-calendar --release",
     "ci": "bash scripts/ci.sh",
     "build:installers": "node scripts/build-installers.js",
     "release:prepare": "node scripts/prepare-release.js"

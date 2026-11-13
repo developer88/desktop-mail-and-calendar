@@ -1,8 +1,8 @@
 [workspace]
 members = [
     "crates/core",
-    "apps/desktop-gmail/src-tauri",
-    "apps/desktop-gcalendar/src-tauri",
+    "apps/desktop-mail/src-tauri",
+    "apps/desktop-calendar/src-tauri",
 ]
 resolver = "2"
 

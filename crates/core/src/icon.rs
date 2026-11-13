@@ -166,16 +166,6 @@ pub mod windows {
         pid: 2,
     };
 
-    const PKEY_APP_USER_MODEL_RELAUNCH_ICON_RESOURCE: PROPERTYKEY = PROPERTYKEY {
-        fmtid: GUID {
-            data1: 0x9F4C2855,
-            data2: 0x9F79,
-            data3: 0x4B39,
-            data4: [0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3],
-        },
-        pid: 3,
-    };
-
     const PKEY_APP_USER_MODEL_RELAUNCH_DISPLAY_NAME_RESOURCE: PROPERTYKEY = PROPERTYKEY {
         fmtid: GUID {
             data1: 0x9F4C2855,
@@ -290,7 +280,10 @@ pub mod windows {
                     free_propvariant_string(&mut pv_name);
                 }
 
-                // RelaunchCommand and RelaunchIconResource pointing to current exe
+                // RelaunchCommand pointing to current exe
+                // NOTE: We deliberately do NOT set PKEY_APP_USER_MODEL_RELAUNCH_ICON_RESOURCE!
+                // Setting that property forces Windows 11 Taskbar to lock to the exe's static icon resource,
+                // which suppresses dynamic WM_SETICON taskbar button updates (unread badge / dynamic calendar date).
                 if let Ok(exe_path) = std::env::current_exe() {
                     let exe_str = exe_path.to_string_lossy();
                     if let Some(mut pv_cmd) = make_propvariant_string(&exe_str) {
@@ -300,15 +293,6 @@ pub mod windows {
                             &pv_cmd as *const _ as *const c_void,
                         );
                         free_propvariant_string(&mut pv_cmd);
-                    }
-                    let icon_res_str = format!("{},0", exe_str);
-                    if let Some(mut pv_icon) = make_propvariant_string(&icon_res_str) {
-                        let _ = (vtbl.set_value)(
-                            store_ptr,
-                            &PKEY_APP_USER_MODEL_RELAUNCH_ICON_RESOURCE,
-                            &pv_icon as *const _ as *const c_void,
-                        );
-                        free_propvariant_string(&mut pv_icon);
                     }
                 }
 
@@ -545,6 +529,15 @@ pub mod windows {
             &mut text_rect,
             DT_CENTER | DT_VCENTER | DT_SINGLELINE,
         );
+
+        // Ensure alpha channel is 255 for the drawn date text area
+        // (GDI DrawTextW does not write 32-bit alpha channel, leaving pixels with alpha=0/transparent)
+        for y in text_rect.top.max(0)..text_rect.bottom.min(height as i32) {
+            for x in text_rect.left.max(0)..text_rect.right.min(width as i32) {
+                let idx = ((y * width as i32 + x) * 4) as usize;
+                dest[idx + 3] = 255;
+            }
+        }
 
         SelectObject(mem_dc, old_font);
         DeleteObject(hfont as _);

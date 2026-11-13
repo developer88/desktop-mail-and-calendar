@@ -1,5 +1,5 @@
 [package]
-name = "desktop-gcalendar"
+name = "desktop-calendar"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true

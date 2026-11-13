@@ -5,8 +5,8 @@ const assert = require('assert');
 console.log('Testing icon assets and brand consistency across workspace...');
 
 const root = path.resolve(__dirname, '..');
-const mailIcons = path.join(root, 'apps/desktop-gmail/src-tauri/icons');
-const calIcons = path.join(root, 'apps/desktop-gcalendar/src-tauri/icons');
+const mailIcons = path.join(root, 'apps/desktop-mail/src-tauri/icons');
+const calIcons = path.join(root, 'apps/desktop-calendar/src-tauri/icons');
 
 // Helper to read PNG dimensions from header
 function getPngDimensions(filePath) {

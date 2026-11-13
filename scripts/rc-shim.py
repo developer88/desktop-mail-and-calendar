@@ -195,21 +195,19 @@ def create_complete_res(rc_path=None):
         for sm in re.finditer(r'VALUE\s+"([^"]+)"\s*,\s*"([^"]+)"', rc_content):
             strings[sm.group(1)] = sm.group(2)
 
-    # If no strings were parsed, provide sensible defaults based on path
-    if not strings:
-        if rc_path and "desktop-gcalendar" in rc_path.lower():
-            strings["FileDescription"] = "Desktop Calendar"
-            strings["ProductName"] = "Desktop Calendar"
-            strings["InternalName"] = "desktop-calendar"
-            strings["OriginalFilename"] = "desktop-calendar.exe"
-        else:
-            strings["FileDescription"] = "Desktop Mail"
-            strings["ProductName"] = "Desktop Mail"
-            strings["InternalName"] = "desktop-mail"
-            strings["OriginalFilename"] = "desktop-mail.exe"
-        strings["CompanyName"] = "Andrey Eremin"
-        strings["FileVersion"] = "0.2.0"
-        strings["ProductVersion"] = "0.2.0"
+    # Ensure all required Windows Details tab strings are fully populated
+    is_calendar = rc_path and ("desktop-calendar" in rc_path.lower() or "calendar" in rc_path.lower())
+    app_name = "Desktop Calendar" if is_calendar else "Desktop Mail"
+    exe_name = "desktop-calendar.exe" if is_calendar else "desktop-mail.exe"
+
+    strings.setdefault("FileDescription", app_name)
+    strings.setdefault("ProductName", app_name)
+    strings.setdefault("InternalName", exe_name[:-4])
+    strings.setdefault("OriginalFilename", exe_name)
+    strings.setdefault("CompanyName", "Andrey Eremin")
+    strings.setdefault("LegalCopyright", "Copyright (C) 2026 Andrey Eremin. MIT License.")
+    strings.setdefault("FileVersion", "0.2.0")
+    strings.setdefault("ProductVersion", "0.2.0")
 
     try:
         vinfo_data = make_vs_version_info(ver_nums[0], ver_nums[1], ver_nums[2], ver_nums[3], strings)
@@ -227,12 +225,12 @@ def create_complete_res(rc_path=None):
         # Default fallback icon check
         if rc_path and "calendar" in rc_path.lower():
             candidates = [
-                "/mnt/c/Users/andrey/Documents/GitHub/desktop-google-apps/apps/desktop-gcalendar/src-tauri/icons/icon.ico",
+                "/mnt/c/Users/andrey/Documents/GitHub/desktop-google-apps/apps/desktop-calendar/src-tauri/icons/icon.ico",
                 "icons/icon.ico"
             ]
         else:
             candidates = [
-                "/mnt/c/Users/andrey/Documents/GitHub/desktop-google-apps/apps/desktop-gmail/src-tauri/icons/icon.ico",
+                "/mnt/c/Users/andrey/Documents/GitHub/desktop-google-apps/apps/desktop-mail/src-tauri/icons/icon.ico",
                 "icons/icon.ico",
                 "../icons/icon.ico"
             ]

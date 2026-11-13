@@ -264,7 +264,7 @@ pub fn run() {
                 unsafe {
                     desktop_google_core::icon::windows::set_window_relaunch_properties(
                         hwnd,
-                        "com.andrey.desktop-gcalendar",
+                        "com.andrey.desktop-calendar",
                         "Desktop Calendar",
                     );
                 }

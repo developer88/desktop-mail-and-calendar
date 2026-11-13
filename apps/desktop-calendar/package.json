@@ -1,7 +1,7 @@
 {
-  "name": "desktop-gmail",
+  "name": "desktop-calendar",
   "version": "0.2.0",
-  "description": "Standalone Windows 11 Desktop client for Gmail",
+  "description": "Standalone Windows 11 Desktop client for Calendar",
   "private": true,
   "scripts": {
     "dev": "tauri dev",

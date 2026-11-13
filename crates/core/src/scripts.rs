@@ -80,16 +80,18 @@ pub fn get_injected_bundle(app_kind: AppKind) -> String {
     if (!isAuthFlow()) {{
         function applyStyles() {{
             if (document.getElementById('desktop-theme')) return;
-            var styleEl = document.createElement('style');
-            styleEl.id = 'desktop-theme';
-            styleEl.textContent = `{theme}\n{declutter}`;
-            (document.head || document.documentElement).appendChild(styleEl);
+            var target = document.head || document.documentElement;
+            if (target) {{
+                var styleEl = document.createElement('style');
+                styleEl.id = 'desktop-theme';
+                styleEl.textContent = `{theme}\n{declutter}`;
+                target.appendChild(styleEl);
+            }}
         }}
 
+        applyStyles();
         if (document.readyState === 'loading') {{
             document.addEventListener('DOMContentLoaded', applyStyles);
-        }} else {{
-            applyStyles();
         }}
     }}
 
@@ -135,5 +137,50 @@ mod tests {
         let cal_bundle = get_injected_bundle(AppKind::Calendar);
         assert!(cal_bundle.contains("APP_KIND = \"calendar\""));
         assert!(cal_bundle.contains("PRIMARY_HOST = \"calendar.google.com\""));
+        assert!(cal_bundle.contains("initCalendarDateObserver"));
+        assert!(cal_bundle.contains("#15803d"));
+        assert!(!CALENDAR_DATE_SCRIPT.contains("#1a73e8"));
+    }
+
+    #[test]
+    fn test_zero_inner_html_in_injected_bundles() {
+        for kind in [AppKind::Mail, AppKind::Calendar] {
+            let bundle = get_injected_bundle(kind);
+            assert!(
+                !bundle.contains(".innerHTML"),
+                "Bundle for {:?} must not contain .innerHTML (violates Google Trusted Types CSP)",
+                kind
+            );
+            assert!(
+                !bundle.contains(".outerHTML"),
+                "Bundle for {:?} must not contain .outerHTML (violates Google Trusted Types CSP)",
+                kind
+            );
+            assert!(
+                !bundle.contains("insertAdjacentHTML"),
+                "Bundle for {:?} must not contain insertAdjacentHTML (violates Google Trusted Types CSP)",
+                kind
+            );
+        }
+    }
+
+    #[test]
+    fn test_bundle_version_matches_cargo_pkg_version() {
+        let pkg_version = env!("CARGO_PKG_VERSION");
+        for kind in [AppKind::Mail, AppKind::Calendar] {
+            let bundle = get_injected_bundle(kind);
+            assert!(
+                bundle.contains(&format!("currentVer = '{}'", pkg_version)),
+                "Bundle for {:?} must contain currentVer = '{}'",
+                kind,
+                pkg_version
+            );
+            assert!(
+                bundle.contains(&format!("verNum.textContent = '{}'", pkg_version)),
+                "Bundle for {:?} must display Build Version {}",
+                kind,
+                pkg_version
+            );
+        }
     }
 }

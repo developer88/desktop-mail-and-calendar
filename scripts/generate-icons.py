@@ -19,31 +19,31 @@ def generate():
             subprocess.run(["rsvg-convert", "-w", str(sz), "-h", str(sz), svg, "-o", out], check=True)
 
     # 1. Desktop Mail
-    gmail_icons = os.path.join(root, "apps", "desktop-gmail", "src-tauri", "icons")
-    Image.open(os.path.join(scratch, "mail_1024.png")).save(os.path.join(gmail_icons, "icon_1024.png"))
-    Image.open(os.path.join(scratch, "mail_1024.png")).save(os.path.join(gmail_icons, "icon.png"))
-    Image.open(os.path.join(scratch, "mail_512.png")).save(os.path.join(gmail_icons, "512x512.png"))
-    Image.open(os.path.join(scratch, "mail_256.png")).save(os.path.join(gmail_icons, "128x128@2x.png"))
-    Image.open(os.path.join(scratch, "mail_128.png")).save(os.path.join(gmail_icons, "128x128.png"))
-    Image.open(os.path.join(scratch, "mail_32.png")).save(os.path.join(gmail_icons, "32x32.png"))
+    mail_icons = os.path.join(root, "apps", "desktop-mail", "src-tauri", "icons")
+    Image.open(os.path.join(scratch, "mail_1024.png")).save(os.path.join(mail_icons, "icon_1024.png"))
+    Image.open(os.path.join(scratch, "mail_1024.png")).save(os.path.join(mail_icons, "icon.png"))
+    Image.open(os.path.join(scratch, "mail_512.png")).save(os.path.join(mail_icons, "512x512.png"))
+    Image.open(os.path.join(scratch, "mail_256.png")).save(os.path.join(mail_icons, "128x128@2x.png"))
+    Image.open(os.path.join(scratch, "mail_128.png")).save(os.path.join(mail_icons, "128x128.png"))
+    Image.open(os.path.join(scratch, "mail_32.png")).save(os.path.join(mail_icons, "32x32.png"))
 
     mail_ico_sizes = [(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
     Image.open(os.path.join(scratch, "mail_256.png")).save(
-        os.path.join(gmail_icons, "icon.ico"),
+        os.path.join(mail_icons, "icon.ico"),
         format="ICO",
         sizes=mail_ico_sizes
     )
 
     # 2. Desktop Calendar
-    gcal_icons = os.path.join(root, "apps", "desktop-gcalendar", "src-tauri", "icons")
-    Image.open(os.path.join(scratch, "cal_1024.png")).save(os.path.join(gcal_icons, "icon_1024.png"))
-    Image.open(os.path.join(scratch, "cal_1024.png")).save(os.path.join(gcal_icons, "icon.png"))
-    Image.open(os.path.join(scratch, "cal_512.png")).save(os.path.join(gcal_icons, "512x512.png"))
-    Image.open(os.path.join(scratch, "cal_256.png")).save(os.path.join(gcal_icons, "128x128@2x.png"))
-    Image.open(os.path.join(scratch, "cal_128.png")).save(os.path.join(gcal_icons, "128x128.png"))
-    Image.open(os.path.join(scratch, "cal_32.png")).save(os.path.join(gcal_icons, "32x32.png"))
-    Image.open(os.path.join(scratch, "cal_blank_1024.png")).save(os.path.join(gcal_icons, "blank_1024.png"))
-    Image.open(os.path.join(scratch, "cal_blank_512.png")).save(os.path.join(gcal_icons, "blank_512.png"))
+    cal_icons = os.path.join(root, "apps", "desktop-calendar", "src-tauri", "icons")
+    Image.open(os.path.join(scratch, "cal_1024.png")).save(os.path.join(cal_icons, "icon_1024.png"))
+    Image.open(os.path.join(scratch, "cal_1024.png")).save(os.path.join(cal_icons, "icon.png"))
+    Image.open(os.path.join(scratch, "cal_512.png")).save(os.path.join(cal_icons, "512x512.png"))
+    Image.open(os.path.join(scratch, "cal_256.png")).save(os.path.join(cal_icons, "128x128@2x.png"))
+    Image.open(os.path.join(scratch, "cal_128.png")).save(os.path.join(cal_icons, "128x128.png"))
+    Image.open(os.path.join(scratch, "cal_32.png")).save(os.path.join(cal_icons, "32x32.png"))
+    Image.open(os.path.join(scratch, "cal_blank_1024.png")).save(os.path.join(cal_icons, "blank_1024.png"))
+    Image.open(os.path.join(scratch, "cal_blank_512.png")).save(os.path.join(cal_icons, "blank_512.png"))
     Image.open(os.path.join(scratch, "cal_blank_256.png")).save(os.path.join(gcal_icons, "blank_256.png"))
     Image.open(os.path.join(scratch, "cal_blank_128.png")).save(os.path.join(gcal_icons, "blank_128.png"))
 

@@ -2,5 +2,5 @@
 #![windows_subsystem = "windows"]
 
 fn main() {
-    desktop_gmail::run();
+    desktop_calendar::run();
 }

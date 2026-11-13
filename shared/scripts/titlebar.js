@@ -1594,10 +1594,9 @@
     });
   }
 
+  createTitlebar();
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', createTitlebar);
-  } else {
-    createTitlebar();
   }
   setInterval(createTitlebar, 1500);
 })();
