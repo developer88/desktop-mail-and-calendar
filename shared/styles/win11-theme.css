@@ -139,7 +139,7 @@ html.desktop-calendar-app {
 }
 
 html.desktop-calendar-app body {
-  transform: translateY(32px) !important;
+  margin-top: 32px !important;
   height: calc(100vh - 32px) !important;
   max-height: calc(100vh - 32px) !important;
   box-sizing: border-box !important;

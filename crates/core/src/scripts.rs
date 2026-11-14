@@ -1,5 +1,6 @@
 use crate::config::AppKind;
 
+pub const SHELL_CSS: &str = include_str!("../../../shared/styles/shell.css");
 pub const WIN11_THEME_CSS: &str = include_str!("../../../shared/styles/win11-theme.css");
 pub const DECLUTTER_CSS: &str = include_str!("../../../shared/styles/declutter.css");
 pub const NAVIGATION_INTERCEPTOR_SCRIPT: &str =
@@ -10,7 +11,7 @@ pub const CALENDAR_DATE_SCRIPT: &str =
 pub const TITLEBAR_SCRIPT: &str = include_str!("../../../shared/scripts/titlebar.js");
 
 /// Constructs the complete consolidated JavaScript bundle injected into the webview on page initialization
-pub fn get_injected_bundle(app_kind: AppKind) -> String {
+pub fn get_injected_bundle(app_kind: AppKind, is_first_run: bool) -> String {
     let app_kind_str = match app_kind {
         AppKind::Mail => "mail",
         AppKind::Calendar => "calendar",
@@ -20,6 +21,7 @@ pub fn get_injected_bundle(app_kind: AppKind) -> String {
         AppKind::Calendar => "calendar.google.com",
     };
 
+    let escaped_shell = SHELL_CSS.replace('\\', "\\\\").replace('`', "\\`");
     let escaped_theme = WIN11_THEME_CSS.replace('\\', "\\\\").replace('`', "\\`");
     let escaped_declutter = DECLUTTER_CSS.replace('\\', "\\\\").replace('`', "\\`");
     let unread_script = match app_kind {
@@ -31,6 +33,7 @@ pub fn get_injected_bundle(app_kind: AppKind) -> String {
         r#"
 (function() {{
     window.__DESKTOP_APP_KIND__ = "{app_kind_str}";
+    window.__DESKTOP_FIRST_RUN__ = {is_first_run};
     var APP_KIND = "{app_kind_str}";
     var PRIMARY_HOST = "{primary_host}";
 
@@ -77,6 +80,23 @@ pub fn get_injected_bundle(app_kind: AppKind) -> String {
         return false;
     }}
 
+    // Shell UI styles: Titlebar and first-run Welcome modal styles are ALWAYS applied
+    // so wrapper controls and the welcome screen are properly rendered even during sign-in.
+    function applyShellStyles() {{
+        if (document.getElementById('desktop-shell-theme')) return;
+        var target = document.head || document.documentElement;
+        if (target) {{
+            var styleEl = document.createElement('style');
+            styleEl.id = 'desktop-shell-theme';
+            styleEl.textContent = `{shell}`;
+            target.appendChild(styleEl);
+        }}
+    }}
+    applyShellStyles();
+    if (document.readyState === 'loading') {{
+        document.addEventListener('DOMContentLoaded', applyShellStyles);
+    }}
+
     if (!isAuthFlow()) {{
         function applyStyles() {{
             if (document.getElementById('desktop-theme')) return;
@@ -106,7 +126,9 @@ pub fn get_injected_bundle(app_kind: AppKind) -> String {
 }})();
 "#,
         app_kind_str = app_kind_str,
+        is_first_run = is_first_run,
         primary_host = primary_host,
+        shell = escaped_shell,
         theme = escaped_theme,
         declutter = escaped_declutter,
         nav = NAVIGATION_INTERCEPTOR_SCRIPT,
@@ -121,11 +143,13 @@ mod tests {
 
     #[test]
     fn test_injected_bundle_generation() {
-        let bundle = get_injected_bundle(AppKind::Mail);
+        let bundle = get_injected_bundle(AppKind::Mail, true);
         assert!(bundle.contains("APP_KIND = \"mail\""));
         assert!(bundle.contains("PRIMARY_HOST = \"mail.google.com\""));
+        assert!(bundle.contains("window.__DESKTOP_FIRST_RUN__ = true"));
         assert!(bundle.contains("window.self !== window.top"));
         assert!(bundle.contains("isAuthFlow"));
+        assert!(bundle.contains("desktop-shell-theme"));
         assert!(bundle.contains("desktop-theme"));
         assert!(bundle.contains("initNavigationInterceptor"));
         assert!(bundle.contains("initUnreadObserver"));
@@ -134,9 +158,10 @@ mod tests {
         assert!(bundle.contains("desktop_first_run_completed"));
         assert!(bundle.contains("desktop-splash-overlay"));
 
-        let cal_bundle = get_injected_bundle(AppKind::Calendar);
+        let cal_bundle = get_injected_bundle(AppKind::Calendar, false);
         assert!(cal_bundle.contains("APP_KIND = \"calendar\""));
         assert!(cal_bundle.contains("PRIMARY_HOST = \"calendar.google.com\""));
+        assert!(cal_bundle.contains("window.__DESKTOP_FIRST_RUN__ = false"));
         assert!(cal_bundle.contains("initCalendarDateObserver"));
         assert!(cal_bundle.contains("#15803d"));
         assert!(!CALENDAR_DATE_SCRIPT.contains("#1a73e8"));
@@ -145,7 +170,7 @@ mod tests {
     #[test]
     fn test_zero_inner_html_in_injected_bundles() {
         for kind in [AppKind::Mail, AppKind::Calendar] {
-            let bundle = get_injected_bundle(kind);
+            let bundle = get_injected_bundle(kind, true);
             assert!(
                 !bundle.contains(".innerHTML"),
                 "Bundle for {:?} must not contain .innerHTML (violates Google Trusted Types CSP)",
@@ -168,7 +193,7 @@ mod tests {
     fn test_bundle_version_matches_cargo_pkg_version() {
         let pkg_version = env!("CARGO_PKG_VERSION");
         for kind in [AppKind::Mail, AppKind::Calendar] {
-            let bundle = get_injected_bundle(kind);
+            let bundle = get_injected_bundle(kind, true);
             assert!(
                 bundle.contains(&format!("currentVer = '{}'", pkg_version)),
                 "Bundle for {:?} must contain currentVer = '{}'",

@@ -7,6 +7,7 @@ console.log('Running E2E Bundle Execution Tests (Mail, Calendar, Auth, Iframe, C
 
 const root = path.resolve(__dirname, '..');
 const pkgJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+const shellCss = fs.readFileSync(path.join(root, 'shared/styles/shell.css'), 'utf8');
 const win11ThemeCss = fs.readFileSync(path.join(root, 'shared/styles/win11-theme.css'), 'utf8');
 const declutterCss = fs.readFileSync(path.join(root, 'shared/styles/declutter.css'), 'utf8');
 const navScript = fs.readFileSync(path.join(root, 'shared/scripts/navigation-interceptor.js'), 'utf8');
@@ -15,12 +16,13 @@ const calDateScript = fs.readFileSync(path.join(root, 'shared/scripts/calendar-d
 const titlebarScript = fs.readFileSync(path.join(root, 'shared/scripts/titlebar.js'), 'utf8');
 
 /**
- * Replicates crates/core/src/scripts.rs::get_injected_bundle(app_kind)
+ * Replicates crates/core/src/scripts.rs::get_injected_bundle(app_kind, is_first_run)
  * and verifies that scripts.rs uses the exact same template structure.
  */
-function buildInjectedBundle(appKind) {
+function buildInjectedBundle(appKind, isFirstRun = true) {
   const appKindStr = appKind === 'mail' ? 'mail' : 'calendar';
   const primaryHost = appKind === 'mail' ? 'mail.google.com' : 'calendar.google.com';
+  const escapedShell = shellCss.replace(/\\/g, '\\\\').replace(/`/g, '\\`');
   const escapedTheme = win11ThemeCss.replace(/\\/g, '\\\\').replace(/`/g, '\\`');
   const escapedDeclutter = declutterCss.replace(/\\/g, '\\\\').replace(/`/g, '\\`');
   const observerScript = appKind === 'mail' ? unreadScript : calDateScript;
@@ -28,6 +30,7 @@ function buildInjectedBundle(appKind) {
   return `
 (function() {
     window.__DESKTOP_APP_KIND__ = "${appKindStr}";
+    window.__DESKTOP_FIRST_RUN__ = ${isFirstRun};
     var APP_KIND = "${appKindStr}";
     var PRIMARY_HOST = "${primaryHost}";
 
@@ -62,6 +65,21 @@ function buildInjectedBundle(appKind) {
             }
         } catch (_) {}
         return false;
+    }
+
+    function applyShellStyles() {
+        if (document.getElementById('desktop-shell-theme')) return;
+        var target = document.head || document.documentElement;
+        if (target) {
+            var styleEl = document.createElement('style');
+            styleEl.id = 'desktop-shell-theme';
+            styleEl.textContent = \`${escapedShell}\`;
+            target.appendChild(styleEl);
+        }
+    }
+    applyShellStyles();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyShellStyles);
     }
 
     if (!isAuthFlow()) {
@@ -258,10 +276,11 @@ console.log('\n[1/5] Testing Desktop Mail full E2E lifecycle...');
   const splashLogo = splash.querySelector('svg');
   assert.strictEqual(splashLogo.getAttribute('viewBox'), '0 0 512 512', 'Splash logo must be 512x512 vector');
 
-  // Dismiss splash and verify localStorage persistence
+  // Dismiss splash and verify persistence
   const splashBtn = splash.querySelector('.desktop-splash-btn');
   splashBtn.click();
   assert.strictEqual(window.localStorage.getItem('desktop_first_run_completed'), 'true', 'Dismissing splash must persist desktop_first_run_completed=true');
+  assert(titleHistory.includes('__desktop_cmd__:first_run_completed'), 'Dismissing splash must send __desktop_cmd__:first_run_completed');
 
   // 1d. Verify caption buttons trigger native Rust title commands
   minBtn.click();
@@ -413,16 +432,24 @@ console.log('\n[3/5] Testing Authentication Flow Guard on accounts.google.com...
     'https://accounts.google.com/v3/signin/identifier?continue=https://mail.google.com',
     '<!DOCTYPE html><html><head><title>Sign in - Google Accounts</title></head><body><input type="email" /></body></html>'
   );
-  const { window, document, ipcCalls } = env;
+  const { window, document, ipcCalls, titleHistory } = env;
 
-  window.eval(buildInjectedBundle('mail'));
+  window.eval(buildInjectedBundle('mail', true));
 
-  // 3a. Styles, declutter CSS, and unread observer must NOT be injected during auth flow
+  // 3a. Page styles, declutter CSS, and unread observer must NOT be injected during auth flow
   assert(!document.getElementById('desktop-theme'), 'desktop-theme CSS must NOT be injected on accounts.google.com');
   assert.strictEqual(ipcCalls.length, 0, 'No unread badge IPC calls may fire on accounts.google.com');
 
-  // 3b. Frameless window titlebar MUST still be present so user can move/minimize/close sign-in window
+  // 3b. Frameless window titlebar and shell theme MUST be present so user can move/minimize/close sign-in window
   assert(document.getElementById('desktop-custom-titlebar'), 'Window titlebar controls must remain accessible during sign-in');
+  assert(document.getElementById('desktop-shell-theme'), 'Shell theme CSS must be injected so controls and splash are styled');
+
+  // 3c. First-run welcome splash MUST appear on sign-in screen (first thing user sees BEFORE signing in!)
+  const splash = document.getElementById('desktop-splash-overlay');
+  assert(splash, 'Welcome splash must be visible BEFORE sign in on first run');
+  const splashBtn = splash.querySelector('.desktop-splash-btn');
+  splashBtn.click();
+  assert(titleHistory.includes('__desktop_cmd__:first_run_completed'), 'Dismissing splash must send __desktop_cmd__:first_run_completed');
 
   env.cleanup();
   console.log('PASS: Authentication Flow Guard verified.');
@@ -443,6 +470,7 @@ console.log('\n[4/5] Testing Subframe & Companion Sidebar Guard...');
   window.eval(buildInjectedBundle('calendar'));
 
   assert(!document.getElementById('desktop-custom-titlebar'), 'Titlebar must NEVER inject inside ?companion=1 sidebar');
+  assert(!document.getElementById('desktop-shell-theme'), 'Shell CSS must NEVER inject inside ?companion=1 sidebar');
   assert(!document.getElementById('desktop-theme'), 'Theme CSS must NEVER inject inside ?companion=1 sidebar');
   assert.strictEqual(ipcCalls.length, 0, 'Observers must NEVER run inside ?companion=1 sidebar');
 

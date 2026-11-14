@@ -103,7 +103,8 @@ pub fn run() {
             commands::close_window
         ])
         .setup(move |app| {
-            let injected_script = get_injected_bundle(config.kind);
+            let is_first_run = desktop_google_core::config::is_first_run("com.andrey.desktop-calendar");
+            let injected_script = get_injected_bundle(config.kind, is_first_run);
 
             let initial_url = WebviewUrl::External(
                 start_url
@@ -161,6 +162,9 @@ pub fn run() {
                                 "open:defaultapps" => {
                                     use tauri_plugin_shell::ShellExt;
                                     let _ = app_cmd.shell().open("ms-settings:defaultapps", None);
+                                }
+                                "first_run_completed" => {
+                                    desktop_google_core::config::mark_first_run_completed("com.andrey.desktop-calendar");
                                 }
                                 _ => {}
                             }

@@ -1230,7 +1230,10 @@
     function dismissSplash() {
       try {
         localStorage.setItem('desktop_first_run_completed', 'true');
+        sessionStorage.setItem('desktop_first_run_completed', 'true');
+        window.__desktop_first_run_completed = true;
       } catch (_) {}
+      triggerAction('first_run_completed');
       overlay.classList.add('closing');
       setTimeout(() => {
         overlay.remove();
@@ -1264,10 +1267,12 @@
   function checkFirstRunSplash() {
     try {
       if (window.self !== window.top || window.parent !== window || window.frameElement) return;
-      const completed = localStorage.getItem('desktop_first_run_completed');
-      if (!completed) {
-        showWelcomeSplash(false);
-      }
+      if (window.__desktop_first_run_completed) return;
+      if (sessionStorage.getItem('desktop_first_run_completed') === 'true') return;
+      if (localStorage.getItem('desktop_first_run_completed') === 'true') return;
+      if (typeof window.__DESKTOP_FIRST_RUN__ !== 'undefined' && !window.__DESKTOP_FIRST_RUN__) return;
+
+      showWelcomeSplash(false);
     } catch (_) {}
   }
 
