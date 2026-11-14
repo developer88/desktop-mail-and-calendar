@@ -16,6 +16,11 @@ Engineered to provide a focused, lightweight desktop window for email and calend
 
 ## 📸 Screenshots
 
+### Desktop Mail Main Window
+*Focused Windows 11 Fluent interface for Gmail with native frameless titlebar, adaptive theme header, hamburger menu, and companion sidebar.*
+
+![Desktop Mail Main View](docs/screenshots/desktop-mail-main.png)
+
 ### Desktop Calendar Main Window
 *Crisp Windows 11 Fluent layout with full-width header controls, companion sidebar support, and emerald green theme accents.*
 
@@ -105,6 +110,7 @@ desktop-google-apps/
 │       ├── desktop-calendar-main.png
 │       ├── desktop-calendar-settings.jpg
 │       ├── desktop-calendar-welcome.jpg
+│       ├── desktop-mail-main.png
 │       ├── desktop-mail-settings.jpg
 │       └── desktop-mail-welcome.jpg
 │
