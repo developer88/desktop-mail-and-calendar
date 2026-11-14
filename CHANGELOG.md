@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-11-15
+
+### Added
+- **First-Run Welcome Screen Before Sign-In:** Welcome dialog is now presented immediately on initial launch before Google account sign-in on `accounts.google.com`. Once dismissed, it never reappears across origins or future app launches (persisted in `%LOCALAPPDATA%`).
+- **Universal Shell Stylesheet:** Extracted native frameless titlebar and first-run dialog styles into `shared/styles/shell.css`, allowing controls and dialogs to render safely on sign-in pages without interfering with Google's authentication inputs.
+- **High-Resolution Documentation Screenshots:** Embedded crisp, up-to-date screenshots into `README.md` showcasing Desktop Calendar main view, Desktop Mail and Desktop Calendar welcome dialogs, and the native Windows 11 Settings modals.
+
+### Fixed
+- **Google Calendar Window Width & Header Layout:** Increased default window width to 1380px (min width 800px, min height 600px), ensuring all header elements, user profile avatar, and action controls fit without horizontal cutoff.
+- **Fixed CSS Transform Containing Block Bug:** Replaced `body` CSS transform with top margin in `win11-theme.css`, eliminating the CSS Transform Level 1 containing-block glitch that previously disrupted Google Calendar's companion sidebar and drawer coordinates.
+
 ## [0.3.0] - 2026-11-14
 
 ### Added

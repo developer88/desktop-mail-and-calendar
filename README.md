@@ -1,6 +1,6 @@
 # Desktop Mail & Desktop Calendar (Windows 11)
 
-[![Release](https://img.shields.io/badge/Release-v0.3.0-blue.svg)](https://github.com/developer88/desktop-mail-and-calendar/releases)
+[![Release](https://img.shields.io/badge/Release-v0.3.1-blue.svg)](https://github.com/developer88/desktop-mail-and-calendar/releases)
 [![Rust](https://img.shields.io/badge/Rust-1.80+-orange.svg)](https://www.rust-lang.org/)
 [![Tauri](https://img.shields.io/badge/Tauri-v2.0-24C8DB.svg)](https://tauri.app/)
 [![Windows 11](https://img.shields.io/badge/Platform-Windows%2011-0078D4.svg)](https://www.microsoft.com/windows)
@@ -11,6 +11,29 @@
 Native-feeling, standalone Windows 11 desktop applications for **Gmail** and **Google Calendar** powered by **Tauri 2.0** and **Microsoft Edge WebView2**.
 
 Engineered to provide a focused, lightweight desktop window for email and calendar management on Windows 11 without running a full Chromium browser or cluttering your daily tabs.
+
+---
+
+## 📸 Screenshots
+
+### Desktop Calendar Main Window
+*Crisp Windows 11 Fluent layout with full-width header controls, companion sidebar support, and emerald green theme accents.*
+
+![Desktop Calendar Main View](docs/screenshots/desktop-calendar-main.png)
+
+### First-Run Privacy & Welcome Dialogs
+*Clear privacy notice presented immediately on first launch before signing in. Dismissing once persists across all origins and future sessions.*
+
+| Desktop Mail Welcome | Desktop Calendar Welcome |
+| :---: | :---: |
+| ![Desktop Mail Welcome](docs/screenshots/desktop-mail-welcome.jpg) | ![Desktop Calendar Welcome](docs/screenshots/desktop-calendar-welcome.jpg) |
+
+### Native Settings & System Integration
+*Integrated settings modal for notifications, automatic startup at Windows login, and one-click deep-link to Windows 11 Default Apps.*
+
+| Desktop Mail Settings | Desktop Calendar Settings |
+| :---: | :---: |
+| ![Desktop Mail Settings](docs/screenshots/desktop-mail-settings.jpg) | ![Desktop Calendar Settings](docs/screenshots/desktop-calendar-settings.jpg) |
 
 ---
 
@@ -27,6 +50,8 @@ Engineered to provide a focused, lightweight desktop window for email and calend
 
 * **Independent Lifecycles:** Separate standalone executables (`desktop-mail.exe` and `desktop-calendar.exe`). Closing your browser or encountering a tab crash does not interrupt your email or calendar. Closing the application window exits the process cleanly.
 * **Windows 11 Fluent Design:** Custom frameless titlebar with native Windows 11 minimize, maximize/restore, and close controls, hamburger menu (`File`, `Edit`, `View`, `Window`), full-window snapping, and adaptive theme synchronization (Dark/Light and Gmail background luminance sampling).
+* **Calibrated Window Dimensions:** Desktop Calendar defaults to `1380×920` (minimum `800×600`) so user profile avatars, action icons, companion sidebars, and drawer navigation display with zero horizontal cutoffs or layout shift.
+* **First-Run Welcome Notice Before Sign-In:** Dedicated `shell.css` stylesheet ensures the welcome notice and native controls render cleanly on initial startup even on `accounts.google.com` before user sign-in, with persistent dismissal tracking stored in `%LOCALAPPDATA%`.
 * **Dynamic Taskbar Icons & Badges:**
   * **Desktop Mail:** Renders a Telegram-style red unread counter pill badge directly onto the taskbar icon and taskbar overlay badge (`1`–`999`, `K`, and `M` formatting), driven by both DOM mutation observers and native Win32 GDI+ `HICON` rendering.
   * **Desktop Calendar:** Dynamically renders the current day of the month (`1`–`31`) in emerald green (`#15803d`) on the calendar taskbar icon and automatically updates across midnight.
@@ -35,9 +60,9 @@ Engineered to provide a focused, lightweight desktop window for email and calend
 * **Protocol & File Associations:**
   * **Desktop Mail:** Supports `mailto:` URI command-line arguments and in-app `mailto:` links (RFC 6068 parser routing directly into the compose view).
   * **Desktop Calendar:** Supports `webcal://`, `webcals://`, and `.ics` command-line arguments and in-app `webcal:` links, routing directly to the calendar subscription view.
-  * **Windows Default Apps Integration:** One-click deep-link to `ms-settings:defaultapps` in **Settings &rarr; General**, plus optional **Open at login** (`HKCU\...\Run` registry toggle).
-* **First-Run Welcome Notice & Settings Modal:** Transparent first-launch splash screen explaining the wrapper architecture and privacy guarantees, alongside a 3-tab Settings dialog (**General**, **Privacy & permissions**, **About**) built with strict DOM APIs (`createElementNS`) for 100% compliance with Google's Trusted Types CSP.
-* **In-App Update Checker:** Direct integration with the GitHub Releases API in **Settings &rarr; About** to check for and download new application versions.
+  * **Windows Default Apps Integration:** Full registration of `FriendlyAppName`, ProgID application records, and URL associations (`mailto:`, `webcal:`, `.ics`), allowing Windows 11 Settings &rarr; Default Apps to properly recommend Desktop Mail and Desktop Calendar with clean friendly names.
+* **Ultra High-DPI NSIS Setup Installers:** Dual distribution with both standalone portable binaries and setup installers with 6x High-DPI uncompressed branding bitmaps (984×1884) and full Windows PE `VERSIONINFO` metadata.
+* **Native Settings Modal & In-App Updates:** 3-tab Settings dialog (**General**, **Privacy & permissions**, **About**) built with strict DOM APIs (`createElementNS`) for 100% compliance with Google's Trusted Types CSP, including direct GitHub Releases update checking.
 
 ---
 
@@ -69,20 +94,30 @@ desktop-google-apps/
 │       ├── Cargo.toml
 │       └── src/
 │           ├── lib.rs                  # Public exports
-│           ├── config.rs               # Window dimensions, initial URLs, app config
+│           ├── config.rs               # Window dimensions, initial URLs, first-run tracking
 │           ├── icon.rs                 # Win32 GDI+ HICON badge/date renderer & IPropertyStore
 │           ├── navigation.rs           # Google ecosystem URL classifier & redirect unwrapper
 │           ├── protocol.rs             # RFC 6068 mailto parser & compose URL converter
 │           └── scripts.rs              # Consolidated CSS & JS initialization bundle builder
 │
+├── docs/
+│   └── screenshots/                    # High-resolution documentation screenshots
+│       ├── desktop-calendar-main.png
+│       ├── desktop-calendar-settings.jpg
+│       ├── desktop-calendar-welcome.jpg
+│       ├── desktop-mail-settings.jpg
+│       └── desktop-mail-welcome.jpg
+│
 ├── shared/
+│   ├── installer/                      # High-DPI NSIS installer wizard bitmaps (984x1884)
 │   ├── scripts/
 │   │   ├── calendar-date-observer.js   # 512x512 live calendar date renderer & toast cleaner
 │   │   ├── navigation-interceptor.js   # Client-side link routing & keyboard reload shortcuts
 │   │   ├── titlebar.js                 # Frameless titlebar, menu, settings modal & updater
 │   │   └── unread-observer.js          # 512x512 unread badge renderer & DOM/title observer
 │   └── styles/
-│       ├── win11-theme.css             # Windows 11 Fluent titlebar, menu, dialogs & splash
+│       ├── shell.css                   # Standalone titlebar & first-run dialog stylesheet
+│       ├── win11-theme.css             # Windows 11 Fluent titlebar, menu & dialog styling
 │       └── declutter.css               # Clean web layout & scroll-lock styling
 │
 ├── scripts/
@@ -102,6 +137,7 @@ desktop-google-apps/
 │   └── observers.test.js               # Unread & calendar date observer verification
 │
 ├── dist/                               # Staged release executables, installers & checksums
+├── AGENTS.md                           # AI agent operating guidelines & brand constraints
 ├── Cargo.toml                          # Cargo workspace configuration
 └── package.json                        # Monorepo build, test, E2E and CI scripts
 ```
@@ -161,7 +197,7 @@ Desktop Mail and Desktop Calendar are independent open-source projects created s
 
 * **No Affiliation:** They have **no affiliation, association, sponsorship, or endorsement with Google LLC or Alphabet Inc.** All Google trademarks, service marks, logos, interfaces, and intellectual property remain the exclusive property of Google LLC.
 * **Standard Windows 11 Edge User-Agent:** Both applications configure the WebView2 runtime with a standard Microsoft Edge on Windows 11 `User-Agent` string (`Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0`) so Google Workspace services deliver full desktop functionality without flagging the embedded WebView2 suffix.
-* **Protected Authentication Flow:** When navigating Google Accounts (`accounts.google.com`, `myaccount.google.com`, or OAuth sign-in endpoints), the injection bundle's `isAuthFlow()` guard disables custom CSS decluttering, link interception, and DOM observers so sign-in pages operate undisturbed. Only the minimal frameless window titlebar remains active so you can drag, minimize, maximize, or close the window during sign-in.
+* **Protected Authentication Flow:** When navigating Google Accounts (`accounts.google.com`, `myaccount.google.com`, or OAuth sign-in endpoints), the injection bundle's `isAuthFlow()` guard disables custom CSS decluttering, link interception, and DOM observers so sign-in pages operate undisturbed. Only the universal `shell.css` frameless window titlebar and first-run dialog remain active so you can drag, minimize, maximize, or close the window during sign-in.
 
 ---
 
