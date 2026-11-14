@@ -52,4 +52,21 @@ assert.strictEqual(calBlank512.width, 512, 'Calendar blank_512 width must be 512
 const calIco = fs.readFileSync(path.join(calIcons, 'icon.ico'));
 assert(calIco.length > 1000, 'Calendar icon.ico must not be empty');
 
-console.log('PASS: All icon assets verified up to 1024x1024 resolution.');
+// 3. Verify High-DPI NSIS Wizard Bitmaps (must be at least 4x native 164x314 resolution)
+console.log('Checking High-DPI installer wizard bitmaps...');
+const wizardMail = path.join(root, 'shared/installer/wizard_mail.bmp');
+const wizardCal = path.join(root, 'shared/installer/wizard_cal.bmp');
+assert(fs.existsSync(wizardMail), 'wizard_mail.bmp must exist');
+assert(fs.existsSync(wizardCal), 'wizard_cal.bmp must exist');
+
+const mailBmpBuf = fs.readFileSync(wizardMail);
+const mailW = mailBmpBuf.readUInt32LE(18);
+const mailH = mailBmpBuf.readInt32LE(22);
+assert(mailW >= 656 && mailH >= 1256, `wizard_mail.bmp must be high-DPI (at least 656x1256, got ${mailW}x${mailH})`);
+
+const calBmpBuf = fs.readFileSync(wizardCal);
+const calW = calBmpBuf.readUInt32LE(18);
+const calH = calBmpBuf.readInt32LE(22);
+assert(calW >= 656 && calH >= 1256, `wizard_cal.bmp must be high-DPI (at least 656x1256, got ${calW}x${calH})`);
+
+console.log('PASS: All icon assets and installer graphics verified up to High-DPI 1024x1024 and 984x1884 resolutions.');
