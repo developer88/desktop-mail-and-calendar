@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-11-14
+
+### Added
+- **Windows 11 Default Apps Integration & Friendly Naming:** Registered `Software\Classes\Applications\<app>` and ProgID application metadata so Windows 11 Settings -> Default Apps and protocol pickers display friendly names ("Desktop Mail" and "Desktop Calendar") for `mailto:`, `webcal:`, and `.ics` files.
+- **Ultra High-DPI NSIS Installer Wizard Graphics:** Upgraded installer sidebar wizard branding graphics to 6x High-DPI resolution (984×1884 uncompressed 24-bit bitmaps) with `ManifestDPIAware true` for razor-sharp rendering on 4K/high-DPI monitors.
+- **Restored Dual Packaging in Release Pipeline:** Automated generation of both standalone portable binaries (`desktop-mail.exe`, `desktop-calendar.exe`) and setup installers (`desktop-mail-setup.exe`, `desktop-calendar-setup.exe`) alongside `SHA256SUMS.txt` and `release-manifest.json`.
+- **Complete PE Resource Information:** Full Win32 `VERSIONINFO` metadata (ProductName, FileDescription, CompanyName, LegalCopyright, FileVersion, ProductVersion) across all binaries and setup installers so Windows File Properties -> Details is 100% complete.
+- **Strict Brand Independence & Internal Workspace Refactoring:** Fully renamed internal directory names and variables to `desktop-mail` and `desktop-calendar` to eliminate Google trademarks from code identifiers; introduced `AGENTS.md` guidelines.
+- **Comprehensive End-to-End (E2E) Test Suite:** Added end-to-end test coverage for full app lifecycles, Trusted Types CSP DOM safety, authentication flow guards, PE binary headers, and installer registry validation.
+
 ## [0.2.0] - 2026-11-12
 
 ### Added

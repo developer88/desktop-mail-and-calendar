@@ -24,6 +24,9 @@ function buildInstaller(config) {
   const rootDir = path.resolve(__dirname, '..');
   const distDir = path.join(rootDir, 'dist');
   const tempNsiPath = path.join(rootDir, `installer-${config.appId}.nsi`);
+  const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
+  const appVersion = pkg.version;
+  const quadVersion = appVersion.split('.').concat(['0', '0', '0']).slice(0, 4).join('.');
 
   if (!fs.existsSync(distDir)) {
     fs.mkdirSync(distDir, { recursive: true });
@@ -189,15 +192,15 @@ InstallDirRegKey HKCU "Software\\${config.appId}" "Install_Dir"
 RequestExecutionLevel user
 
 ; Version Information for Windows File Properties Details Tab
-VIProductVersion "0.2.0.0"
-VIFileVersion "0.2.0.0"
+VIProductVersion "${quadVersion}"
+VIFileVersion "${quadVersion}"
 VIAddVersionKey "ProductName" "${config.appName}"
-VIAddVersionKey "ProductVersion" "0.2.0"
+VIAddVersionKey "ProductVersion" "${appVersion}"
 VIAddVersionKey "Comments" "${config.appName} Windows 11 Installer"
 VIAddVersionKey "CompanyName" "Andrey Eremin"
 VIAddVersionKey "LegalCopyright" "Copyright (C) 2026 Andrey Eremin. MIT License."
 VIAddVersionKey "FileDescription" "${config.appName} Setup"
-VIAddVersionKey "FileVersion" "0.2.0.0"
+VIAddVersionKey "FileVersion" "${quadVersion}"
 VIAddVersionKey "OriginalFilename" "${config.installerName}"
 
 ; UI & Graphic Settings
@@ -237,7 +240,7 @@ Section "Install"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "DisplayName" "${config.appName}"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "UninstallString" '"$INSTDIR\\uninstall.exe"'
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "DisplayIcon" '"$INSTDIR\\${config.binaryName}",0'
-  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "DisplayVersion" "0.2.0"
+  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "DisplayVersion" "${appVersion}"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "Publisher" "Andrey Eremin"
   WriteRegDWORD HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "NoModify" 1
   WriteRegDWORD HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "NoRepair" 1

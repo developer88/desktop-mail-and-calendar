@@ -76,8 +76,10 @@ function main() {
 
   fs.writeFileSync(path.join(distDir, 'SHA256SUMS.txt'), checksums.join('\n') + '\n');
 
+  const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
+
   const manifest = {
-    version: '0.2.0',
+    version: pkg.version,
     buildDate: new Date().toISOString(),
     gitCommit: getGitCommit(),
     artifacts: releaseFiles

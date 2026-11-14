@@ -6,6 +6,7 @@ const { JSDOM } = require('jsdom');
 console.log('Running E2E Bundle Execution Tests (Mail, Calendar, Auth, Iframe, CSP)...');
 
 const root = path.resolve(__dirname, '..');
+const pkgJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const win11ThemeCss = fs.readFileSync(path.join(root, 'shared/styles/win11-theme.css'), 'utf8');
 const declutterCss = fs.readFileSync(path.join(root, 'shared/styles/declutter.css'), 'utf8');
 const navScript = fs.readFileSync(path.join(root, 'shared/scripts/navigation-interceptor.js'), 'utf8');
@@ -311,7 +312,7 @@ console.log('\n[1/5] Testing Desktop Mail full E2E lifecycle...');
   assert(aboutTitle, 'About tab title must render without CSP error');
   assert.strictEqual(aboutTitle.textContent, 'About Desktop Mail');
   const verNum = settingsOverlay.querySelector('.desktop-version-num');
-  assert.strictEqual(verNum.textContent, '0.2.0', 'About tab must display Build Version 0.2.0');
+  assert.strictEqual(verNum.textContent, pkgJson.version, `About tab must display Build Version ${pkgJson.version}`);
   const aboutLogo = settingsOverlay.querySelector('.desktop-about-logo svg');
   assert(aboutLogo, 'About tab SVG logo must exist');
   assert.strictEqual(aboutLogo.getAttribute('viewBox'), '0 0 512 512');

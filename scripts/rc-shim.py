@@ -184,7 +184,22 @@ def create_complete_res(rc_path=None):
 
     # 3. Parse and build RT_VERSION (type 16, id 1)
     strings = {}
-    ver_nums = [0, 2, 0, 0]
+    app_version = "0.3.0"
+    try:
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        pkg_file = os.path.join(root_dir, "package.json")
+        if os.path.exists(pkg_file):
+            import json
+            with open(pkg_file, "r") as pf:
+                app_version = json.load(pf).get("version", "0.3.0")
+    except Exception:
+        pass
+
+    ver_parts = [int(p) for p in re.findall(r'\d+', app_version)]
+    while len(ver_parts) < 4:
+        ver_parts.append(0)
+    ver_nums = ver_parts[:4]
+
     if rc_content:
         # Parse version numbers
         vm = re.search(r'FILEVERSION\s+(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)', rc_content)
@@ -206,8 +221,8 @@ def create_complete_res(rc_path=None):
     strings.setdefault("OriginalFilename", exe_name)
     strings.setdefault("CompanyName", "Andrey Eremin")
     strings.setdefault("LegalCopyright", "Copyright (C) 2026 Andrey Eremin. MIT License.")
-    strings.setdefault("FileVersion", "0.2.0")
-    strings.setdefault("ProductVersion", "0.2.0")
+    strings.setdefault("FileVersion", app_version)
+    strings.setdefault("ProductVersion", app_version)
 
     try:
         vinfo_data = make_vs_version_info(ver_nums[0], ver_nums[1], ver_nums[2], ver_nums[3], strings)
