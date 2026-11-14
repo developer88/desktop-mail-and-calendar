@@ -54,56 +54,123 @@ function buildInstaller(config) {
   if (config.appId === 'DesktopMail') {
     protocolRegistration = `
   ; Default Programs & URL Protocol Association for mailto:
+  WriteRegStr HKCU "Software\\RegisteredApplications" "${config.appName}" "Software\\DesktopMail\\Capabilities"
   WriteRegStr HKCU "Software\\RegisteredApplications" "DesktopMail" "Software\\DesktopMail\\Capabilities"
   WriteRegStr HKCU "Software\\DesktopMail\\Capabilities" "ApplicationName" "${config.appName}"
+  WriteRegStr HKCU "Software\\DesktopMail\\Capabilities" "ApplicationCompany" "Andrey Eremin"
   WriteRegStr HKCU "Software\\DesktopMail\\Capabilities" "ApplicationDescription" "Native-feeling Windows 11 desktop wrapper for Mail"
   WriteRegStr HKCU "Software\\DesktopMail\\Capabilities" "ApplicationIcon" '"$INSTDIR\\${config.binaryName}",0'
   WriteRegStr HKCU "Software\\DesktopMail\\Capabilities\\URLAssociations" "mailto" "DesktopMail.Url.mailto"
 
-  WriteRegStr HKCU "Software\\Classes\\DesktopMail.Url.mailto" "" "URL:MailTo Protocol"
+  ; Applications registration: Ensures Windows 11 "Select a default app" list displays "Desktop Mail" instead of "desktop-mail.exe"
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "" "${config.appName}"
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "FriendlyAppName" "${config.appName}"
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "ApplicationName" "${config.appName}"
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "ApplicationCompany" "Andrey Eremin"
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "AppUserModelId" "com.andrey.desktop-mail"
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}\\DefaultIcon" "" '"$INSTDIR\\${config.binaryName}",0'
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}\\SupportedProtocols\\mailto" "" ""
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}\\shell\\open\\command" "" '"$INSTDIR\\${config.binaryName}" "%1"'
+
+  ; App Paths
+  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${config.binaryName}" "" '"$INSTDIR\\${config.binaryName}"'
+  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${config.binaryName}" "Path" '"$INSTDIR"'
+
+  ; ProgID for mailto:
+  WriteRegStr HKCU "Software\\Classes\\DesktopMail.Url.mailto" "" "${config.appName}"
   WriteRegStr HKCU "Software\\Classes\\DesktopMail.Url.mailto" "URL Protocol" ""
   WriteRegStr HKCU "Software\\Classes\\DesktopMail.Url.mailto" "FriendlyTypeName" "${config.appName}"
+  WriteRegStr HKCU "Software\\Classes\\DesktopMail.Url.mailto" "AppUserModelId" "com.andrey.desktop-mail"
+  WriteRegStr HKCU "Software\\Classes\\DesktopMail.Url.mailto\\Application" "ApplicationName" "${config.appName}"
+  WriteRegStr HKCU "Software\\Classes\\DesktopMail.Url.mailto\\Application" "ApplicationCompany" "Andrey Eremin"
+  WriteRegStr HKCU "Software\\Classes\\DesktopMail.Url.mailto\\Application" "ApplicationDescription" "Native-feeling Windows 11 desktop wrapper for Mail"
+  WriteRegStr HKCU "Software\\Classes\\DesktopMail.Url.mailto\\Application" "ApplicationIcon" '"$INSTDIR\\${config.binaryName}",0'
+  WriteRegStr HKCU "Software\\Classes\\DesktopMail.Url.mailto\\Application" "AppUserModelId" "com.andrey.desktop-mail"
   WriteRegStr HKCU "Software\\Classes\\DesktopMail.Url.mailto\\DefaultIcon" "" '"$INSTDIR\\${config.binaryName}",0'
   WriteRegStr HKCU "Software\\Classes\\DesktopMail.Url.mailto\\shell\\open\\command" "" '"$INSTDIR\\${config.binaryName}" "%1"'
 
+  ; Clients\\Mail registration for legacy & modern Windows Mail pickers
   WriteRegStr HKCU "Software\\Clients\\Mail\\Desktop Mail" "" "${config.appName}"
   WriteRegStr HKCU "Software\\Clients\\Mail\\Desktop Mail" "DLLPath" ""
   WriteRegStr HKCU "Software\\Clients\\Mail\\Desktop Mail\\DefaultIcon" "" '"$INSTDIR\\${config.binaryName}",0'
   WriteRegStr HKCU "Software\\Clients\\Mail\\Desktop Mail\\shell\\open\\command" "" '"$INSTDIR\\${config.binaryName}" "%1"'
 `;
     protocolUnregistration = `
+  DeleteRegValue HKCU "Software\\RegisteredApplications" "${config.appName}"
   DeleteRegValue HKCU "Software\\RegisteredApplications" "DesktopMail"
   DeleteRegKey HKCU "Software\\DesktopMail"
+  DeleteRegKey HKCU "Software\\Classes\\Applications\\${config.binaryName}"
+  DeleteRegKey HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${config.binaryName}"
   DeleteRegKey HKCU "Software\\Classes\\DesktopMail.Url.mailto"
   DeleteRegKey HKCU "Software\\Clients\\Mail\\Desktop Mail"
 `;
   } else if (config.appId === 'DesktopCalendar') {
     protocolRegistration = `
   ; Default Programs & URL Protocol Association for webcal: and .ics:
+  WriteRegStr HKCU "Software\\RegisteredApplications" "${config.appName}" "Software\\DesktopCalendar\\Capabilities"
   WriteRegStr HKCU "Software\\RegisteredApplications" "DesktopCalendar" "Software\\DesktopCalendar\\Capabilities"
   WriteRegStr HKCU "Software\\DesktopCalendar\\Capabilities" "ApplicationName" "${config.appName}"
-  WriteRegStr HKCU "Software\\DesktopCalendar\\Capabilities" "ApplicationDescription" "Native-feeling Windows 11 desktop wrapper for Google Calendar"
+  WriteRegStr HKCU "Software\\DesktopCalendar\\Capabilities" "ApplicationCompany" "Andrey Eremin"
+  WriteRegStr HKCU "Software\\DesktopCalendar\\Capabilities" "ApplicationDescription" "Native-feeling Windows 11 desktop wrapper for Calendar"
   WriteRegStr HKCU "Software\\DesktopCalendar\\Capabilities" "ApplicationIcon" '"$INSTDIR\\${config.binaryName}",0'
   WriteRegStr HKCU "Software\\DesktopCalendar\\Capabilities\\URLAssociations" "webcal" "DesktopCalendar.Url.webcal"
   WriteRegStr HKCU "Software\\DesktopCalendar\\Capabilities\\URLAssociations" "webcals" "DesktopCalendar.Url.webcal"
   WriteRegStr HKCU "Software\\DesktopCalendar\\Capabilities\\FileAssociations" ".ics" "DesktopCalendar.Assoc.ics"
 
-  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Url.webcal" "" "URL:Webcal Protocol"
+  ; Applications registration: Ensures Windows 11 "Select a default app" list displays "Desktop Calendar" instead of "desktop-calendar.exe"
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "" "${config.appName}"
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "FriendlyAppName" "${config.appName}"
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "ApplicationName" "${config.appName}"
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "ApplicationCompany" "Andrey Eremin"
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "AppUserModelId" "com.andrey.desktop-calendar"
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}\\DefaultIcon" "" '"$INSTDIR\\${config.binaryName}",0'
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}\\SupportedProtocols\\webcal" "" ""
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}\\SupportedProtocols\\webcals" "" ""
+  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}\\shell\\open\\command" "" '"$INSTDIR\\${config.binaryName}" "%1"'
+
+  ; App Paths
+  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${config.binaryName}" "" '"$INSTDIR\\${config.binaryName}"'
+  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${config.binaryName}" "Path" '"$INSTDIR"'
+
+  ; ProgID for webcal:
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Url.webcal" "" "${config.appName}"
   WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Url.webcal" "URL Protocol" ""
   WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Url.webcal" "FriendlyTypeName" "${config.appName}"
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Url.webcal" "AppUserModelId" "com.andrey.desktop-calendar"
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Url.webcal\\Application" "ApplicationName" "${config.appName}"
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Url.webcal\\Application" "ApplicationCompany" "Andrey Eremin"
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Url.webcal\\Application" "ApplicationDescription" "Native-feeling Windows 11 desktop wrapper for Calendar"
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Url.webcal\\Application" "ApplicationIcon" '"$INSTDIR\\${config.binaryName}",0'
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Url.webcal\\Application" "AppUserModelId" "com.andrey.desktop-calendar"
   WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Url.webcal\\DefaultIcon" "" '"$INSTDIR\\${config.binaryName}",0'
   WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Url.webcal\\shell\\open\\command" "" '"$INSTDIR\\${config.binaryName}" "%1"'
 
-  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics" "" "iCalendar File"
+  ; ProgID for .ics files:
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics" "" "${config.appName}"
   WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics" "FriendlyTypeName" "${config.appName}"
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics" "AppUserModelId" "com.andrey.desktop-calendar"
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics\\Application" "ApplicationName" "${config.appName}"
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics\\Application" "ApplicationCompany" "Andrey Eremin"
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics\\Application" "ApplicationDescription" "Native-feeling Windows 11 desktop wrapper for Calendar"
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics\\Application" "ApplicationIcon" '"$INSTDIR\\${config.binaryName}",0'
+  WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics\\Application" "AppUserModelId" "com.andrey.desktop-calendar"
   WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics\\DefaultIcon" "" '"$INSTDIR\\${config.binaryName}",0'
   WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics\\shell\\open\\command" "" '"$INSTDIR\\${config.binaryName}" "%1"'
+
+  ; Clients\\Calendar registration
+  WriteRegStr HKCU "Software\\Clients\\Calendar\\Desktop Calendar" "" "${config.appName}"
+  WriteRegStr HKCU "Software\\Clients\\Calendar\\Desktop Calendar\\DefaultIcon" "" '"$INSTDIR\\${config.binaryName}",0'
+  WriteRegStr HKCU "Software\\Clients\\Calendar\\Desktop Calendar\\shell\\open\\command" "" '"$INSTDIR\\${config.binaryName}" "%1"'
 `;
     protocolUnregistration = `
+  DeleteRegValue HKCU "Software\\RegisteredApplications" "${config.appName}"
   DeleteRegValue HKCU "Software\\RegisteredApplications" "DesktopCalendar"
   DeleteRegKey HKCU "Software\\DesktopCalendar"
+  DeleteRegKey HKCU "Software\\Classes\\Applications\\${config.binaryName}"
+  DeleteRegKey HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${config.binaryName}"
   DeleteRegKey HKCU "Software\\Classes\\DesktopCalendar.Url.webcal"
   DeleteRegKey HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics"
+  DeleteRegKey HKCU "Software\\Clients\\Calendar\\Desktop Calendar"
 `;
   }
 
