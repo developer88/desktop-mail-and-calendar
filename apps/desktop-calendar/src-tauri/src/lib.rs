@@ -263,38 +263,28 @@ pub fn run() {
                 .build()?;
 
             #[cfg(target_os = "windows")]
-            if let Ok(hwnd_obj) = window.hwnd() {
-                let hwnd = hwnd_obj.0 as isize;
-                unsafe {
-                    desktop_google_core::icon::windows::set_window_relaunch_properties(
-                        hwnd,
-                        "com.andrey.desktop-calendar",
-                        "Desktop Calendar",
-                    );
-                }
-            }
-
-            #[cfg(target_os = "windows")]
             {
                 let win_handle = window.clone();
                 std::thread::spawn(move || {
                     let mut last_day = 0u32;
-                    let base_img = tauri::image::Image::from_bytes(include_bytes!(
-                        "../icons/blank_512.png"
-                    ))
-                    .ok();
+                    let base_bytes = include_bytes!("../icons/blank_512.png");
+                    let base_img = tauri::image::Image::from_bytes(base_bytes).ok();
 
-                    for _ in 0..100 {
-                        if let Ok(hwnd_obj) = win_handle.hwnd() {
-                            let hwnd = hwnd_obj.0 as isize;
-                            if hwnd != 0 {
-                                unsafe {
-                                    let day = desktop_google_core::icon::windows::get_local_day();
-                                    if day != last_day {
-                                        last_day = day;
-                                        if let Some(ref img) = base_img {
-                                            let hicon = desktop_google_core::icon::windows::render_calendar_date_hicon(
-                                                img.rgba(), day,
+                    let update_icon = |win: &tauri::WebviewWindow, current_day: u32| {
+                        if let Some(ref img) = base_img {
+                            unsafe {
+                                if let Some(rgba) = desktop_google_core::icon::windows::render_calendar_date_rgba(
+                                    img.rgba(),
+                                    current_day,
+                                ) {
+                                    let _ = win.set_icon(tauri::image::Image::new_owned(rgba.clone(), 512, 512));
+                                    if let Ok(hwnd_obj) = win.hwnd() {
+                                        let hwnd = hwnd_obj.0 as isize;
+                                        if hwnd != 0 {
+                                            let hicon = desktop_google_core::icon::windows::create_hicon_from_rgba(
+                                                &rgba,
+                                                512,
+                                                512,
                                             );
                                             if hicon != 0 {
                                                 desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
@@ -302,33 +292,27 @@ pub fn run() {
                                         }
                                     }
                                 }
-                                break;
                             }
                         }
-                        std::thread::sleep(std::time::Duration::from_millis(50));
+                    };
+
+                    // Re-apply several times during startup to ensure Tauri / WebView2 window
+                    // creation and display does not overwrite the dynamic date icon.
+                    let startup_delays_ms = [50, 100, 200, 400, 800, 1500, 3000];
+                    for &delay in &startup_delays_ms {
+                        std::thread::sleep(std::time::Duration::from_millis(delay));
+                        let day = unsafe { desktop_google_core::icon::windows::get_local_day() };
+                        last_day = day;
+                        update_icon(&win_handle, day);
                     }
 
-                    // Background loop: check every 30s for date change across midnight
+                    // Background loop: check every 10s for date change across midnight
                     loop {
-                        std::thread::sleep(std::time::Duration::from_secs(30));
-                        if let Ok(hwnd_obj) = win_handle.hwnd() {
-                            let hwnd = hwnd_obj.0 as isize;
-                            if hwnd != 0 {
-                                unsafe {
-                                    let day = desktop_google_core::icon::windows::get_local_day();
-                                    if day != last_day {
-                                        last_day = day;
-                                        if let Some(ref img) = base_img {
-                                            let hicon = desktop_google_core::icon::windows::render_calendar_date_hicon(
-                                                img.rgba(), day,
-                                            );
-                                            if hicon != 0 {
-                                                desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                        std::thread::sleep(std::time::Duration::from_secs(10));
+                        let day = unsafe { desktop_google_core::icon::windows::get_local_day() };
+                        if day != last_day {
+                            last_day = day;
+                            update_icon(&win_handle, day);
                         }
                     }
                 });

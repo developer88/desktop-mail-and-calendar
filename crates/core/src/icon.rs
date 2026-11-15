@@ -561,6 +561,169 @@ pub mod windows {
         hicon as isize
     }
 
+    /// Renders the current day of the month (1-31) onto the base calendar image and returns row-major 32-bit RGBA.
+    pub unsafe fn render_calendar_date_rgba(base_rgba: &[u8], day: u32) -> Option<Vec<u8>> {
+        let width = if base_rgba.len() >= (512 * 512 * 4) {
+            512u32
+        } else if base_rgba.len() == (256 * 256 * 4) {
+            256u32
+        } else {
+            128u32
+        };
+        let height = width;
+        if base_rgba.len() != (width * height * 4) as usize {
+            return None;
+        }
+
+        let bi = BITMAPV5HEADER {
+            bV5Size: std::mem::size_of::<BITMAPV5HEADER>() as u32,
+            bV5Width: width as i32,
+            bV5Height: -(height as i32),
+            bV5Planes: 1,
+            bV5BitCount: 32,
+            bV5Compression: BI_BITFIELDS,
+            bV5SizeImage: (width * height * 4) as u32,
+            bV5XPelsPerMeter: 0,
+            bV5YPelsPerMeter: 0,
+            bV5ClrUsed: 0,
+            bV5ClrImportant: 0,
+            bV5RedMask: 0x00FF0000,
+            bV5GreenMask: 0x0000FF00,
+            bV5BlueMask: 0x000000FF,
+            bV5AlphaMask: 0xFF000000,
+            bV5CSType: 0x73524742,
+            bV5Endpoints: std::mem::zeroed(),
+            bV5GammaRed: 0,
+            bV5GammaGreen: 0,
+            bV5GammaBlue: 0,
+            bV5Intent: 0,
+            bV5ProfileData: 0,
+            bV5ProfileSize: 0,
+            bV5Reserved: 0,
+        };
+
+        let screen_dc = GetDC(0 as _);
+        let mut bits: *mut u8 = std::ptr::null_mut();
+        let hbm_color = CreateDIBSection(
+            screen_dc,
+            &bi as *const _ as *const BITMAPINFO,
+            DIB_RGB_COLORS,
+            &mut bits as *mut _ as *mut *mut c_void,
+            0 as _,
+            0,
+        );
+        ReleaseDC(0 as _, screen_dc);
+
+        if bits.is_null() || hbm_color.is_null() {
+            return None;
+        }
+
+        let dest = std::slice::from_raw_parts_mut(bits, (width * height * 4) as usize);
+        for i in 0..(width * height) as usize {
+            let src_idx = i * 4;
+            let a = base_rgba[src_idx + 3] as u32;
+            let r = base_rgba[src_idx] as u32;
+            let g = base_rgba[src_idx + 1] as u32;
+            let b = base_rgba[src_idx + 2] as u32;
+            dest[src_idx] = ((b * a + 127) / 255) as u8;
+            dest[src_idx + 1] = ((g * a + 127) / 255) as u8;
+            dest[src_idx + 2] = ((r * a + 127) / 255) as u8;
+            dest[src_idx + 3] = a as u8;
+        }
+
+        let mem_dc = CreateCompatibleDC(0 as _);
+        let old_bm = SelectObject(mem_dc, hbm_color as _);
+
+        let font_size = if width >= 512 {
+            (78 * width as i32) / 256
+        } else if width == 256 {
+            78
+        } else {
+            39
+        };
+        let font_name: Vec<u16> = "Segoe UI Variable Display\0".encode_utf16().collect();
+        let mut hfont = CreateFontW(
+            font_size,
+            0,
+            0,
+            0,
+            FW_BOLD as i32,
+            0,
+            0,
+            0,
+            DEFAULT_CHARSET as u32,
+            OUT_DEFAULT_PRECIS as u32,
+            CLIP_DEFAULT_PRECIS as u32,
+            CLEARTYPE_QUALITY as u32,
+            (DEFAULT_PITCH | FF_DONTCARE) as u32,
+            font_name.as_ptr(),
+        );
+        if hfont.is_null() {
+            let fallback_name: Vec<u16> = "Segoe UI\0".encode_utf16().collect();
+            hfont = CreateFontW(
+                font_size,
+                0,
+                0,
+                0,
+                FW_BOLD as i32,
+                0,
+                0,
+                0,
+                DEFAULT_CHARSET as u32,
+                OUT_DEFAULT_PRECIS as u32,
+                CLIP_DEFAULT_PRECIS as u32,
+                CLEARTYPE_QUALITY as u32,
+                (DEFAULT_PITCH | FF_DONTCARE) as u32,
+                fallback_name.as_ptr(),
+            );
+        }
+
+        let old_font = SelectObject(mem_dc, hfont as _);
+        SetBkMode(mem_dc, TRANSPARENT as i32);
+        SetTextColor(mem_dc, 0x003D8015); // Emerald green #15803d
+
+        let day_str = format!("{}\0", day);
+        let day_wide: Vec<u16> = day_str.encode_utf16().collect();
+        let mut text_rect = RECT {
+            left: (36 * width as i32) / 256,
+            top: (108 * height as i32) / 256,
+            right: (220 * width as i32) / 256,
+            bottom: (228 * height as i32) / 256,
+        };
+        DrawTextW(
+            mem_dc,
+            day_wide.as_ptr(),
+            -1,
+            &mut text_rect,
+            DT_CENTER | DT_VCENTER | DT_SINGLELINE,
+        );
+
+        for y in text_rect.top.max(0)..text_rect.bottom.min(height as i32) {
+            for x in text_rect.left.max(0)..text_rect.right.min(width as i32) {
+                let idx = ((y * width as i32 + x) * 4) as usize;
+                dest[idx + 3] = 255;
+            }
+        }
+
+        SelectObject(mem_dc, old_font);
+        DeleteObject(hfont as _);
+        SelectObject(mem_dc, old_bm);
+        DeleteDC(mem_dc);
+
+        let mut out_rgba = vec![0u8; (width * height * 4) as usize];
+        for i in 0..(width * height) as usize {
+            let idx = i * 4;
+            out_rgba[idx] = dest[idx + 2];     // R
+            out_rgba[idx + 1] = dest[idx + 1]; // G
+            out_rgba[idx + 2] = dest[idx];     // B
+            out_rgba[idx + 3] = dest[idx + 3]; // A
+        }
+
+        DeleteObject(hbm_color as _);
+
+        Some(out_rgba)
+    }
+
     /// Renders the Telegram-style unread badge onto the Fluent Design Mail icon.
     /// Supports both 256x256 and 128x128 base templates.
     pub unsafe fn render_mail_badged_hicon(base_rgba: &[u8], count: u32) -> isize {
@@ -977,6 +1140,29 @@ pub mod windows {
         let prev = LAST_OVERLAY_HICON.swap(overlay_hicon, Ordering::SeqCst);
         if prev != 0 && prev != overlay_hicon {
             DestroyIcon(prev as _);
+        }
+    }
+
+    #[cfg(test)]
+    mod windows_tests {
+        use super::*;
+
+        #[test]
+        fn test_render_calendar_date_rgba_and_hicon() {
+            let base_rgba = vec![255u8; 512 * 512 * 4];
+            let rendered = unsafe { render_calendar_date_rgba(&base_rgba, 15) };
+            assert!(rendered.is_some());
+            let rgba = rendered.unwrap();
+            assert_eq!(rgba.len(), 512 * 512 * 4);
+            // Verify that text was drawn with modified pixel values (dark text)
+            let has_drawing = rgba.iter().any(|&b| b != 255);
+            assert!(has_drawing, "Date drawing must have modified pixel values");
+
+            let hicon = unsafe { create_hicon_from_rgba(&rgba, 512, 512) };
+            assert_ne!(hicon, 0);
+            unsafe {
+                DestroyIcon(hicon as _);
+            }
         }
     }
 }
