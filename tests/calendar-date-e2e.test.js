@@ -63,10 +63,10 @@ console.log('\n[3/5] Verifying Desktop Calendar Tauri Config & Window Initializa
   assert(libRs.includes('render_calendar_date_rgba'), 'lib.rs must call render_calendar_date_rgba on startup');
   assert(libRs.includes('builder.icon('), 'lib.rs must configure builder.icon() with dynamic date before build()');
   assert(libRs.includes('set_window_hicon'), 'lib.rs must call set_window_hicon for WM_SETICON & GCLP_HICON');
-  assert(libRs.includes('render_calendar_day_overlay_hicon'), 'lib.rs must render day overlay badge');
-  assert(libRs.includes('set_taskbar_overlay_icon'), 'lib.rs must call set_taskbar_overlay_icon with current day');
+  assert(!libRs.includes('render_calendar_day_overlay_hicon'), 'lib.rs must NOT use day overlay dot badge');
+  assert(libRs.includes('desktop_google_core::icon::windows::set_taskbar_overlay_icon'), 'lib.rs must ensure overlay icon is cleared');
 
-  console.log('PASS: Desktop Calendar lifecycle hooks and taskbar overlay integration verified.');
+  console.log('PASS: Desktop Calendar lifecycle hooks and clean taskbar icon (no dots) verified.');
 }
 
 function toWindowsPath(p) {

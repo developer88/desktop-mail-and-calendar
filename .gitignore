@@ -15,6 +15,10 @@ yarn-error.log*
 /releases/
 **/src-tauri/target/
 
+# Test artifacts
+tests/screenshots/
+tests/.screenshot-harness/
+
 # OS specific
 .DS_Store
 Thumbs.db

@@ -304,15 +304,12 @@ pub fn run() {
                                                 desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
                                             }
 
-                                            // Set dynamic taskbar overlay badge for current day number
-                                            let overlay_hicon = desktop_google_core::icon::windows::render_calendar_day_overlay_hicon(current_day);
-                                            if overlay_hicon != 0 {
-                                                desktop_google_core::icon::windows::set_taskbar_overlay_icon(
-                                                    hwnd,
-                                                    overlay_hicon,
-                                                    &format!("Day {}", current_day),
-                                                );
-                                            }
+                                            // Ensure taskbar has no overlay badge/dot for calendar day
+                                            desktop_google_core::icon::windows::set_taskbar_overlay_icon(
+                                                hwnd,
+                                                0,
+                                                "",
+                                            );
 
                                             desktop_google_core::icon::windows::notify_shell_icon_cache_change();
                                         }

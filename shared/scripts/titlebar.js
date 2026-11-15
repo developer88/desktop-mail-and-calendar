@@ -661,7 +661,7 @@
   }
 
   // Settings Modal Dialog with 3 sections matching Gemini
-  function openSettingsDialog() {
+  function openSettingsDialog(initialTab) {
     if (document.getElementById('desktop-settings-overlay')) return;
 
     const overlay = document.createElement('div');
@@ -707,7 +707,8 @@
     const contentArea = document.createElement('div');
     contentArea.className = 'desktop-settings-content';
 
-    let currentTab = 'general';
+    const startTab = (initialTab === 'about' || initialTab === 'privacy') ? initialTab : 'general';
+    let currentTab = startTab;
     const navItems = {};
 
     function renderToggleCard(parent, iconName, title, desc, prefKey, defaultVal, onToggle) {
@@ -1103,7 +1104,7 @@
     body.appendChild(contentArea);
 
     // Initial render
-    renderContent('general');
+    renderContent(startTab);
 
     // Footer
     const footer = document.createElement('div');
@@ -1604,4 +1605,11 @@
     document.addEventListener('DOMContentLoaded', createTitlebar);
   }
   setInterval(createTitlebar, 1500);
+
+  // Expose UI methods for runtime interactions and headless UI testing
+  window.__desktop_ui = {
+    openSettings: function(tab) { openSettingsDialog(tab); },
+    showWelcome: function(isRevisit) { showWelcomeSplash(isRevisit); },
+    closeSettings: closeSettingsDialog
+  };
 })();

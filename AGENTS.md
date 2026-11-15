@@ -6,7 +6,8 @@ This document specifies mandatory rules, design constraints, and operational gui
 
 ## 1. Release & Tag Management Rules
 
-* **Never Touch Completed Releases:** Once a GitHub release is published (e.g., `v0.2.0`), **do not** delete, re-upload, retag, or overwrite it unless the user explicitly and unambiguously requests a new release publish.
+* **Release Titles Strictly Version-Only:** GitHub release names and titles must be solely the version string (e.g. `0.3.1`, `0.3.2`), **NOT** prefixed with application names or 'v' (never `Desktop Mail & Desktop Calendar v0.3.1`).
+* **Never Touch Past Releases:** Once a GitHub release is published, **do not** delete, re-upload, retag, or overwrite it unless the user explicitly and unambiguously requests a new release publish. Do not touch or rename past releases; this requirement applies to all subsequent releases.
 * **Push to Master / Main:** All subsequent bug fixes, UI improvements, installer updates, and test expansions must be committed to the repository and pushed directly to `origin/main` (or `master`) without altering existing release assets.
 * **Keep Dual Packaging (Portable + Installers):** Always maintain both standalone portable executables (`desktop-mail.exe`, `desktop-calendar.exe`) and setup installers (`desktop-mail-setup.exe`, `desktop-calendar-setup.exe`) alongside `SHA256SUMS.txt` and `release-manifest.json` in `dist/`.
 
@@ -20,10 +21,10 @@ This document specifies mandatory rules, design constraints, and operational gui
   * **No Google Blue:** Never use Google blue (`#1a73e8`) for custom branding or date labels.
 * **Approved Visual Identity:**
   * **Desktop Mail:** Tactile orange envelope with soft shadow and white folded letter (`#ea580c` / `#f97316`).
-  * **Desktop Calendar:** Crisp emerald green desk calendar with silver binding rings (`#15803d` / `#16a34a`).
-* **Dynamic Taskbar Behavior:**
+  * **Desktop Calendar:** Crisp emerald green desk calendar with silver binding rings (`#15803d` / `#16a34a`). The default executable icon (`desktop-calendar.exe`), setup installer (`desktop-calendar-setup.exe`), and installer wizard sidebar must always display the official emerald green calendar with the "31" number.
+* **Taskbar & Window Icon Behavior:**
   * **Desktop Mail:** Telegram-style vivid red pill unread counter badge (`#eb4034`) rendered on the top-right corner of the taskbar icon and taskbar overlay badge (formatting `1`–`999`, `K`, and `M`).
-  * **Desktop Calendar:** Dynamically renders today's live day of the month (`1`–`31`) in emerald green (`#15803d`) onto the white calendar card and updates automatically across midnight.
+  * **Desktop Calendar:** When the application runs, it dynamically renders today's live day of the month (`1`–`31`) directly onto the white calendar card for the window/Alt-Tab icon. **Strictly no dot or corner overlay badges on Desktop Calendar** (never display the day as an overlay dot). If dynamic main taskbar icon modification is not natively supported by the Windows shell, the static "31" icon is displayed cleanly without any dots.
 
 ---
 
@@ -71,6 +72,8 @@ This document specifies mandatory rules, design constraints, and operational gui
   2. UI & Trusted Types CSP tests (`node tests/about-dialog.test.js`).
   3. Icon resolution tests (`node tests/icon-assets.test.js`).
   4. Observer tests (`node tests/observers.test.js`).
-  5. E2E bundle simulation tests (`node tests/e2e-bundle.test.js`).
-  6. E2E binary, installer & metadata verification tests (`node tests/e2e-binaries.test.js`).
+  5. Offline UI Screenshot tests (`node tests/screenshot-ui.test.js`).
+  6. E2E bundle simulation tests (`node tests/e2e-bundle.test.js`).
+  7. E2E binary, installer & metadata verification tests (`node tests/e2e-binaries.test.js`).
+  8. Calendar date dynamic icon & clean taskbar E2E tests (`node tests/calendar-date-e2e.test.js`).
 * **Never Report Completion Without Verification:** Always verify changes with command execution and test output.
