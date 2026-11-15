@@ -1092,6 +1092,168 @@ pub mod windows {
         hicon as isize
     }
 
+    /// Renders a 32x32 overlay icon for calendar taskbar day badges.
+    pub unsafe fn render_calendar_day_overlay_hicon(day: u32) -> isize {
+        if day == 0 || day > 31 {
+            return 0;
+        }
+
+        let width = 32u32;
+        let height = 32u32;
+        let label = day.to_string();
+
+        let bi = BITMAPV5HEADER {
+            bV5Size: std::mem::size_of::<BITMAPV5HEADER>() as u32,
+            bV5Width: width as i32,
+            bV5Height: -(height as i32),
+            bV5Planes: 1,
+            bV5BitCount: 32,
+            bV5Compression: BI_BITFIELDS,
+            bV5SizeImage: (width * height * 4) as u32,
+            bV5XPelsPerMeter: 0,
+            bV5YPelsPerMeter: 0,
+            bV5ClrUsed: 0,
+            bV5ClrImportant: 0,
+            bV5RedMask: 0x00FF0000,
+            bV5GreenMask: 0x0000FF00,
+            bV5BlueMask: 0x000000FF,
+            bV5AlphaMask: 0xFF000000,
+            bV5CSType: 0x73524742,
+            bV5Endpoints: std::mem::zeroed(),
+            bV5GammaRed: 0,
+            bV5GammaGreen: 0,
+            bV5GammaBlue: 0,
+            bV5Intent: 0,
+            bV5ProfileData: 0,
+            bV5ProfileSize: 0,
+            bV5Reserved: 0,
+        };
+
+        let mut bits: *mut c_void = std::ptr::null_mut();
+        let hbm_color = CreateDIBSection(
+            0 as _,
+            &bi as *const _ as *const BITMAPINFO,
+            DIB_RGB_COLORS,
+            &mut bits,
+            0 as _,
+            0,
+        );
+
+        if hbm_color.is_null() || bits.is_null() {
+            return 0;
+        }
+
+        let dest = std::slice::from_raw_parts_mut(bits as *mut u8, (width * height * 4) as usize);
+        dest.fill(0);
+
+        let mem_dc = CreateCompatibleDC(0 as _);
+        let old_bm = SelectObject(mem_dc, hbm_color as _);
+
+        // Emerald green circle: #15803d -> BGR 0x003D8015
+        let green_brush = CreateSolidBrush(0x003D8015);
+        let dark_pen = CreatePen(PS_SOLID as i32, 1, 0x00164E11);
+        let old_brush = SelectObject(mem_dc, green_brush as _);
+        let old_pen = SelectObject(mem_dc, dark_pen as _);
+
+        // Draw badge circle
+        Ellipse(mem_dc, 1, 1, 31, 31);
+
+        let font_name: Vec<u16> = "Segoe UI\0".encode_utf16().collect();
+        let font_size = if day >= 10 { 17 } else { 19 };
+        let hfont = CreateFontW(
+            font_size,
+            0,
+            0,
+            0,
+            FW_BOLD as i32,
+            0,
+            0,
+            0,
+            DEFAULT_CHARSET as u32,
+            OUT_DEFAULT_PRECIS as u32,
+            CLIP_DEFAULT_PRECIS as u32,
+            CLEARTYPE_QUALITY as u32,
+            (DEFAULT_PITCH | FF_DONTCARE) as u32,
+            font_name.as_ptr(),
+        );
+        let old_font = SelectObject(mem_dc, hfont as _);
+
+        SetBkMode(mem_dc, TRANSPARENT as i32);
+        SetTextColor(mem_dc, 0x00FFFFFF); // Pure white text
+
+        let label_str = format!("{}\0", label);
+        let label_wide: Vec<u16> = label_str.encode_utf16().collect();
+        let mut text_rect = RECT {
+            left: 1,
+            top: 2,
+            right: 31,
+            bottom: 30,
+        };
+        DrawTextW(
+            mem_dc,
+            label_wide.as_ptr(),
+            -1,
+            &mut text_rect,
+            DT_CENTER | DT_VCENTER | DT_SINGLELINE,
+        );
+
+        // Set alpha channel for the circle
+        for y in 0..32 {
+            for x in 0..32 {
+                let dx = x as f32 - 15.5;
+                let dy = y as f32 - 15.5;
+                if dx * dx + dy * dy <= 15.0 * 15.0 {
+                    let idx = ((y * 32 + x) * 4) as usize;
+                    dest[idx + 3] = 255;
+                }
+            }
+        }
+
+        SelectObject(mem_dc, old_font);
+        DeleteObject(hfont as _);
+        SelectObject(mem_dc, old_brush);
+        DeleteObject(green_brush as _);
+        SelectObject(mem_dc, old_pen);
+        DeleteObject(dark_pen as _);
+        SelectObject(mem_dc, old_bm);
+        DeleteDC(mem_dc);
+
+        let hbm_mask = CreateBitmap(width as i32, height as i32, 1, 1, std::ptr::null());
+        let icon_info = ICONINFO {
+            fIcon: 1,
+            xHotspot: 0,
+            yHotspot: 0,
+            hbmMask: hbm_mask,
+            hbmColor: hbm_color,
+        };
+        let hicon = CreateIconIndirect(&icon_info);
+        DeleteObject(hbm_color as _);
+        if !hbm_mask.is_null() {
+            DeleteObject(hbm_mask as _);
+        }
+
+        hicon as isize
+    }
+
+    /// Notifies Windows Shell (Explorer) that associations / icons have updated.
+    pub unsafe fn notify_shell_icon_cache_change() {
+        let shell32 = GetModuleHandleA(b"shell32.dll\0".as_ptr());
+        if !shell32.is_null() {
+            let proc = GetProcAddress(shell32, b"SHChangeNotify\0".as_ptr());
+            if let Some(notify_proc) = proc {
+                type NotifyFn = unsafe extern "system" fn(
+                    w_event_id: i32,
+                    u_flags: u32,
+                    dw_item1: *const c_void,
+                    dw_item2: *const c_void,
+                );
+                let notify_fn: NotifyFn = std::mem::transmute(notify_proc);
+                // SHCNE_ASSOCCHANGED = 0x08000000, SHCNF_IDLIST = 0
+                notify_fn(0x08000000, 0, std::ptr::null(), std::ptr::null());
+            }
+        }
+    }
+
     /// Sets both ICON_BIG and ICON_SMALL on the window via SendMessageW.
     /// ICON_BIG is what the Windows Taskbar uses for the taskbar button.
     pub unsafe fn set_window_hicon(hwnd: isize, hicon: isize) {
@@ -1171,6 +1333,19 @@ pub mod windows {
             unsafe {
                 DestroyIcon(hicon as _);
             }
+        }
+
+        #[test]
+        fn test_render_calendar_day_overlay_hicon() {
+            let hicon = unsafe { render_calendar_day_overlay_hicon(15) };
+            assert_ne!(hicon, 0);
+            unsafe {
+                DestroyIcon(hicon as _);
+            }
+
+            // Test boundary checks
+            assert_eq!(unsafe { render_calendar_day_overlay_hicon(0) }, 0);
+            assert_eq!(unsafe { render_calendar_day_overlay_hicon(32) }, 0);
         }
     }
 }

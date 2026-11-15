@@ -115,7 +115,7 @@ pub fn run() {
             let app_nav = app.handle().clone();
             let app_win = app.handle().clone();
 
-            let window = WebviewWindowBuilder::new(app, "main", initial_url)
+            let mut builder = WebviewWindowBuilder::new(app, "main", initial_url)
                 .title(&config.title)
                 .inner_size(config.width, config.height)
                 .min_inner_size(config.min_width, config.min_height)
@@ -124,7 +124,21 @@ pub fn run() {
                 .decorations(false)
                 .shadow(true)
                 .user_agent(USER_AGENT)
-                .initialization_script(&injected_script)
+                .initialization_script(&injected_script);
+
+            #[cfg(target_os = "windows")]
+            {
+                let day = unsafe { desktop_google_core::icon::windows::get_local_day() };
+                if let Ok(base_img) = tauri::image::Image::from_bytes(include_bytes!("../icons/blank_512.png")) {
+                    if let Some(rgba) = unsafe {
+                        desktop_google_core::icon::windows::render_calendar_date_rgba(base_img.rgba(), day)
+                    } {
+                        builder = builder.icon(tauri::image::Image::new_owned(rgba, 512, 512)).expect("valid icon");
+                    }
+                }
+            }
+
+            let window = builder
                 .on_document_title_changed({
                     let app_cmd = app.handle().clone();
                     move |window, title| {
@@ -289,6 +303,18 @@ pub fn run() {
                                             if hicon != 0 {
                                                 desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
                                             }
+
+                                            // Set dynamic taskbar overlay badge for current day number
+                                            let overlay_hicon = desktop_google_core::icon::windows::render_calendar_day_overlay_hicon(current_day);
+                                            if overlay_hicon != 0 {
+                                                desktop_google_core::icon::windows::set_taskbar_overlay_icon(
+                                                    hwnd,
+                                                    overlay_hicon,
+                                                    &format!("Day {}", current_day),
+                                                );
+                                            }
+
+                                            desktop_google_core::icon::windows::notify_shell_icon_cache_change();
                                         }
                                     }
                                 }

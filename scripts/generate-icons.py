@@ -36,19 +36,19 @@ def generate():
 
     # 2. Desktop Calendar
     cal_icons = os.path.join(root, "apps", "desktop-calendar", "src-tauri", "icons")
-    Image.open(os.path.join(scratch, "cal_1024.png")).save(os.path.join(cal_icons, "icon_1024.png"))
-    Image.open(os.path.join(scratch, "cal_1024.png")).save(os.path.join(cal_icons, "icon.png"))
-    Image.open(os.path.join(scratch, "cal_512.png")).save(os.path.join(cal_icons, "512x512.png"))
-    Image.open(os.path.join(scratch, "cal_256.png")).save(os.path.join(cal_icons, "128x128@2x.png"))
-    Image.open(os.path.join(scratch, "cal_128.png")).save(os.path.join(cal_icons, "128x128.png"))
-    Image.open(os.path.join(scratch, "cal_32.png")).save(os.path.join(cal_icons, "32x32.png"))
+    Image.open(os.path.join(scratch, "cal_blank_1024.png")).save(os.path.join(cal_icons, "icon_1024.png"))
+    Image.open(os.path.join(scratch, "cal_blank_1024.png")).save(os.path.join(cal_icons, "icon.png"))
+    Image.open(os.path.join(scratch, "cal_blank_512.png")).save(os.path.join(cal_icons, "512x512.png"))
+    Image.open(os.path.join(scratch, "cal_blank_256.png")).save(os.path.join(cal_icons, "128x128@2x.png"))
+    Image.open(os.path.join(scratch, "cal_blank_128.png")).save(os.path.join(cal_icons, "128x128.png"))
+    Image.open(os.path.join(scratch, "cal_blank_32.png")).save(os.path.join(cal_icons, "32x32.png"))
     Image.open(os.path.join(scratch, "cal_blank_1024.png")).save(os.path.join(cal_icons, "blank_1024.png"))
     Image.open(os.path.join(scratch, "cal_blank_512.png")).save(os.path.join(cal_icons, "blank_512.png"))
     Image.open(os.path.join(scratch, "cal_blank_256.png")).save(os.path.join(cal_icons, "blank_256.png"))
     Image.open(os.path.join(scratch, "cal_blank_128.png")).save(os.path.join(cal_icons, "blank_128.png"))
 
     cal_ico_sizes = [(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
-    Image.open(os.path.join(scratch, "cal_256.png")).save(
+    Image.open(os.path.join(scratch, "cal_blank_256.png")).save(
         os.path.join(cal_icons, "icon.ico"),
         format="ICO",
         sizes=cal_ico_sizes
