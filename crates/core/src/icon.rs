@@ -1103,6 +1103,14 @@ pub mod windows {
         // ICON_SMALL = 0 (Window titlebar and Alt+Tab)
         SendMessageW(hwnd as _, WM_SETICON, 0, hicon as _);
 
+        // Also set on the Window Class (GCLP_HICON = -14, GCLP_HICONSM = -34)
+        // so that Windows Shell/Taskbar sees the icon at the class level
+        #[cfg(target_pointer_width = "64")]
+        {
+            SetClassLongPtrW(hwnd as _, GCLP_HICON, hicon);
+            SetClassLongPtrW(hwnd as _, GCLP_HICONSM, hicon);
+        }
+
         let prev = LAST_MAIN_HICON.swap(hicon, Ordering::SeqCst);
         if prev != 0 && prev != hicon {
             DestroyIcon(prev as _);

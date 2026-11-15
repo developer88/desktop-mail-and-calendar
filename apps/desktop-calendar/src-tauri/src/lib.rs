@@ -370,3 +370,25 @@ fn set_windows_autostart(enable: bool) {
 
 #[cfg(not(target_os = "windows"))]
 fn set_windows_autostart(_enable: bool) {}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_calendar_blank_image_and_date_render() {
+        let base_bytes = include_bytes!("../icons/blank_512.png");
+        let base_img = tauri::image::Image::from_bytes(base_bytes);
+        assert!(base_img.is_ok(), "blank_512.png must be decoded by tauri::image::Image");
+        let img = base_img.unwrap();
+        assert_eq!(img.width(), 512);
+        assert_eq!(img.height(), 512);
+        #[cfg(target_os = "windows")]
+        unsafe {
+            let rendered = desktop_google_core::icon::windows::render_calendar_date_rgba(img.rgba(), 15);
+            assert!(rendered.is_some());
+            let rgba = rendered.unwrap();
+            assert_eq!(rgba.len(), 512 * 512 * 4);
+            let hicon = desktop_google_core::icon::windows::create_hicon_from_rgba(&rgba, 512, 512);
+            assert_ne!(hicon, 0);
+        }
+    }
+}
