@@ -6,6 +6,7 @@ const { execSync } = require('child_process');
 console.log('Running UI Screenshot & Offline Visual Test Suite...');
 
 const root = path.resolve(__dirname, '..');
+const appVersion = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
 const outputDir = path.join(root, 'tests', 'screenshots');
 const harnessDir = path.join(root, 'tests', '.screenshot-harness');
 
@@ -100,7 +101,7 @@ const scenarios = [
         </div>
         <script>
           window.APP_KIND = 'mail';
-          window.APP_VERSION = '0.3.1';
+          window.APP_VERSION = '${appVersion}';
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
       </body>
@@ -133,7 +134,7 @@ const scenarios = [
         </div>
         <script>
           window.APP_KIND = 'calendar';
-          window.APP_VERSION = '0.3.1';
+          window.APP_VERSION = '${appVersion}';
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
       </body>
@@ -155,7 +156,7 @@ const scenarios = [
       <body>
         <script>
           window.APP_KIND = 'mail';
-          window.APP_VERSION = '0.3.1';
+          window.APP_VERSION = '${appVersion}';
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
@@ -180,7 +181,7 @@ const scenarios = [
       <body>
         <script>
           window.APP_KIND = 'calendar';
-          window.APP_VERSION = '0.3.1';
+          window.APP_VERSION = '${appVersion}';
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
@@ -205,7 +206,7 @@ const scenarios = [
       <body>
         <script>
           window.APP_KIND = 'mail';
-          window.APP_VERSION = '0.3.1';
+          window.APP_VERSION = '${appVersion}';
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
@@ -230,7 +231,7 @@ const scenarios = [
       <body>
         <script>
           window.APP_KIND = 'calendar';
-          window.APP_VERSION = '0.3.1';
+          window.APP_VERSION = '${appVersion}';
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
@@ -255,7 +256,7 @@ const scenarios = [
       <body>
         <script>
           window.APP_KIND = 'mail';
-          window.APP_VERSION = '0.3.1';
+          window.APP_VERSION = '${appVersion}';
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
@@ -280,7 +281,7 @@ const scenarios = [
       <body>
         <script>
           window.APP_KIND = 'calendar';
-          window.APP_VERSION = '0.3.1';
+          window.APP_VERSION = '${appVersion}';
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>

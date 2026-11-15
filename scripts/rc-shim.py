@@ -184,14 +184,14 @@ def create_complete_res(rc_path=None):
 
     # 3. Parse and build RT_VERSION (type 16, id 1)
     strings = {}
-    app_version = "0.3.1"
+    app_version = "0.4.0"
     try:
         root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         pkg_file = os.path.join(root_dir, "package.json")
         if os.path.exists(pkg_file):
             import json
             with open(pkg_file, "r") as pf:
-                app_version = json.load(pf).get("version", "0.3.1")
+                app_version = json.load(pf).get("version", "0.4.0")
     except Exception:
         pass
 

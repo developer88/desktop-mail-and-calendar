@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-11-15
+
+### Added
+- **Dynamic Window Caption, Alt-Tab & Task Manager Calendar Date:** Today's live date (`1`–`31`) is dynamically rendered on the window caption/title bar badge in the app, and dynamically set on the window via Win32 `WM_SETICON` (`ICON_BIG`, `ICON_SMALL`) and `GCLP_HICON`/`GCLP_HICONSM` with a High-DPI 256×256 icon so Alt-Tab switcher and Task Manager display today's actual date.
+- **Clean Static Taskbar Icon for Desktop Calendar:** Restored clean official emerald green calendar with the "31" number for the taskbar icon, removing unsightly corner overlay dots/badges.
+- **Installer Active Process Termination:** NSIS setup installers now terminate running application instances before file extraction during setup (`.onInit` and `Install` section), preventing file lock errors (`ERROR_SHARING_VIOLATION`) and guaranteeing seamless reinstalls and upgrades.
+- **Offline UI Screenshot Test Suite:** Added comprehensive headless browser UI screenshot test suite (`tests/screenshot-ui.test.js`) validating 10 distinct UI states across Desktop Mail and Desktop Calendar (titlebars, dynamic calendar dates, welcome dialogs, settings, about modals) without requiring live Google services.
+- **Dynamic Calendar Date & Clean Taskbar E2E Test Suite:** Added `tests/calendar-date-e2e.test.js` verifying dynamic date icon generation, Alt-Tab icon setting, in-app title bar date badge rendering, and clean static 31 taskbar icon configuration.
+- **Release Naming Standardization:** Standardized GitHub release titles to strictly version-only format (e.g., `0.4.0`) per project guidelines in `AGENTS.md`.
+
 ## [0.3.1] - 2026-11-15
 
 ### Added

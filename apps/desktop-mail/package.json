@@ -1,6 +1,6 @@
 {
   "name": "desktop-mail",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Standalone Windows 11 Desktop client for Mail",
   "private": true,
   "scripts": {
