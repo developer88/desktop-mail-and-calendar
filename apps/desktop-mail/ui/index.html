@@ -8,17 +8,61 @@
 </head>
 <body>
   <div class="splash-container">
-    <div class="logo">
-      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="#EA4335"/>
-      </svg>
-    </div>
-    <h1>Desktop Mail</h1>
-    <p class="status" id="status-text">Connecting to Mail...</p>
-    <div class="spinner"></div>
-    <div class="offline-actions" id="offline-actions" style="display: none;">
-      <p>Unable to connect to Mail servers.</p>
-      <button id="retry-btn">Retry Connection</button>
+    <div class="splash-card">
+      <div class="logo" aria-hidden="true">
+        <svg width="72" height="72" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="dtMailBack" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#ea580c"/>
+              <stop offset="60%" stop-color="#c2410c"/>
+              <stop offset="100%" stop-color="#9a3412"/>
+            </linearGradient>
+            <linearGradient id="dtMailFront" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#fb923c"/>
+              <stop offset="20%" stop-color="#f97316"/>
+              <stop offset="85%" stop-color="#ea580c"/>
+              <stop offset="100%" stop-color="#c2410c"/>
+            </linearGradient>
+            <clipPath id="dtMailClip">
+              <rect x="56" y="80" width="400" height="370" rx="68"/>
+            </clipPath>
+          </defs>
+          <rect x="56" y="80" width="400" height="370" rx="68" fill="url(#dtMailBack)" stroke="#9a3412" stroke-width="2"/>
+          <rect x="84" y="92" width="344" height="320" rx="36" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+          <rect x="132" y="136" width="144" height="18" rx="9" fill="#94a3b8" opacity="0.85"/>
+          <rect x="132" y="172" width="248" height="18" rx="9" fill="#cbd5e1" opacity="0.9"/>
+          <rect x="132" y="208" width="192" height="18" rx="9" fill="#e2e8f0" opacity="0.85"/>
+          <g clip-path="url(#dtMailClip)">
+            <path d="M 50,200 L 256,316 L 462,200 L 462,460 L 50,460 Z" fill="url(#dtMailFront)"/>
+            <path d="M 56,200 L 256,316 L 456,200" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 56,203 L 256,319 L 456,203" fill="none" stroke="#9a3412" stroke-width="2.5" opacity="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+        </svg>
+      </div>
+      <h1>Desktop Mail</h1>
+      <p class="status" id="status-text">Connecting to Mail...</p>
+      <div class="spinner"></div>
+      <div class="offline-actions" id="offline-actions" style="display: none;">
+        <div class="offline-msg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+            <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+            <line x1="12" y1="20" x2="12.01" y2="20"></line>
+          </svg>
+          <span>Unable to connect to Mail servers.</span>
+        </div>
+        <button id="retry-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span>Retry Connection</span>
+        </button>
+      </div>
     </div>
   </div>
   <script src="main.js"></script>

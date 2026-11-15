@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isOfflineTest) {
       if (spinner) spinner.style.display = 'none';
       if (statusText) statusText.innerText = 'No internet connection detected.';
-      if (offlineActions) offlineActions.style.display = 'block';
+      if (offlineActions) offlineActions.style.display = 'flex';
       return;
     }
     if (navigator.onLine) {
@@ -18,14 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       if (spinner) spinner.style.display = 'none';
       if (statusText) statusText.innerText = 'No internet connection detected.';
-      if (offlineActions) offlineActions.style.display = 'block';
+      if (offlineActions) offlineActions.style.display = 'flex';
     }
   }
 
   if (retryBtn) {
     retryBtn.addEventListener('click', () => {
       if (spinner) spinner.style.display = 'block';
-      if (statusText) statusText.innerText = 'Connecting...';
+      if (statusText) statusText.innerText = 'Connecting to Calendar...';
       if (offlineActions) offlineActions.style.display = 'none';
       setTimeout(tryRedirect, 500);
     });
