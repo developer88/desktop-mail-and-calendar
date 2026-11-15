@@ -593,7 +593,7 @@
       dateText.setAttribute('font-size', '142');
       dateText.setAttribute('fill', '#15803d');
       dateText.setAttribute('letter-spacing', '-3');
-      dateText.textContent = '31';
+      dateText.textContent = String(new Date().getDate());
       svg.appendChild(dateText);
     } else if (type === 'window') {
       const rect = document.createElementNS(svgNS, 'rect');
@@ -1507,6 +1507,14 @@
     const dragArea = document.createElement('div');
     dragArea.id = 'desktop-custom-titlebar-drag';
     dragArea.setAttribute('data-tauri-drag-region', 'deep');
+
+    if (isCalendar) {
+      const titleIcon = createSvgIcon('calendar-logo');
+      titleIcon.setAttribute('width', '16');
+      titleIcon.setAttribute('height', '16');
+      titleIcon.id = 'desktop-custom-titlebar-icon';
+      dragArea.appendChild(titleIcon);
+    }
 
     const title = document.createElement('span');
     title.id = 'desktop-custom-titlebar-title';

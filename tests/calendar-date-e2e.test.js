@@ -8,6 +8,7 @@ console.log('Running Calendar Date Dynamic Icon E2E Test Suite (TDD)...');
 const root = path.resolve(__dirname, '..');
 const calIconsDir = path.join(root, 'apps', 'desktop-calendar', 'src-tauri', 'icons');
 const blank512Path = path.join(calIconsDir, 'blank_512.png');
+const blank256Path = path.join(calIconsDir, 'blank_256.png');
 const iconIcoPath = path.join(calIconsDir, 'icon.ico');
 const iconPngPath = path.join(calIconsDir, 'icon.png');
 const wizardCalPath = path.join(root, 'shared', 'installer', 'wizard_cal.bmp');
@@ -19,8 +20,11 @@ const distExePath = path.join(root, 'dist', 'desktop-calendar.exe');
 console.log('\n[1/5] Verifying Calendar Icon Assets & Blank Template...');
 {
   assert(fs.existsSync(blank512Path), 'Missing blank_512.png template');
+  assert(fs.existsSync(blank256Path), 'Missing blank_256.png template');
   const blankBuf = fs.readFileSync(blank512Path);
   assert.strictEqual(blankBuf.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', 'blank_512.png must be a valid PNG');
+  const blank256Buf = fs.readFileSync(blank256Path);
+  assert.strictEqual(blank256Buf.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', 'blank_256.png must be a valid PNG');
 
   // Check official branding assets
   assert(fs.existsSync(iconIcoPath), 'Missing icon.ico branding');

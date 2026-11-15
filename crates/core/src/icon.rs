@@ -1261,17 +1261,31 @@ pub mod windows {
         if hwnd == 0 {
             return;
         }
-        // ICON_BIG = 1 (Windows Taskbar button icon)
+        // ICON_BIG = 1 (Alt+Tab and large window icon switcher)
         SendMessageW(hwnd as _, WM_SETICON, 1, hicon as _);
-        // ICON_SMALL = 0 (Window titlebar and Alt+Tab)
+        // ICON_SMALL = 0 (Window titlebar, caption, Task Manager)
         SendMessageW(hwnd as _, WM_SETICON, 0, hicon as _);
 
+        // Also set on owner window if any
+        let hwnd_owner = windows_sys::Win32::UI::WindowsAndMessaging::GetWindow(
+            hwnd as windows_sys::Win32::Foundation::HWND,
+            windows_sys::Win32::UI::WindowsAndMessaging::GW_OWNER,
+        );
+        if !hwnd_owner.is_null() {
+            SendMessageW(hwnd_owner, WM_SETICON, 1, hicon as _);
+            SendMessageW(hwnd_owner, WM_SETICON, 0, hicon as _);
+        }
+
         // Also set on the Window Class (GCLP_HICON = -14, GCLP_HICONSM = -34)
-        // so that Windows Shell/Taskbar sees the icon at the class level
+        // so that Windows Shell, Alt+Tab, and Task Manager see the icon at the class level
         #[cfg(target_pointer_width = "64")]
         {
             SetClassLongPtrW(hwnd as _, GCLP_HICON, hicon);
             SetClassLongPtrW(hwnd as _, GCLP_HICONSM, hicon);
+            if !hwnd_owner.is_null() {
+                SetClassLongPtrW(hwnd_owner, GCLP_HICON, hicon);
+                SetClassLongPtrW(hwnd_owner, GCLP_HICONSM, hicon);
+            }
         }
 
         let prev = LAST_MAIN_HICON.swap(hicon, Ordering::SeqCst);

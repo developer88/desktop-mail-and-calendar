@@ -124,6 +124,13 @@
   -webkit-app-region: drag !important;
 }
 
+#desktop-custom-titlebar-icon {
+  margin-right: 8px !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
 #desktop-custom-titlebar-title {
   font-size: 11px !important;
   font-weight: 500 !important;

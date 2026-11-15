@@ -129,11 +129,11 @@ pub fn run() {
             #[cfg(target_os = "windows")]
             {
                 let day = unsafe { desktop_google_core::icon::windows::get_local_day() };
-                if let Ok(base_img) = tauri::image::Image::from_bytes(include_bytes!("../icons/blank_512.png")) {
+                if let Ok(base_img) = tauri::image::Image::from_bytes(include_bytes!("../icons/blank_256.png")) {
                     if let Some(rgba) = unsafe {
                         desktop_google_core::icon::windows::render_calendar_date_rgba(base_img.rgba(), day)
                     } {
-                        builder = builder.icon(tauri::image::Image::new_owned(rgba, 512, 512)).expect("valid icon");
+                        builder = builder.icon(tauri::image::Image::new_owned(rgba, 256, 256)).expect("valid icon");
                     }
                 }
             }
@@ -281,7 +281,7 @@ pub fn run() {
                 let win_handle = window.clone();
                 std::thread::spawn(move || {
                     let mut last_day = 0u32;
-                    let base_bytes = include_bytes!("../icons/blank_512.png");
+                    let base_bytes = include_bytes!("../icons/blank_256.png");
                     let base_img = tauri::image::Image::from_bytes(base_bytes).ok();
 
                     let update_icon = |win: &tauri::WebviewWindow, current_day: u32| {
@@ -291,14 +291,14 @@ pub fn run() {
                                     img.rgba(),
                                     current_day,
                                 ) {
-                                    let _ = win.set_icon(tauri::image::Image::new_owned(rgba.clone(), 512, 512));
+                                    let _ = win.set_icon(tauri::image::Image::new_owned(rgba.clone(), 256, 256));
                                     if let Ok(hwnd_obj) = win.hwnd() {
                                         let hwnd = hwnd_obj.0 as isize;
                                         if hwnd != 0 {
                                             let hicon = desktop_google_core::icon::windows::create_hicon_from_rgba(
                                                 &rgba,
-                                                512,
-                                                512,
+                                                256,
+                                                256,
                                             );
                                             if hicon != 0 {
                                                 desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
