@@ -210,6 +210,7 @@ html.desktop-calendar-app body {
 
 #desktop-custom-titlebar-controls {
   display: flex !important;
+  align-items: center !important;
   height: 100% !important;
   -webkit-app-region: no-drag !important;
   pointer-events: auto !important;
