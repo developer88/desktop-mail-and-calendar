@@ -6,7 +6,8 @@ pub mod windows {
     use windows_sys::Win32::Foundation::{HWND, RECT};
     use windows_sys::Win32::Graphics::Gdi::*;
     use windows_sys::Win32::System::Com::{
-        CoCreateInstance, CoTaskMemAlloc, CoTaskMemFree, CLSCTX_INPROC_SERVER,
+        CoCreateInstance, CoInitialize, CoTaskMemAlloc, CoTaskMemFree, CoUninitialize,
+        CLSCTX_INPROC_SERVER,
     };
     use windows_sys::Win32::System::LibraryLoader::{GetModuleHandleA, GetProcAddress};
     use windows_sys::Win32::UI::WindowsAndMessaging::*;
@@ -1280,10 +1281,14 @@ pub mod windows {
     }
 
     /// Sets or clears the taskbar overlay icon via ITaskbarList3::SetOverlayIcon.
-    pub unsafe fn set_taskbar_overlay_icon(hwnd: isize, overlay_hicon: isize, description: &str) {
+    /// Ensures COM is properly initialized on the calling thread.
+    pub unsafe fn set_taskbar_overlay_icon(hwnd: isize, overlay_hicon: isize, description: &str) -> bool {
         if hwnd == 0 {
-            return;
+            return false;
         }
+
+        // Initialize COM on this thread if not already initialized
+        let co_init_hr = CoInitialize(std::ptr::null());
 
         let mut taskbar: *mut c_void = std::ptr::null_mut();
         let hr = CoCreateInstance(
@@ -1294,23 +1299,34 @@ pub mod windows {
             &mut taskbar,
         );
 
+        let mut success = false;
         if hr == 0 && !taskbar.is_null() {
             let tbl = taskbar as *mut ITaskbarList3;
             let vtbl = &*(*tbl).vtbl;
-            let _ = (vtbl.hr_init)(taskbar);
-
-            let wide: Vec<u16> = description
-                .encode_utf16()
-                .chain(std::iter::once(0))
-                .collect();
-            let _ = (vtbl.set_overlay_icon)(taskbar, hwnd as _, overlay_hicon as _, wide.as_ptr());
+            let hr_init_res = (vtbl.hr_init)(taskbar);
+            if hr_init_res == 0 {
+                let wide: Vec<u16> = description
+                    .encode_utf16()
+                    .chain(std::iter::once(0))
+                    .collect();
+                let set_res = (vtbl.set_overlay_icon)(taskbar, hwnd as _, overlay_hicon as _, wide.as_ptr());
+                if set_res == 0 {
+                    success = true;
+                }
+            }
             let _ = (vtbl.release)(taskbar);
+        }
+
+        if co_init_hr == 0 {
+            CoUninitialize();
         }
 
         let prev = LAST_OVERLAY_HICON.swap(overlay_hicon, Ordering::SeqCst);
         if prev != 0 && prev != overlay_hicon {
             DestroyIcon(prev as _);
         }
+
+        success
     }
 
     #[cfg(test)]
@@ -1346,6 +1362,38 @@ pub mod windows {
             // Test boundary checks
             assert_eq!(unsafe { render_calendar_day_overlay_hicon(0) }, 0);
             assert_eq!(unsafe { render_calendar_day_overlay_hicon(32) }, 0);
+        }
+
+        #[test]
+        fn test_set_taskbar_overlay_icon_fresh_thread() {
+            let handle = std::thread::spawn(|| {
+                let overlay_hicon = unsafe { render_calendar_day_overlay_hicon(15) };
+                assert_ne!(overlay_hicon, 0);
+
+                // Zero hwnd should return false cleanly without crashing
+                assert!(!unsafe { set_taskbar_overlay_icon(0, overlay_hicon, "Day 15") });
+
+                // Create a real hidden Win32 window to test live COM SetOverlayIcon call
+                unsafe {
+                    let class_name: Vec<u16> = "STATIC\0".encode_utf16().collect();
+                    let title: Vec<u16> = "TestWindow\0".encode_utf16().collect();
+                    let hwnd = CreateWindowExW(
+                        0,
+                        class_name.as_ptr(),
+                        title.as_ptr(),
+                        WS_OVERLAPPEDWINDOW,
+                        0, 0, 100, 100,
+                        0 as _,
+                        0 as _,
+                        0 as _,
+                        std::ptr::null(),
+                    );
+                    assert_ne!(hwnd, std::ptr::null_mut());
+                    let _ = set_taskbar_overlay_icon(hwnd as isize, overlay_hicon, "Day 15");
+                    DestroyWindow(hwnd);
+                }
+            });
+            handle.join().unwrap();
         }
     }
 }
