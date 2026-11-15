@@ -223,7 +223,20 @@ VIAddVersionKey "OriginalFilename" "${config.installerName}"
 
 !insertmacro MUI_LANGUAGE "English"
 
+Function .onInit
+  nsExec::Exec 'taskkill /F /IM "${config.binaryName}" /T'
+FunctionEnd
+
+Function un.onInit
+  nsExec::Exec 'taskkill /F /IM "${config.binaryName}" /T'
+FunctionEnd
+
 Section "Install"
+  ; Terminate any existing running instance to release Windows file locks
+  DetailPrint "Closing running instances of ${config.appName}..."
+  nsExec::Exec 'taskkill /F /IM "${config.binaryName}" /T'
+  Sleep 600
+
   SetOutPath "$INSTDIR"
   
   File "${binaryPath.replace(/\\/g, '/')}"
@@ -249,6 +262,11 @@ Section "Install"
 SectionEnd
 
 Section "Uninstall"
+  ; Terminate running instances before uninstallation
+  DetailPrint "Closing running instances of ${config.appName}..."
+  nsExec::Exec 'taskkill /F /IM "${config.binaryName}" /T'
+  Sleep 600
+
   Delete "$DESKTOP\\${config.appName}.lnk"
   Delete "$SMPROGRAMS\\${config.appName}\\${config.appName}.lnk"
   Delete "$SMPROGRAMS\\${config.appName}\\Uninstall.lnk"
