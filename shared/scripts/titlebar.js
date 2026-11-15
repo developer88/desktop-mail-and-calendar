@@ -640,6 +640,22 @@
       path.setAttribute('stroke-linecap', 'round');
       path.setAttribute('stroke-linejoin', 'round');
       svg.appendChild(path);
+    } else if (type === 'update') {
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', 'M 8,12.5 L 8,3.5 M 4.5,7 L 8,3.5 L 11.5,7');
+      path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '1.6');
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
+      path.setAttribute('fill', 'none');
+      svg.appendChild(path);
+    } else if (type === 'x-small') {
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', 'M 4.5,4.5 L 11.5,11.5 M 11.5,4.5 L 4.5,11.5');
+      path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(path);
     }
     return svg;
   }
@@ -658,6 +674,201 @@
     try {
       localStorage.setItem('desktop_pref_' + key, boolVal ? 'true' : 'false');
     } catch (_) {}
+  }
+
+  // Application Version & Update Management
+  const currentVer = '0.4.0';
+
+  function getAppVersion() {
+    return (typeof window !== 'undefined' && window.APP_VERSION) || currentVer;
+  }
+
+  function isNewerVersion(latest, current) {
+    const p1 = latest.split('.').map((n) => parseInt(n, 10) || 0);
+    const p2 = current.split('.').map((n) => parseInt(n, 10) || 0);
+    for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
+      const num1 = p1[i] || 0;
+      const num2 = p2[i] || 0;
+      if (num1 > num2) return true;
+      if (num1 < num2) return false;
+    }
+    return false;
+  }
+
+  let activeUpdateInfo = null;
+
+  function showUpdateBanner(version, releaseUrl) {
+    try {
+      if (window.self !== window.top || window.parent !== window || window.frameElement) return;
+    } catch (_) {
+      return;
+    }
+
+    let existingBanner = document.getElementById('desktop-update-banner');
+    if (existingBanner) {
+      existingBanner.classList.remove('closing');
+      return;
+    }
+
+    const banner = document.createElement('div');
+    banner.id = 'desktop-update-banner';
+    banner.className = 'desktop-update-banner ' + (isCalendar ? 'calendar-theme' : 'mail-theme');
+
+    const left = document.createElement('div');
+    left.className = 'desktop-update-banner-left';
+
+    const iconWrap = document.createElement('div');
+    iconWrap.className = 'desktop-update-banner-icon';
+    const iconSvg = createSvgIcon('update');
+    iconSvg.setAttribute('width', '14');
+    iconSvg.setAttribute('height', '14');
+    iconWrap.appendChild(iconSvg);
+    left.appendChild(iconWrap);
+
+    const textWrap = document.createElement('div');
+    textWrap.className = 'desktop-update-banner-text';
+
+    const strongApp = document.createElement('strong');
+    strongApp.textContent = isCalendar ? 'Desktop Calendar' : 'Desktop Mail';
+    textWrap.appendChild(strongApp);
+
+    const txtPre = document.createElement('span');
+    txtPre.textContent = ' update is ready (';
+    textWrap.appendChild(txtPre);
+
+    const badge = document.createElement('span');
+    badge.className = 'desktop-update-badge';
+    badge.textContent = 'v' + version;
+    textWrap.appendChild(badge);
+
+    const txtPost = document.createElement('span');
+    txtPost.textContent = ')';
+    textWrap.appendChild(txtPost);
+
+    left.appendChild(textWrap);
+
+    const right = document.createElement('div');
+    right.className = 'desktop-update-banner-right';
+
+    const actionBtn = document.createElement('button');
+    actionBtn.className = 'desktop-update-action-btn';
+    const btnIcon = createSvgIcon('update');
+    btnIcon.setAttribute('width', '12');
+    btnIcon.setAttribute('height', '12');
+    actionBtn.appendChild(btnIcon);
+    const btnLabel = document.createElement('span');
+    btnLabel.textContent = 'Update';
+    actionBtn.appendChild(btnLabel);
+
+    actionBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.open(releaseUrl, '_blank');
+    });
+
+    const dismissBtn = document.createElement('button');
+    dismissBtn.className = 'desktop-update-dismiss-btn';
+    dismissBtn.title = 'Dismiss update banner';
+    dismissBtn.setAttribute('aria-label', 'Dismiss update banner');
+    const dismissIcon = createSvgIcon('x-small');
+    dismissIcon.setAttribute('width', '12');
+    dismissIcon.setAttribute('height', '12');
+    dismissBtn.appendChild(dismissIcon);
+
+    dismissBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dismissUpdateBanner(version);
+    });
+
+    right.appendChild(actionBtn);
+    right.appendChild(dismissBtn);
+
+    banner.appendChild(left);
+    banner.appendChild(right);
+
+    const root = document.documentElement || document.body;
+    if (root) {
+      root.appendChild(banner);
+    }
+  }
+
+  function dismissUpdateBanner(version) {
+    const banner = document.getElementById('desktop-update-banner');
+    if (banner) {
+      banner.classList.add('closing');
+      setTimeout(() => {
+        banner.remove();
+      }, 200);
+    }
+    if (version) {
+      try {
+        sessionStorage.setItem('desktop_dismissed_update_' + version, 'true');
+      } catch (_) {}
+    }
+  }
+
+  function updateTitlebarPill(version, releaseUrl) {
+    let pill = document.getElementById('desktop-caption-update-pill');
+    if (pill) {
+      pill.style.display = 'inline-flex';
+      pill.title = 'Update available (v' + version + ')';
+    }
+  }
+
+  function checkForUpdates(silent = true) {
+    return fetch('https://api.github.com/repos/developer88/desktop-mail-and-calendar/releases/latest', {
+      headers: { 'Accept': 'application/vnd.github.v3+json' }
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Status ' + res.status);
+        return res.json();
+      })
+      .then((data) => {
+        const latestTag = (data && data.tag_name) || '';
+        const latestVer = latestTag.replace(/^v/, '');
+        const currentVer = getAppVersion();
+
+        if (latestVer && isNewerVersion(latestVer, currentVer)) {
+          const releaseUrl = data.html_url || ('https://github.com/developer88/desktop-mail-and-calendar/releases/tag/' + latestTag);
+          activeUpdateInfo = { version: latestVer, tag: latestTag, url: releaseUrl };
+
+          // Activate titlebar pill
+          updateTitlebarPill(latestVer, releaseUrl);
+
+          // Check if dismissed in this session
+          let dismissed = false;
+          try {
+            dismissed = sessionStorage.getItem('desktop_dismissed_update_' + latestVer) === 'true';
+          } catch (_) {}
+
+          if (!dismissed) {
+            showUpdateBanner(latestVer, releaseUrl);
+          }
+
+          return { updateAvailable: true, version: latestVer, tag: latestTag, url: releaseUrl };
+        } else {
+          return { updateAvailable: false, version: currentVer };
+        }
+      })
+      .catch((err) => {
+        if (!silent) console.warn('[Update Check]', err);
+        return { updateAvailable: false, error: err };
+      });
+  }
+
+  function initAutoUpdateChecker() {
+    try {
+      if (window.self !== window.top || window.parent !== window || window.frameElement) return;
+    } catch (_) {
+      return;
+    }
+
+    setTimeout(() => {
+      checkForUpdates(true);
+    }, 4000);
+
+    setInterval(() => {
+      checkForUpdates(true);
+    }, 4 * 60 * 60 * 1000);
   }
 
   // Settings Modal Dialog with 3 sections matching Gemini
@@ -966,13 +1177,22 @@
         const verNum = document.createElement('span');
         verNum.className = 'desktop-version-num';
         verNum.textContent = '0.4.0';
+        if (typeof window !== 'undefined' && window.APP_VERSION) {
+          verNum.textContent = window.APP_VERSION;
+        }
         verLeft.appendChild(verNum);
 
         const updateBtn = document.createElement('button');
         updateBtn.className = 'desktop-update-btn';
         updateBtn.textContent = 'Check for Updates';
 
-        let targetUpdateUrl = null;
+        let targetUpdateUrl = activeUpdateInfo ? activeUpdateInfo.url : null;
+        if (targetUpdateUrl && activeUpdateInfo) {
+          updateBtn.textContent = 'Download ' + activeUpdateInfo.tag + ' ↗';
+          updateBtn.style.background = isCalendar ? '#16a34a' : '#ea580c';
+          updateBtn.style.color = '#ffffff';
+          updateBtn.style.borderColor = 'transparent';
+        }
 
         updateBtn.addEventListener('click', () => {
           if (targetUpdateUrl) {
@@ -983,42 +1203,17 @@
           updateBtn.disabled = true;
           updateBtn.textContent = 'Checking for updates...';
 
-          fetch('https://api.github.com/repos/developer88/desktop-mail-and-calendar/releases/latest', {
-            headers: { 'Accept': 'application/vnd.github.v3+json' }
-          })
+          checkForUpdates(false)
             .then((res) => {
-              if (res.status === 404) {
-                return { tag_name: 'v0.4.0' };
-              }
-              if (!res.ok) throw new Error('Status ' + res.status);
-              return res.json();
-            })
-            .then((data) => {
-              const latestTag = (data && data.tag_name) || '';
-              const latestVer = latestTag.replace(/^v/, '');
-              const currentVer = '0.4.0';
-
-              function isNewer(latest, current) {
-                const p1 = latest.split('.').map((n) => parseInt(n, 10) || 0);
-                const p2 = current.split('.').map((n) => parseInt(n, 10) || 0);
-                for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
-                  const num1 = p1[i] || 0;
-                  const num2 = p2[i] || 0;
-                  if (num1 > num2) return true;
-                  if (num1 < num2) return false;
-                }
-                return false;
-              }
-
-              if (latestVer && isNewer(latestVer, currentVer)) {
-                targetUpdateUrl = data.html_url || ('https://github.com/developer88/desktop-mail-and-calendar/releases/tag/' + latestTag);
+              if (res && res.updateAvailable) {
+                targetUpdateUrl = res.url;
                 updateBtn.disabled = false;
-                updateBtn.textContent = 'Download ' + latestTag + ' ↗';
+                updateBtn.textContent = 'Download ' + res.tag + ' ↗';
                 updateBtn.style.background = isCalendar ? '#16a34a' : '#ea580c';
                 updateBtn.style.color = '#ffffff';
                 updateBtn.style.borderColor = 'transparent';
               } else {
-                updateBtn.textContent = 'You are on the latest version (v0.4.0)';
+                updateBtn.textContent = 'You are on the latest version (v' + getAppVersion() + ')';
                 setTimeout(() => {
                   updateBtn.disabled = false;
                   updateBtn.textContent = 'Check for Updates';
@@ -1026,7 +1221,7 @@
               }
             })
             .catch(() => {
-              updateBtn.textContent = 'You are on the latest version (v0.4.0)';
+              updateBtn.textContent = 'You are on the latest version (v' + getAppVersion() + ')';
               setTimeout(() => {
                 updateBtn.disabled = false;
                 updateBtn.textContent = 'Check for Updates';
@@ -1524,6 +1719,37 @@
     const controls = document.createElement('div');
     controls.id = 'desktop-custom-titlebar-controls';
 
+    // Chrome-Style Update Pill Button (shown when a newer release is ready)
+    const updatePill = document.createElement('button');
+    updatePill.className = 'desktop-caption-update-pill ' + (isCalendar ? 'calendar-theme' : 'mail-theme');
+    updatePill.id = 'desktop-caption-update-pill';
+    updatePill.title = 'Update available';
+    const pillIcon = createSvgIcon('update');
+    pillIcon.setAttribute('width', '11');
+    pillIcon.setAttribute('height', '11');
+    updatePill.appendChild(pillIcon);
+    const pillText = document.createElement('span');
+    pillText.textContent = 'Update';
+    updatePill.appendChild(pillText);
+
+    if (activeUpdateInfo) {
+      updatePill.style.display = 'inline-flex';
+      updatePill.title = 'Update available (v' + activeUpdateInfo.version + ')';
+    }
+
+    updatePill.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (activeUpdateInfo) {
+        const existingBanner = document.getElementById('desktop-update-banner');
+        if (!existingBanner) {
+          showUpdateBanner(activeUpdateInfo.version, activeUpdateInfo.url);
+        } else {
+          window.open(activeUpdateInfo.url, '_blank');
+        }
+      }
+    });
+
     // Hamburger Menu Button (3 horizontal lines)
     const menuBtn = document.createElement('button');
     menuBtn.className = 'desktop-caption-btn menu';
@@ -1549,6 +1775,7 @@
     closeBtn.title = 'Close';
     closeBtn.appendChild(createSvgIcon('close'));
 
+    controls.appendChild(updatePill);
     controls.appendChild(menuBtn);
     controls.appendChild(minBtn);
     controls.appendChild(maxBtn);
@@ -1614,10 +1841,24 @@
   }
   setInterval(createTitlebar, 1500);
 
+  // Initialize background update checker
+  initAutoUpdateChecker();
+
   // Expose UI methods for runtime interactions and headless UI testing
   window.__desktop_ui = {
     openSettings: function(tab) { openSettingsDialog(tab); },
     showWelcome: function(isRevisit) { showWelcomeSplash(isRevisit); },
-    closeSettings: closeSettingsDialog
+    closeSettings: closeSettingsDialog,
+    checkForUpdates: function(silent) { return checkForUpdates(silent); },
+    showUpdateBanner: function(version, url) {
+      const ver = version || '0.5.0';
+      const targetUrl = url || ('https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v' + ver);
+      activeUpdateInfo = { version: ver, tag: 'v' + ver, url: targetUrl };
+      updateTitlebarPill(ver, targetUrl);
+      showUpdateBanner(ver, targetUrl);
+    },
+    dismissUpdateBanner: function() {
+      dismissUpdateBanner(activeUpdateInfo ? activeUpdateInfo.version : null);
+    }
   };
 })();

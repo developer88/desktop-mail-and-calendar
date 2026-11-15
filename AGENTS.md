@@ -72,8 +72,9 @@ This document specifies mandatory rules, design constraints, and operational gui
   2. UI & Trusted Types CSP tests (`node tests/about-dialog.test.js`).
   3. Icon resolution tests (`node tests/icon-assets.test.js`).
   4. Observer tests (`node tests/observers.test.js`).
-  5. Offline UI Screenshot tests (`node tests/screenshot-ui.test.js`).
-  6. E2E bundle simulation tests (`node tests/e2e-bundle.test.js`).
-  7. E2E binary, installer & metadata verification tests (`node tests/e2e-binaries.test.js`).
-  8. Calendar date dynamic icon & clean taskbar E2E tests (`node tests/calendar-date-e2e.test.js`).
+  5. Update notification & background release checker tests (`node tests/update-notification.test.js`).
+  6. Offline UI Screenshot tests (`node tests/screenshot-ui.test.js`).
+  7. E2E bundle simulation tests (`node tests/e2e-bundle.test.js`).
+  8. E2E binary, installer & metadata verification tests (`node tests/e2e-binaries.test.js`).
+  9. Calendar date dynamic icon & clean taskbar E2E tests (`node tests/calendar-date-e2e.test.js`).
 * **Never Report Completion Without Verification:** Always verify changes with command execution and test output.

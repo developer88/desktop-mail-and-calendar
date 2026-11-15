@@ -481,3 +481,256 @@
   from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
 }
+
+/* Chrome-Style Non-Intrusive Update Banner */
+#desktop-update-banner {
+  position: fixed !important;
+  top: 32px !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 38px !important;
+  z-index: 2147483640 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
+  font-family: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 12.5px !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  color: #1e293b !important;
+  animation: desktopBannerSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  pointer-events: auto !important;
+}
+
+#desktop-update-banner.closing {
+  transform: translateY(-100%) !important;
+  opacity: 0 !important;
+  transition: transform 0.2s ease, opacity 0.2s ease !important;
+}
+
+@keyframes desktopBannerSlideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.desktop-update-banner-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  overflow: hidden !important;
+}
+
+.desktop-update-banner-icon {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+#desktop-update-banner.calendar-theme .desktop-update-banner-icon {
+  background: rgba(22, 163, 74, 0.12) !important;
+  color: #16a34a !important;
+}
+
+#desktop-update-banner.mail-theme .desktop-update-banner-icon {
+  background: rgba(234, 88, 12, 0.12) !important;
+  color: #ea580c !important;
+}
+
+.desktop-update-banner-text {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  color: #334155 !important;
+}
+
+.desktop-update-banner-text strong {
+  font-weight: 600 !important;
+  color: #0f172a !important;
+}
+
+.desktop-update-badge {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: #0f172a !important;
+}
+
+.desktop-update-banner-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.desktop-update-action-btn {
+  height: 26px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+  border: none !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  transition: transform 0.1s ease, filter 0.15s ease !important;
+  outline: none !important;
+}
+
+.desktop-update-action-btn:active {
+  transform: scale(0.97) !important;
+}
+
+#desktop-update-banner.calendar-theme .desktop-update-action-btn {
+  background: #16a34a !important;
+}
+
+#desktop-update-banner.calendar-theme .desktop-update-action-btn:hover {
+  filter: brightness(1.1) !important;
+}
+
+#desktop-update-banner.mail-theme .desktop-update-action-btn {
+  background: #ea580c !important;
+}
+
+#desktop-update-banner.mail-theme .desktop-update-action-btn:hover {
+  filter: brightness(1.1) !important;
+}
+
+.desktop-update-dismiss-btn {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 6px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #64748b !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: background 0.15s ease, color 0.15s ease !important;
+}
+
+.desktop-update-dismiss-btn:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: #0f172a !important;
+}
+
+/* Dark Mode Banner Styles */
+@media (prefers-color-scheme: dark) {
+  #desktop-update-banner {
+    background: rgba(30, 41, 59, 0.94) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35) !important;
+    color: #f1f5f9 !important;
+  }
+
+  #desktop-update-banner .desktop-update-banner-text {
+    color: #cbd5e1 !important;
+  }
+
+  #desktop-update-banner .desktop-update-banner-text strong {
+    color: #ffffff !important;
+  }
+
+  #desktop-update-banner .desktop-update-badge {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+  }
+
+  #desktop-update-banner .desktop-update-dismiss-btn {
+    color: #94a3b8 !important;
+  }
+
+  #desktop-update-banner .desktop-update-dismiss-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+  }
+}
+
+/* Chrome-Style Titlebar Update Pill */
+.desktop-caption-update-pill {
+  display: none;
+  align-items: center !important;
+  gap: 4px !important;
+  height: 22px !important;
+  padding: 0 8px !important;
+  margin-right: 6px !important;
+  border-radius: 11px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  -webkit-app-region: no-drag !important;
+  border: 1px solid transparent !important;
+  outline: none !important;
+}
+
+.desktop-caption-update-pill.calendar-theme {
+  background: rgba(22, 163, 74, 0.12) !important;
+  border-color: rgba(22, 163, 74, 0.3) !important;
+  color: #15803d !important;
+}
+
+.desktop-caption-update-pill.calendar-theme:hover {
+  background: rgba(22, 163, 74, 0.22) !important;
+  border-color: rgba(22, 163, 74, 0.5) !important;
+  color: #166534 !important;
+}
+
+.desktop-caption-update-pill.mail-theme {
+  background: rgba(234, 88, 12, 0.15) !important;
+  border-color: rgba(234, 88, 12, 0.35) !important;
+  color: #c2410c !important;
+}
+
+.desktop-caption-update-pill.mail-theme:hover {
+  background: rgba(234, 88, 12, 0.25) !important;
+  border-color: rgba(234, 88, 12, 0.55) !important;
+  color: #9a3412 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .desktop-caption-update-pill.calendar-theme {
+    background: rgba(34, 197, 94, 0.18) !important;
+    border-color: rgba(34, 197, 94, 0.4) !important;
+    color: #4ade80 !important;
+  }
+
+  .desktop-caption-update-pill.calendar-theme:hover {
+    background: rgba(34, 197, 94, 0.28) !important;
+    color: #86efac !important;
+  }
+
+  .desktop-caption-update-pill.mail-theme {
+    background: rgba(249, 115, 22, 0.2) !important;
+    border-color: rgba(249, 115, 22, 0.4) !important;
+    color: #fb923c !important;
+  }
+
+  .desktop-caption-update-pill.mail-theme:hover {
+    background: rgba(249, 115, 22, 0.3) !important;
+    color: #fdba74 !important;
+  }
+}

@@ -290,6 +290,76 @@ const scenarios = [
       </body>
       </html>
     `
+  },
+  {
+    name: '11-calendar-update-banner',
+    title: 'Desktop Calendar Non-Intrusive Update Notification Banner & Titlebar Pill',
+    generateHarness: () => `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Desktop Calendar</title>
+        <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'win11-theme.css'))}">
+        <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'shell.css'))}">
+        <style>
+          body { margin: 0; padding: 0; background: #ffffff; font-family: 'Segoe UI Variable', system-ui, sans-serif; height: 100vh; overflow: hidden; }
+          .mock-body { margin-top: 72px; padding: 24px; display: flex; gap: 20px; }
+          .mock-cal-sidebar { width: 240px; background: #f8fafc; border-radius: 12px; height: 460px; padding: 16px; box-sizing: border-box; }
+          .mock-cal-grid { flex: 1; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; height: 460px; padding: 16px; box-sizing: border-box; }
+        </style>
+      </head>
+      <body>
+        <div class="mock-body">
+          <div class="mock-cal-sidebar"><div style="font-weight: 600; color: #15803d;">Desktop Calendar Sidebar</div></div>
+          <div class="mock-cal-grid"><div style="font-weight: 600; color: #1e293b;">Calendar Schedule Grid</div></div>
+        </div>
+        <script>
+          window.APP_KIND = 'calendar';
+          window.APP_VERSION = '${appVersion}';
+        </script>
+        <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
+        <script>
+          window.__desktop_ui.showUpdateBanner('0.5.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.5.0');
+        </script>
+      </body>
+      </html>
+    `
+  },
+  {
+    name: '12-mail-update-banner',
+    title: 'Desktop Mail Non-Intrusive Update Notification Banner & Titlebar Pill',
+    generateHarness: () => `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Desktop Mail</title>
+        <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'win11-theme.css'))}">
+        <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'shell.css'))}">
+        <style>
+          body { margin: 0; padding: 0; background: #f6f8fc; font-family: 'Segoe UI Variable', system-ui, sans-serif; height: 100vh; overflow: hidden; }
+          .mock-body { margin-top: 72px; padding: 24px; display: flex; gap: 20px; }
+          .mock-nav { width: 220px; background: #ffffff; border-radius: 12px; height: 460px; padding: 16px; box-sizing: border-box; }
+          .mock-list { flex: 1; background: #ffffff; border-radius: 12px; height: 460px; padding: 16px; box-sizing: border-box; }
+        </style>
+      </head>
+      <body>
+        <div class="mock-body">
+          <div class="mock-nav"><div style="font-weight: 600; color: #444746;">Desktop Mail Folders</div></div>
+          <div class="mock-list"><div style="font-weight: 600; color: #1f1f1f;">Inbox - Email List View</div></div>
+        </div>
+        <script>
+          window.APP_KIND = 'mail';
+          window.APP_VERSION = '${appVersion}';
+        </script>
+        <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
+        <script>
+          window.__desktop_ui.showUpdateBanner('0.5.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.5.0');
+        </script>
+      </body>
+      </html>
+    `
   }
 ];
 
