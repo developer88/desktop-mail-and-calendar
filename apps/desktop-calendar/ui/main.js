@@ -6,6 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusText = document.getElementById('status-text');
 
   function tryRedirect() {
+    const isOfflineTest = (window.location.search && window.location.search.includes('offline=true')) || window.__DESKTOP_OFFLINE_TEST__;
+    if (isOfflineTest) {
+      if (spinner) spinner.style.display = 'none';
+      if (statusText) statusText.innerText = 'No internet connection detected.';
+      if (offlineActions) offlineActions.style.display = 'block';
+      return;
+    }
     if (navigator.onLine) {
       window.location.replace(targetUrl);
     } else {

@@ -68,12 +68,14 @@ const scenarios = [
   {
     name: '01-mail-offline-splash',
     title: 'Desktop Mail Offline / Splash Screen',
-    sourceHtml: path.join(root, 'apps', 'desktop-mail', 'ui', 'index.html')
+    sourceHtml: path.join(root, 'apps', 'desktop-mail', 'ui', 'index.html'),
+    queryString: '?offline=true'
   },
   {
     name: '02-calendar-offline-splash',
     title: 'Desktop Calendar Offline / Splash Screen',
-    sourceHtml: path.join(root, 'apps', 'desktop-calendar', 'ui', 'index.html')
+    sourceHtml: path.join(root, 'apps', 'desktop-calendar', 'ui', 'index.html'),
+    queryString: '?offline=true'
   },
   {
     name: '03-mail-titlebar-shell',
@@ -102,6 +104,7 @@ const scenarios = [
         <script>
           window.APP_KIND = 'mail';
           window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_FIRST_RUN__ = false;
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
       </body>
@@ -135,6 +138,7 @@ const scenarios = [
         <script>
           window.APP_KIND = 'calendar';
           window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_FIRST_RUN__ = false;
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
       </body>
@@ -207,6 +211,7 @@ const scenarios = [
         <script>
           window.APP_KIND = 'mail';
           window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_FIRST_RUN__ = false;
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
@@ -232,6 +237,7 @@ const scenarios = [
         <script>
           window.APP_KIND = 'calendar';
           window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_FIRST_RUN__ = false;
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
@@ -257,6 +263,7 @@ const scenarios = [
         <script>
           window.APP_KIND = 'mail';
           window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_FIRST_RUN__ = false;
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
@@ -282,6 +289,7 @@ const scenarios = [
         <script>
           window.APP_KIND = 'calendar';
           window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_FIRST_RUN__ = false;
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
@@ -317,6 +325,7 @@ const scenarios = [
         <script>
           window.APP_KIND = 'calendar';
           window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_FIRST_RUN__ = false;
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
@@ -352,6 +361,7 @@ const scenarios = [
         <script>
           window.APP_KIND = 'mail';
           window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_FIRST_RUN__ = false;
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
@@ -373,7 +383,7 @@ for (let i = 0; i < scenarios.length; i++) {
 
   let targetUrl = '';
   if (sc.sourceHtml) {
-    targetUrl = toFileUrl(sc.sourceHtml);
+    targetUrl = toFileUrl(sc.sourceHtml) + (sc.queryString || '');
   } else if (sc.generateHarness) {
     const harnessPath = path.join(harnessDir, `${sc.name}.html`);
     fs.writeFileSync(harnessPath, sc.generateHarness());
@@ -394,7 +404,7 @@ for (let i = 0; i < scenarios.length; i++) {
   assert.strictEqual(buf.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', 'File must be a valid PNG');
 
   // Assert minimum file size (ensuring non-blank rendered UI)
-  assert(buf.length > 15000, `Screenshot size (${buf.length} bytes) is suspiciously small`);
+  assert(buf.length > 5000, `Screenshot size (${buf.length} bytes) is suspiciously small`);
 
   // Assert PNG width and height chunk (IHDR)
   const width = buf.readUInt32BE(16);

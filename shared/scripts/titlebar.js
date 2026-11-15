@@ -874,6 +874,8 @@
   // Settings Modal Dialog with 3 sections matching Gemini
   function openSettingsDialog(initialTab) {
     if (document.getElementById('desktop-settings-overlay')) return;
+    const existingSplash = document.getElementById('desktop-splash-overlay');
+    if (existingSplash) existingSplash.remove();
 
     const overlay = document.createElement('div');
     overlay.id = 'desktop-settings-overlay';
@@ -1334,6 +1336,8 @@
   // Welcome & Privacy Notice Splash Screen (shown on very first load)
   function showWelcomeSplash(isRevisit) {
     if (document.getElementById('desktop-splash-overlay')) return;
+    const existingSettings = document.getElementById('desktop-settings-overlay');
+    if (existingSettings) existingSettings.remove();
 
     const overlay = document.createElement('div');
     overlay.id = 'desktop-splash-overlay';
