@@ -65,65 +65,54 @@ async function main() {
   window.eval(titlebarScript);
   assert(window.__desktop_ui, '__desktop_ui must be exported');
 
-  // Test 1: Desktop Calendar Update Banner & Trusted Types DOM
-  console.log('\n[1/4] Testing Desktop Calendar Update Banner DOM & Trusted Types...');
+  // Test 1: Titlebar Update Pill Activation & Direct Open
+  console.log('\n[1/4] Testing Titlebar Update Pill Activation & Direct Open...');
   {
     window.__desktop_ui.showUpdateBanner('0.5.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.5.0');
-
-    const banner = document.getElementById('desktop-update-banner');
-    assert(banner, 'Update banner must exist in the DOM');
-    assert(banner.classList.contains('calendar-theme'), 'Banner must have calendar-theme class');
-    assert.strictEqual(banner.querySelector('.desktop-update-badge').textContent, 'v0.5.0');
-    assert(banner.textContent.includes('Desktop Calendar update is ready (v0.5.0)'), 'Banner must include Desktop Calendar text');
 
     // Titlebar Update Pill
     const pill = document.getElementById('desktop-caption-update-pill');
     assert(pill, 'Titlebar update pill must exist in controls');
     assert.strictEqual(pill.style.display, 'inline-flex', 'Pill must be visible when update is ready');
+    assert.strictEqual(pill.title, 'Update available (v0.5.0)', 'Pill title must include version');
 
-    // Test Action Button
-    const actionBtn = banner.querySelector('.desktop-update-action-btn');
-    assert(actionBtn, 'Action button must exist');
-    actionBtn.click();
+    // Ensure no intrusive big banner exists
+    const banner = document.getElementById('desktop-update-banner');
+    assert.strictEqual(banner, null, 'Big banner row must NOT exist in the DOM');
+
+    // Test clicking the titlebar pill directly opens the release URL
+    pill.click();
     assert.strictEqual(openedUrls.length, 1);
     assert.strictEqual(openedUrls[0].url, 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.5.0');
     assert.strictEqual(openedUrls[0].target, '_blank');
 
-    console.log('PASS: Calendar update banner and titlebar pill created cleanly without Trusted Types violations.');
+    console.log('PASS: Titlebar update pill created cleanly without Trusted Types violations and opens release page.');
   }
 
-  // Test 2: Dismissal & Persistence
-  console.log('\n[2/4] Testing Banner Dismissal & Non-Pushy Persistence...');
+  // Test 2: Pill Theme & Structure
+  console.log('\n[2/4] Testing Titlebar Update Pill Branding Structure...');
   {
-    const banner = document.getElementById('desktop-update-banner');
-    assert(banner, 'Banner must be present before dismissal');
-
-    const dismissBtn = banner.querySelector('.desktop-update-dismiss-btn');
-    assert(dismissBtn, 'Dismiss button must exist');
-    dismissBtn.click();
-
-    assert(banner.classList.contains('closing'), 'Banner must have closing class on dismiss');
-    assert.strictEqual(window.sessionStorage.getItem('desktop_dismissed_update_0.5.0'), 'true');
-
-    // Subtle Titlebar Pill stays visible
     const pill = document.getElementById('desktop-caption-update-pill');
-    assert.strictEqual(pill.style.display, 'inline-flex', 'Pill must stay visible after dismissing top banner');
+    assert(pill.classList.contains('calendar-theme'), 'Pill must have calendar-theme class');
+    assert(pill.textContent.includes('Update'), 'Pill must display Update text');
+    assert(pill.querySelector('svg'), 'Pill must have arrow SVG icon');
 
-    console.log('PASS: Dismissal properly marks session and leaves subtle titlebar pill without intrusive popups.');
-    banner.remove();
+    console.log('PASS: Titlebar update pill has correct structure, icon, and theme.');
   }
 
-  // Test 3: Desktop Mail Update Banner Styling
-  console.log('\n[3/4] Testing Desktop Mail Update Banner DOM & Styling...');
+  // Test 3: Desktop Mail Update Pill Handling
+  console.log('\n[3/4] Testing Subsequent Version Updates Seamlessly...');
   {
-    // Re-trigger banner with Mail theme
+    // Re-trigger update with subsequent version
     window.__desktop_ui.showUpdateBanner('0.6.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.6.0');
-    const banner = document.getElementById('desktop-update-banner');
-    assert(banner, 'Update banner must exist');
-    assert.strictEqual(banner.querySelector('.desktop-update-badge').textContent, 'v0.6.0');
+    const pill = document.getElementById('desktop-caption-update-pill');
+    assert.strictEqual(pill.title, 'Update available (v0.6.0)');
 
-    console.log('PASS: Update banner handles subsequent version notifications seamlessly.');
-    banner.remove();
+    pill.click();
+    assert.strictEqual(openedUrls.length, 2);
+    assert.strictEqual(openedUrls[1].url, 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.6.0');
+
+    console.log('PASS: Update pill handles subsequent version updates seamlessly.');
   }
 
   // Test 4: Background Release Checker
@@ -136,10 +125,14 @@ async function main() {
     assert.strictEqual(result.tag, 'v0.7.0');
     assert(lastFetchedUrl.includes('releases/latest'), 'Fetch URL must target releases/latest endpoint');
 
-    const autoBanner = document.getElementById('desktop-update-banner');
-    assert(autoBanner, 'Background check must automatically spawn update banner when new release is detected');
+    const pill = document.getElementById('desktop-caption-update-pill');
+    assert.strictEqual(pill.style.display, 'inline-flex');
+    assert.strictEqual(pill.title, 'Update available (v0.7.0)');
 
-    console.log('PASS: Background release checker correctly queries GitHub and triggers update banner.');
+    const autoBanner = document.getElementById('desktop-update-banner');
+    assert.strictEqual(autoBanner, null, 'Background check must NOT spawn an intrusive big banner');
+
+    console.log('PASS: Background release checker correctly queries GitHub and triggers sleek titlebar pill.');
   }
 
   console.log('\nALL 4 UPDATE NOTIFICATION TESTS PASSED SUCCESSFULLY!');

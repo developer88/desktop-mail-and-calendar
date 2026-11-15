@@ -697,120 +697,23 @@
 
   let activeUpdateInfo = null;
 
+  function updateTitlebarPill(version, releaseUrl) {
+    activeUpdateInfo = { version, url: releaseUrl };
+    let pill = document.getElementById('desktop-caption-update-pill');
+    if (pill) {
+      pill.style.display = 'inline-flex';
+      pill.title = 'Update available (v' + version + ')';
+    }
+  }
+
   function showUpdateBanner(version, releaseUrl) {
-    try {
-      if (window.self !== window.top || window.parent !== window || window.frameElement) return;
-    } catch (_) {
-      return;
-    }
-
-    let existingBanner = document.getElementById('desktop-update-banner');
-    if (existingBanner) {
-      existingBanner.classList.remove('closing');
-      return;
-    }
-
-    const banner = document.createElement('div');
-    banner.id = 'desktop-update-banner';
-    banner.className = 'desktop-update-banner ' + (isCalendar ? 'calendar-theme' : 'mail-theme');
-
-    const left = document.createElement('div');
-    left.className = 'desktop-update-banner-left';
-
-    const iconWrap = document.createElement('div');
-    iconWrap.className = 'desktop-update-banner-icon';
-    const iconSvg = createSvgIcon('update');
-    iconSvg.setAttribute('width', '14');
-    iconSvg.setAttribute('height', '14');
-    iconWrap.appendChild(iconSvg);
-    left.appendChild(iconWrap);
-
-    const textWrap = document.createElement('div');
-    textWrap.className = 'desktop-update-banner-text';
-
-    const strongApp = document.createElement('strong');
-    strongApp.textContent = isCalendar ? 'Desktop Calendar' : 'Desktop Mail';
-    textWrap.appendChild(strongApp);
-
-    const txtPre = document.createElement('span');
-    txtPre.textContent = ' update is ready (';
-    textWrap.appendChild(txtPre);
-
-    const badge = document.createElement('span');
-    badge.className = 'desktop-update-badge';
-    badge.textContent = 'v' + version;
-    textWrap.appendChild(badge);
-
-    const txtPost = document.createElement('span');
-    txtPost.textContent = ')';
-    textWrap.appendChild(txtPost);
-
-    left.appendChild(textWrap);
-
-    const right = document.createElement('div');
-    right.className = 'desktop-update-banner-right';
-
-    const actionBtn = document.createElement('button');
-    actionBtn.className = 'desktop-update-action-btn';
-    const btnIcon = createSvgIcon('update');
-    btnIcon.setAttribute('width', '12');
-    btnIcon.setAttribute('height', '12');
-    actionBtn.appendChild(btnIcon);
-    const btnLabel = document.createElement('span');
-    btnLabel.textContent = 'Update';
-    actionBtn.appendChild(btnLabel);
-
-    actionBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      window.open(releaseUrl, '_blank');
-    });
-
-    const dismissBtn = document.createElement('button');
-    dismissBtn.className = 'desktop-update-dismiss-btn';
-    dismissBtn.title = 'Dismiss update banner';
-    dismissBtn.setAttribute('aria-label', 'Dismiss update banner');
-    const dismissIcon = createSvgIcon('x-small');
-    dismissIcon.setAttribute('width', '12');
-    dismissIcon.setAttribute('height', '12');
-    dismissBtn.appendChild(dismissIcon);
-
-    dismissBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      dismissUpdateBanner(version);
-    });
-
-    right.appendChild(actionBtn);
-    right.appendChild(dismissBtn);
-
-    banner.appendChild(left);
-    banner.appendChild(right);
-
-    const root = document.documentElement || document.body;
-    if (root) {
-      root.appendChild(banner);
-    }
+    updateTitlebarPill(version, releaseUrl);
   }
 
   function dismissUpdateBanner(version) {
     const banner = document.getElementById('desktop-update-banner');
     if (banner) {
-      banner.classList.add('closing');
-      setTimeout(() => {
-        banner.remove();
-      }, 200);
-    }
-    if (version) {
-      try {
-        sessionStorage.setItem('desktop_dismissed_update_' + version, 'true');
-      } catch (_) {}
-    }
-  }
-
-  function updateTitlebarPill(version, releaseUrl) {
-    let pill = document.getElementById('desktop-caption-update-pill');
-    if (pill) {
-      pill.style.display = 'inline-flex';
-      pill.title = 'Update available (v' + version + ')';
+      banner.remove();
     }
   }
 
@@ -831,18 +734,8 @@
           const releaseUrl = data.html_url || ('https://github.com/developer88/desktop-mail-and-calendar/releases/tag/' + latestTag);
           activeUpdateInfo = { version: latestVer, tag: latestTag, url: releaseUrl };
 
-          // Activate titlebar pill
+          // Activate sleek titlebar update pill
           updateTitlebarPill(latestVer, releaseUrl);
-
-          // Check if dismissed in this session
-          let dismissed = false;
-          try {
-            dismissed = sessionStorage.getItem('desktop_dismissed_update_' + latestVer) === 'true';
-          } catch (_) {}
-
-          if (!dismissed) {
-            showUpdateBanner(latestVer, releaseUrl);
-          }
 
           return { updateAvailable: true, version: latestVer, tag: latestTag, url: releaseUrl };
         } else {
@@ -1744,13 +1637,8 @@
     updatePill.addEventListener('click', (e) => {
       e.stopPropagation();
       e.preventDefault();
-      if (activeUpdateInfo) {
-        const existingBanner = document.getElementById('desktop-update-banner');
-        if (!existingBanner) {
-          showUpdateBanner(activeUpdateInfo.version, activeUpdateInfo.url);
-        } else {
-          window.open(activeUpdateInfo.url, '_blank');
-        }
+      if (activeUpdateInfo && activeUpdateInfo.url) {
+        window.open(activeUpdateInfo.url, '_blank');
       }
     });
 

@@ -301,7 +301,7 @@ const scenarios = [
   },
   {
     name: '11-calendar-update-banner',
-    title: 'Desktop Calendar Non-Intrusive Update Notification Banner & Titlebar Pill',
+    title: 'Desktop Calendar Non-Intrusive Titlebar Update Pill',
     generateHarness: () => `
       <!DOCTYPE html>
       <html>
@@ -312,9 +312,9 @@ const scenarios = [
         <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'shell.css'))}">
         <style>
           body { margin: 0; padding: 0; background: #ffffff; font-family: 'Segoe UI Variable', system-ui, sans-serif; height: 100vh; overflow: hidden; }
-          .mock-body { margin-top: 72px; padding: 24px; display: flex; gap: 20px; }
-          .mock-cal-sidebar { width: 240px; background: #f8fafc; border-radius: 12px; height: 460px; padding: 16px; box-sizing: border-box; }
-          .mock-cal-grid { flex: 1; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; height: 460px; padding: 16px; box-sizing: border-box; }
+          .mock-body { margin-top: 36px; padding: 24px; display: flex; gap: 20px; }
+          .mock-cal-sidebar { width: 240px; background: #f8fafc; border-radius: 12px; height: 500px; padding: 16px; box-sizing: border-box; }
+          .mock-cal-grid { flex: 1; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; height: 500px; padding: 16px; box-sizing: border-box; }
         </style>
       </head>
       <body>
@@ -337,7 +337,7 @@ const scenarios = [
   },
   {
     name: '12-mail-update-banner',
-    title: 'Desktop Mail Non-Intrusive Update Notification Banner & Titlebar Pill',
+    title: 'Desktop Mail Non-Intrusive Titlebar Update Pill',
     generateHarness: () => `
       <!DOCTYPE html>
       <html>
@@ -348,9 +348,9 @@ const scenarios = [
         <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'shell.css'))}">
         <style>
           body { margin: 0; padding: 0; background: #f6f8fc; font-family: 'Segoe UI Variable', system-ui, sans-serif; height: 100vh; overflow: hidden; }
-          .mock-body { margin-top: 72px; padding: 24px; display: flex; gap: 20px; }
-          .mock-nav { width: 220px; background: #ffffff; border-radius: 12px; height: 460px; padding: 16px; box-sizing: border-box; }
-          .mock-list { flex: 1; background: #ffffff; border-radius: 12px; height: 460px; padding: 16px; box-sizing: border-box; }
+          .mock-body { margin-top: 36px; padding: 24px; display: flex; gap: 20px; }
+          .mock-nav { width: 220px; background: #ffffff; border-radius: 12px; height: 500px; padding: 16px; box-sizing: border-box; }
+          .mock-list { flex: 1; background: #ffffff; border-radius: 12px; height: 500px; padding: 16px; box-sizing: border-box; }
         </style>
       </head>
       <body>
