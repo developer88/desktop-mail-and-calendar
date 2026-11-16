@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-11-16
+
+### Added
+- **Chrome-Style Non-Intrusive Update Notifications:** Lightweight background release checker periodically queries GitHub Releases API and displays a subtle, compact **↑ Update** pill directly in the window titlebar controls. Clicking the pill directly opens the GitHub release download page.
+- **Redesigned Offline & Error Splash Screens:** Replaced generic vector outlines with official high-resolution branded vector icons (warm tactile orange envelope for Mail, emerald binder with silver rings and bold "31" for Calendar). Structured around a modern centered Fluent card with soft elevation shadows, offline status badge callout, comfortable spacing, and primary action buttons.
+- **Ko-fi Support Badge in About Dialog:** Added official **Buy Me a Coffee** Ko-fi badge and link to the About tab of the Settings modal, constructed safely via standard DOM APIs to ensure 100% compliance with Google's strict Trusted Types Content Security Policy.
+- **Robust Setup Installer Reinstalls & Upgrades:** Setup installers now forcefully close running app instances and WebView2 child processes via `taskkill.exe`, unlock and remove existing binaries with a retry mechanism, enforce `SetOverwrite on`, and package the freshest compiled binaries directly from `target/release`.
+
 ## [0.4.0] - 2026-11-15
 
 ### Added

@@ -20,7 +20,7 @@ async function main() {
   const { document } = window;
 
   window.APP_KIND = 'calendar';
-  window.APP_VERSION = '0.4.0';
+  window.APP_VERSION = '0.5.0';
   window.PRIMARY_HOST = 'calendar.google.com';
 
   // Inject shell styles
@@ -120,7 +120,7 @@ async function main() {
   {
     mockReleaseTag = 'v0.7.0';
     const result = await window.__desktop_ui.checkForUpdates(false);
-    assert(result.updateAvailable, 'Must detect update available when latest (0.7.0) > current (0.4.0)');
+    assert(result.updateAvailable, 'Must detect update available when latest (0.7.0) > current (0.5.0)');
     assert.strictEqual(result.version, '0.7.0');
     assert.strictEqual(result.tag, 'v0.7.0');
     assert(lastFetchedUrl.includes('releases/latest'), 'Fetch URL must target releases/latest endpoint');

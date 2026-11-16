@@ -677,7 +677,7 @@
   }
 
   // Application Version & Update Management
-  const currentVer = '0.4.0';
+  const currentVer = '0.5.0';
 
   function getAppVersion() {
     return (typeof window !== 'undefined' && window.APP_VERSION) || currentVer;
@@ -1071,7 +1071,7 @@
         verLeft.textContent = 'Build Version ';
         const verNum = document.createElement('span');
         verNum.className = 'desktop-version-num';
-        verNum.textContent = '0.4.0';
+        verNum.textContent = '0.5.0';
         if (typeof window !== 'undefined' && window.APP_VERSION) {
           verNum.textContent = window.APP_VERSION;
         }
