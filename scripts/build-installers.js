@@ -41,10 +41,33 @@ function buildInstaller(config) {
     throw new Error('makensis not found in PATH or standard Program Files locations');
   }
 
-  const binaryPath = path.join(distDir, config.binaryName);
-  if (!fs.existsSync(binaryPath)) {
-    throw new Error(`Binary not found at ${binaryPath}. Please build it first.`);
+  const searchDirs = [
+    path.join(rootDir, 'target', 'x86_64-pc-windows-msvc', 'release'),
+    path.join(rootDir, 'target', 'release'),
+    path.join(rootDir, 'target', 'x86_64-pc-windows-msvc', 'debug'),
+    path.join(rootDir, 'target', 'debug'),
+    distDir
+  ];
+  let binaryPath = null;
+  for (const dir of searchDirs) {
+    if (!fs.existsSync(dir)) continue;
+    const candidate = path.join(dir, config.binaryName);
+    if (fs.existsSync(candidate)) {
+      binaryPath = candidate;
+      break;
+    }
   }
+
+  if (!binaryPath) {
+    throw new Error(`Binary not found for ${config.binaryName}. Please build it first.`);
+  }
+
+  // Ensure dist has the freshest compiled binary before packaging installer
+  const distBinaryPath = path.join(distDir, config.binaryName);
+  if (binaryPath !== distBinaryPath) {
+    fs.copyFileSync(binaryPath, distBinaryPath);
+  }
+  binaryPath = distBinaryPath;
 
   const iconPath = path.join(rootDir, config.iconRelPath);
   const wizardBmpPath = path.join(rootDir, config.wizardBmp);
@@ -181,6 +204,7 @@ function buildInstaller(config) {
   const nsiContent = `
 !include "MUI2.nsh"
 !include "FileFunc.nsh"
+!include "LogicLib.nsh"
 
 Unicode True
 ManifestDPIAware true
@@ -224,21 +248,36 @@ VIAddVersionKey "OriginalFilename" "${config.installerName}"
 !insertmacro MUI_LANGUAGE "English"
 
 Function .onInit
-  nsExec::Exec 'taskkill /F /IM "${config.binaryName}" /T'
+  InitPluginsDir
+  ; Terminate any existing running instance as soon as setup starts
+  nsExec::Exec '"$SYSDIR\\taskkill.exe" /F /IM "${config.binaryName}" /T'
 FunctionEnd
 
 Function un.onInit
-  nsExec::Exec 'taskkill /F /IM "${config.binaryName}" /T'
+  InitPluginsDir
+  nsExec::Exec '"$SYSDIR\\taskkill.exe" /F /IM "${config.binaryName}" /T'
 FunctionEnd
 
 Section "Install"
   ; Terminate any existing running instance to release Windows file locks
   DetailPrint "Closing running instances of ${config.appName}..."
-  nsExec::Exec 'taskkill /F /IM "${config.binaryName}" /T'
-  Sleep 600
+  nsExec::Exec '"$SYSDIR\\taskkill.exe" /F /IM "${config.binaryName}" /T'
+  Sleep 1000
 
+  SetOverwrite on
   SetOutPath "$INSTDIR"
-  
+
+  ; Ensure any existing installed binary is cleanly unlinked and always overwritten
+  ClearErrors
+  Delete "$INSTDIR\\${config.binaryName}"
+  \${If} \${Errors}
+    DetailPrint "Waiting for file locks on ${config.appName} to release..."
+    nsExec::Exec '"$SYSDIR\\taskkill.exe" /F /IM "${config.binaryName}" /T'
+    Sleep 1500
+    ClearErrors
+    Delete "$INSTDIR\\${config.binaryName}"
+  \${EndIf}
+
   File "${binaryPath.replace(/\\/g, '/')}"
   
   WriteUninstaller "$INSTDIR\\uninstall.exe"
@@ -250,11 +289,13 @@ Section "Install"
   CreateShortcut "$DESKTOP\\${config.appName}.lnk" "$INSTDIR\\${config.binaryName}" "" "$INSTDIR\\${config.binaryName}" 0
 
   ; Registry for Add/Remove Programs
+  WriteRegStr HKCU "Software\\${config.appId}" "Install_Dir" "$INSTDIR"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "DisplayName" "${config.appName}"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "UninstallString" '"$INSTDIR\\uninstall.exe"'
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "DisplayIcon" '"$INSTDIR\\${config.binaryName}",0'
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "DisplayVersion" "${appVersion}"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "Publisher" "Andrey Eremin"
+  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "InstallLocation" "$INSTDIR"
   WriteRegDWORD HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "NoModify" 1
   WriteRegDWORD HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${config.appId}" "NoRepair" 1
 
@@ -264,8 +305,8 @@ SectionEnd
 Section "Uninstall"
   ; Terminate running instances before uninstallation
   DetailPrint "Closing running instances of ${config.appName}..."
-  nsExec::Exec 'taskkill /F /IM "${config.binaryName}" /T'
-  Sleep 600
+  nsExec::Exec '"$SYSDIR\\taskkill.exe" /F /IM "${config.binaryName}" /T'
+  Sleep 1000
 
   Delete "$DESKTOP\\${config.appName}.lnk"
   Delete "$SMPROGRAMS\\${config.appName}\\${config.appName}.lnk"

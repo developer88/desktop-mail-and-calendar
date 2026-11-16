@@ -133,6 +133,9 @@ console.log('\n[3/4] Verifying NSIS setup installers and embedded metadata...');
   assert(installerScript.includes('DesktopCalendar.Assoc.ics'), 'NSIS script must register DesktopCalendar.Assoc.ics for .ics files');
   assert(installerScript.includes('FriendlyAppName'), 'NSIS script must register FriendlyAppName in Classes\\Applications so Windows displays friendly app name');
   assert(installerScript.includes('AppUserModelId'), 'NSIS script must register AppUserModelId across protocol handlers');
+  assert(installerScript.includes('SetOverwrite on'), 'NSIS script must enforce SetOverwrite on so already installed apps are always cleanly re-written');
+  assert(installerScript.includes('taskkill.exe'), 'NSIS script must use taskkill.exe with $SYSDIR to terminate running instances');
+  assert(installerScript.includes('InitPluginsDir'), 'NSIS script must initialize plugins dir before calling nsExec in .onInit');
 
   console.log('PASS: Both NSIS setup installers verified with complete metadata, High-DPI awareness, and Default Apps protocol registrations.');
 }
