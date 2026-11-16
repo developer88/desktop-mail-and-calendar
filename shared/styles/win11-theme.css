@@ -359,7 +359,7 @@ html.desktop-calendar-app body {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2) !important;
   width: 700px !important;
   max-width: 92vw !important;
-  height: 640px !important;
+  height: 695px !important;
   max-height: 90vh !important;
   font-family: "Google Sans", Roboto, "Segoe UI Variable Text", "Segoe UI", -apple-system, sans-serif !important;
   overflow: hidden !important;
@@ -510,7 +510,7 @@ html.desktop-calendar-app body {
 
 .desktop-settings-content {
   flex: 1 !important;
-  padding: 24px 28px !important;
+  padding: 20px 28px !important;
   overflow-y: auto !important;
   display: flex !important;
   flex-direction: column !important;
@@ -735,8 +735,8 @@ html.desktop-calendar-app body {
   display: flex !important;
   align-items: center !important;
   gap: 16px !important;
-  margin-bottom: 16px !important;
-  padding-bottom: 14px !important;
+  margin-bottom: 12px !important;
+  padding-bottom: 12px !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
@@ -773,9 +773,9 @@ html.desktop-calendar-app body {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 8px 0 14px 0 !important;
+  padding: 6px 0 12px 0 !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-  margin-bottom: 16px !important;
+  margin-bottom: 14px !important;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -825,6 +825,28 @@ html.desktop-calendar-app body {
   .desktop-update-btn:hover {
     background: rgba(168, 199, 250, 0.1) !important;
   }
+}
+
+.desktop-about-coffee-row {
+  display: flex !important;
+  align-items: center !important;
+  margin-bottom: 14px !important;
+}
+
+.desktop-about-coffee-row a {
+  display: inline-block !important;
+  line-height: 0 !important;
+  border-radius: 8px !important;
+  transition: transform 0.15s ease, opacity 0.15s ease !important;
+}
+
+.desktop-about-coffee-row a:hover {
+  transform: translateY(-1px) !important;
+  opacity: 0.9 !important;
+}
+
+.desktop-about-coffee-row a:active {
+  transform: translateY(0) !important;
 }
 
 .desktop-disclaimer-box {

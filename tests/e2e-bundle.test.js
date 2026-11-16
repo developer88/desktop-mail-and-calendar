@@ -336,6 +336,15 @@ console.log('\n[1/5] Testing Desktop Mail full E2E lifecycle...');
   assert(aboutLogo, 'About tab SVG logo must exist');
   assert.strictEqual(aboutLogo.getAttribute('viewBox'), '0 0 512 512');
 
+  const coffeeLink = settingsOverlay.querySelector('.desktop-about-coffee-row a');
+  assert(coffeeLink, 'About tab must render Buy Me a Coffee link');
+  assert.strictEqual(coffeeLink.getAttribute('href'), 'https://ko-fi.com/O5K12AQJGT');
+  assert.strictEqual(coffeeLink.getAttribute('target'), '_blank');
+  const coffeeImg = coffeeLink.querySelector('img');
+  assert(coffeeImg, 'Buy Me a Coffee link must contain image');
+  assert.strictEqual(coffeeImg.getAttribute('src'), 'https://storage.ko-fi.com/cdn/kofi4.png?v=6');
+  assert.strictEqual(coffeeImg.getAttribute('alt'), 'Buy Me a Coffee at ko-fi.com');
+
   // Close settings via Done button
   settingsOverlay.querySelector('.desktop-settings-done-btn').click();
   assert(!document.getElementById('desktop-settings-overlay'), 'Settings modal must close when clicking Done');
@@ -418,6 +427,15 @@ console.log('\n[2/5] Testing Desktop Calendar full E2E lifecycle...');
   assert.strictEqual(aboutTitle.textContent, 'About Desktop Calendar');
   const calLogo = settingsOverlay.querySelector('.desktop-about-logo svg');
   assert.strictEqual(calLogo.getAttribute('viewBox'), '0 0 512 512');
+
+  const calCoffeeLink = settingsOverlay.querySelector('.desktop-about-coffee-row a');
+  assert(calCoffeeLink, 'Calendar About tab must render Buy Me a Coffee link');
+  assert.strictEqual(calCoffeeLink.getAttribute('href'), 'https://ko-fi.com/O5K12AQJGT');
+  assert.strictEqual(calCoffeeLink.getAttribute('target'), '_blank');
+  const calCoffeeImg = calCoffeeLink.querySelector('img');
+  assert(calCoffeeImg, 'Buy Me a Coffee link must contain image');
+  assert.strictEqual(calCoffeeImg.getAttribute('src'), 'https://storage.ko-fi.com/cdn/kofi4.png?v=6');
+  assert.strictEqual(calCoffeeImg.getAttribute('alt'), 'Buy Me a Coffee at ko-fi.com');
 
   env.cleanup();
   console.log('PASS: Desktop Calendar full E2E lifecycle verified.');

@@ -1128,6 +1128,41 @@
         verRow.appendChild(updateBtn);
         contentArea.appendChild(verRow);
 
+        // Buy Me a Coffee / Support
+        const coffeeRow = document.createElement('div');
+        coffeeRow.className = 'desktop-about-coffee-row';
+
+        const coffeeLink = document.createElement('a');
+        coffeeLink.href = 'https://ko-fi.com/O5K12AQJGT';
+        coffeeLink.target = '_blank';
+        coffeeLink.rel = 'noopener noreferrer';
+        coffeeLink.title = 'Buy Me a Coffee at ko-fi.com';
+
+        const coffeeImg = document.createElement('img');
+        coffeeImg.height = 36;
+        coffeeImg.style.border = '0px';
+        coffeeImg.style.height = '36px';
+        coffeeImg.style.display = 'block';
+        coffeeImg.src = 'https://storage.ko-fi.com/cdn/kofi4.png?v=6';
+        coffeeImg.setAttribute('border', '0');
+        coffeeImg.alt = 'Buy Me a Coffee at ko-fi.com';
+
+        coffeeLink.appendChild(coffeeImg);
+        coffeeRow.appendChild(coffeeLink);
+
+        coffeeLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (typeof window !== 'undefined' && window.__TAURI__ && window.__TAURI__.core) {
+            window.__TAURI__.core.invoke('open_external_url', { url: 'https://ko-fi.com/O5K12AQJGT' }).catch(() => {
+              window.open('https://ko-fi.com/O5K12AQJGT', '_blank');
+            });
+          } else {
+            window.open('https://ko-fi.com/O5K12AQJGT', '_blank');
+          }
+        });
+
+        contentArea.appendChild(coffeeRow);
+
         // Disclaimer Box
         const discBox = document.createElement('div');
         discBox.className = 'desktop-disclaimer-box';

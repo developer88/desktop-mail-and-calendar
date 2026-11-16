@@ -41,4 +41,10 @@ function runAboutTest(appName, isCalendar) {
 runAboutTest('Desktop Mail', false);
 runAboutTest('Desktop Calendar', true);
 
+// Test Buy Me a Coffee link configuration
+assert(code.includes('https://ko-fi.com/O5K12AQJGT'), 'titlebar.js must contain the Ko-fi link');
+assert(code.includes('https://storage.ko-fi.com/cdn/kofi4.png?v=6'), 'titlebar.js must contain the Ko-fi badge image URL');
+assert(code.includes('Buy Me a Coffee at ko-fi.com'), 'titlebar.js must contain the alt text for Ko-fi badge');
+console.log('PASS: Buy Me a Coffee link and badge configuration verified.');
+
 console.log('\nALL ABOUT DIALOG TRUSTED TYPES TESTS PASSED!');
