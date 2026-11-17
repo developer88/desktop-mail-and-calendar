@@ -138,6 +138,9 @@ async function run() {
     notif.close();
     assert(closeFired, 'onclose handler must fire on close()');
 
+    // Allow queue to settle
+    await new Promise((r) => setTimeout(r, 120));
+
     // Verify dispatched command
     assert(dispatchedCommands.length >= 1, 'Command must be dispatched to native host');
     const lastCmd = dispatchedCommands[0];
@@ -163,7 +166,7 @@ async function run() {
       body: 'Event starting in 10 minutes'
     });
 
-    await new Promise((r) => setTimeout(r, 60));
+    await new Promise((r) => setTimeout(r, 120));
     assert(dispatchedCommands.length >= 1, 'SW notification must dispatch to native host');
     const hex = dispatchedCommands[0].slice('__desktop_cmd__:notify:'.length);
     const decoded = JSON.parse(fromHex(hex));

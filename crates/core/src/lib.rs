@@ -1,9 +1,11 @@
+pub mod aumid;
 pub mod config;
 pub mod icon;
 pub mod navigation;
 pub mod protocol;
 pub mod scripts;
 
+pub use aumid::register_aumid;
 pub use config::{AppKind, DesktopAppConfig};
 pub use navigation::{
     classify_url, extract_redirect_target, get_external_browser_target, is_google_host,

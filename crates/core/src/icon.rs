@@ -939,14 +939,14 @@ pub mod windows {
         hicon as isize
     }
 
-    /// Renders a 32x32 overlay icon for taskbar overlay badges.
+    /// Renders a crisp 64x64 High-DPI overlay icon for taskbar overlay badges (charcoal dark style).
     pub unsafe fn render_overlay_hicon(count: u32) -> isize {
         if count == 0 {
             return 0;
         }
 
-        let width = 32u32;
-        let height = 32u32;
+        let width = 64u32;
+        let height = 64u32;
         let label = if count >= 1_000_000 {
             format!("{}M", count / 1_000_000)
         } else if count >= 1_000 {
@@ -1004,20 +1004,22 @@ pub mod windows {
         let mem_dc = CreateCompatibleDC(0 as _);
         let old_bm = SelectObject(mem_dc, hbm_color as _);
 
-        // Red circle with dark border
-        let dark_pen = CreatePen(PS_SOLID as i32, 1, 0x00141414);
-        let red_brush = CreateSolidBrush(0x003440EB);
-        let old_brush = SelectObject(mem_dc, red_brush as _);
-        let old_pen = SelectObject(mem_dc, dark_pen as _);
-        Ellipse(mem_dc, 1, 1, 31, 31);
+        // Charcoal Dark circle (#242424) with subtle high-contrast rim (#555555)
+        let border_pen = CreatePen(PS_SOLID as i32, 1, 0x00555555);
+        let dark_brush = CreateSolidBrush(0x00242424);
+        let old_brush = SelectObject(mem_dc, dark_brush as _);
+        let old_pen = SelectObject(mem_dc, border_pen as _);
+        Ellipse(mem_dc, 2, 2, 62, 62);
 
-        // White centered text
-        let font_size = if label.len() <= 2 {
-            16
+        // White centered bold text
+        let font_size = if label.len() <= 1 {
+            42
+        } else if label.len() <= 2 {
+            34
         } else if label.len() <= 3 {
-            12
+            26
         } else {
-            10
+            20
         };
         let font_name: Vec<u16> = "Segoe UI\0".encode_utf16().collect();
         let hfont = CreateFontW(
@@ -1025,7 +1027,7 @@ pub mod windows {
             0,
             0,
             0,
-            FW_BOLD as i32,
+            FW_HEAVY as i32,
             0,
             0,
             0,
@@ -1042,10 +1044,10 @@ pub mod windows {
 
         let label_wide: Vec<u16> = format!("{}\0", label).encode_utf16().collect();
         let mut text_rect = RECT {
-            left: 1,
+            left: 0,
             top: 1,
-            right: 31,
-            bottom: 31,
+            right: 64,
+            bottom: 64,
         };
         DrawTextW(
             mem_dc,
@@ -1055,14 +1057,27 @@ pub mod windows {
             DT_CENTER | DT_VCENTER | DT_SINGLELINE,
         );
 
-        // Set alpha channel for the circle
-        for y in 0..32 {
-            for x in 0..32 {
-                let dx = x as f32 - 15.5;
-                let dy = y as f32 - 15.5;
-                if dx * dx + dy * dy <= 15.0 * 15.0 {
-                    let idx = ((y * 32 + x) * 4) as usize;
+        // Anti-aliased radial alpha blending for smooth High-DPI circle edges
+        for y in 0..64 {
+            for x in 0..64 {
+                let dx = x as f32 - 31.5;
+                let dy = y as f32 - 31.5;
+                let dist = (dx * dx + dy * dy).sqrt();
+                let idx = ((y * 64 + x) * 4) as usize;
+                if dist <= 28.5 {
                     dest[idx + 3] = 255;
+                } else if dist < 30.5 {
+                    let factor = (30.5 - dist) / 2.0;
+                    let alpha = (factor * 255.0).clamp(0.0, 255.0) as u8;
+                    dest[idx + 3] = alpha;
+                    dest[idx] = ((dest[idx] as u32 * alpha as u32) / 255) as u8;
+                    dest[idx + 1] = ((dest[idx + 1] as u32 * alpha as u32) / 255) as u8;
+                    dest[idx + 2] = ((dest[idx + 2] as u32 * alpha as u32) / 255) as u8;
+                } else {
+                    dest[idx + 3] = 0;
+                    dest[idx] = 0;
+                    dest[idx + 1] = 0;
+                    dest[idx + 2] = 0;
                 }
             }
         }
@@ -1070,9 +1085,9 @@ pub mod windows {
         SelectObject(mem_dc, old_font);
         DeleteObject(hfont as _);
         SelectObject(mem_dc, old_brush);
-        DeleteObject(red_brush as _);
+        DeleteObject(dark_brush as _);
         SelectObject(mem_dc, old_pen);
-        DeleteObject(dark_pen as _);
+        DeleteObject(border_pen as _);
         SelectObject(mem_dc, old_bm);
         DeleteDC(mem_dc);
 
@@ -1376,6 +1391,29 @@ pub mod windows {
             // Test boundary checks
             assert_eq!(unsafe { render_calendar_day_overlay_hicon(0) }, 0);
             assert_eq!(unsafe { render_calendar_day_overlay_hicon(32) }, 0);
+        }
+
+        #[test]
+        fn test_render_overlay_hicon_high_dpi() {
+            unsafe {
+                // Zero unread count should return 0 (no overlay)
+                assert_eq!(render_overlay_hicon(0), 0);
+
+                // Single digit overlay (e.g. 4 unread messages)
+                let hicon_4 = render_overlay_hicon(4);
+                assert_ne!(hicon_4, 0);
+                DestroyIcon(hicon_4 as _);
+
+                // Double digit overlay (e.g. 31 unread messages)
+                let hicon_31 = render_overlay_hicon(31);
+                assert_ne!(hicon_31, 0);
+                DestroyIcon(hicon_31 as _);
+
+                // Thousands format (e.g. 2500 -> 2K)
+                let hicon_2k = render_overlay_hicon(2500);
+                assert_ne!(hicon_2k, 0);
+                DestroyIcon(hicon_2k as _);
+            }
         }
 
         #[test]

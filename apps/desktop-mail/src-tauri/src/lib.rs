@@ -73,6 +73,33 @@ mod commands {
     }
 }
 
+fn show_native_toast<R: Runtime>(app: &AppHandle<R>, title: &str, body: &str) {
+    use tauri_plugin_notification::NotificationExt;
+    let res = app
+        .notification()
+        .builder()
+        .title(title)
+        .body(body)
+        .show();
+
+    if let Err(e) = res {
+        eprintln!("[Notification] Primary toast failed: {:?}, attempting fallback", e);
+        #[cfg(target_os = "windows")]
+        {
+            let escaped_title = title.replace('\'', "''");
+            let escaped_body = body.replace('\'', "''");
+            let _ = std::process::Command::new("powershell.exe")
+                .arg("-NoProfile")
+                .arg("-Command")
+                .arg(format!(
+                    "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; $t = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02); $n = $t.GetElementsByTagName('text'); $n.Item(0).AppendChild($t.CreateTextNode('{}')) | Out-Null; $n.Item(1).AppendChild($t.CreateTextNode('{}')) | Out-Null; $toast = [Windows.UI.Notifications.ToastNotification]::new($t); [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}}\\WindowsPowerShell\\v1.0\\powershell.exe').Show($toast)",
+                    escaped_title, escaped_body
+                ))
+                .spawn();
+        }
+    }
+}
+
 fn apply_unread_count<R: Runtime>(
     window: &tauri::WebviewWindow<R>,
     count: u32,
@@ -180,6 +207,7 @@ pub fn run() {
             commands::close_window
         ])
         .setup(move |app| {
+            desktop_google_core::register_aumid("com.andrey.desktop-mail", "Desktop Mail");
             use tauri_plugin_notification::NotificationExt;
             let app_click = app.handle().clone();
             let _ = app.notification().on_action(move |_action| {
@@ -220,12 +248,11 @@ pub fn run() {
                             if let Some(hex_data) = cmd.strip_prefix("notify:") {
                                 if let Some(json_str) = desktop_google_core::scripts::from_hex(hex_data) {
                                     if let Ok(payload) = serde_json::from_str::<desktop_google_core::scripts::NotificationPayload>(&json_str) {
-                                        let _ = app_cmd
-                                            .notification()
-                                            .builder()
-                                            .title(&payload.title)
-                                            .body(payload.body.as_deref().unwrap_or(""))
-                                            .show();
+                                        show_native_toast(
+                                            &app_cmd,
+                                            &payload.title,
+                                            payload.body.as_deref().unwrap_or(""),
+                                        );
                                     }
                                 }
                                 return;

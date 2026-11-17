@@ -120,6 +120,11 @@ function buildInstaller(config) {
   WriteRegStr HKCU "Software\\Clients\\Mail\\Desktop Mail" "DLLPath" ""
   WriteRegStr HKCU "Software\\Clients\\Mail\\Desktop Mail\\DefaultIcon" "" '"$INSTDIR\\${config.binaryName}",0'
   WriteRegStr HKCU "Software\\Clients\\Mail\\Desktop Mail\\shell\\open\\command" "" '"$INSTDIR\\${config.binaryName}" "%1"'
+
+  ; Action Center Notification AUMID Registration
+  WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail" "DisplayName" "Desktop Mail"
+  WriteRegDWORD HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail" "ShowInSettings" 1
+  WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail" "IconUri" '"$INSTDIR\\${config.binaryName}",0'
 `;
     protocolUnregistration = `
   DeleteRegValue HKCU "Software\\RegisteredApplications" "${config.appName}"
@@ -129,6 +134,7 @@ function buildInstaller(config) {
   DeleteRegKey HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${config.binaryName}"
   DeleteRegKey HKCU "Software\\Classes\\DesktopMail.Url.mailto"
   DeleteRegKey HKCU "Software\\Clients\\Mail\\Desktop Mail"
+  DeleteRegKey HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail"
 `;
   } else if (config.appId === 'DesktopCalendar') {
     protocolRegistration = `
@@ -187,6 +193,11 @@ function buildInstaller(config) {
   WriteRegStr HKCU "Software\\Clients\\Calendar\\Desktop Calendar" "" "${config.appName}"
   WriteRegStr HKCU "Software\\Clients\\Calendar\\Desktop Calendar\\DefaultIcon" "" '"$INSTDIR\\${config.binaryName}",0'
   WriteRegStr HKCU "Software\\Clients\\Calendar\\Desktop Calendar\\shell\\open\\command" "" '"$INSTDIR\\${config.binaryName}" "%1"'
+
+  ; Action Center Notification AUMID Registration
+  WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar" "DisplayName" "Desktop Calendar"
+  WriteRegDWORD HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar" "ShowInSettings" 1
+  WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar" "IconUri" '"$INSTDIR\\${config.binaryName}",0'
 `;
     protocolUnregistration = `
   DeleteRegValue HKCU "Software\\RegisteredApplications" "${config.appName}"
@@ -197,6 +208,7 @@ function buildInstaller(config) {
   DeleteRegKey HKCU "Software\\Classes\\DesktopCalendar.Url.webcal"
   DeleteRegKey HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics"
   DeleteRegKey HKCU "Software\\Clients\\Calendar\\Desktop Calendar"
+  DeleteRegKey HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar"
 `;
   }
 

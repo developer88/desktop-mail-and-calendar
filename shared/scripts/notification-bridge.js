@@ -51,21 +51,42 @@
       const prevTitle = document.title.startsWith('__desktop_cmd__:') ? '' : document.title;
       document.title = '__desktop_cmd__:notify:' + hex;
 
+      // Give WebView2 adequate time (60ms) to deliver document.title change to host
       setTimeout(() => {
         if (prevTitle && document.title.startsWith('__desktop_cmd__:')) {
           document.title = prevTitle;
         }
-        setTimeout(processDispatchQueue, 30);
-      }, 25);
+        setTimeout(processDispatchQueue, 20);
+      }, 60);
     } catch (err) {
       console.warn('[NotificationBridge] Failed to encode notification:', err);
-      setTimeout(processDispatchQueue, 30);
+      setTimeout(processDispatchQueue, 40);
     }
   }
 
   function sendNativeNotification(payload) {
     if (!isNotificationsAllowed()) return;
     window.__desktop_last_notif_time = Date.now();
+
+    // 1. If Tauri internals are available, invoke plugin:notification directly
+    if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__ && typeof window.__TAURI_INTERNALS__.invoke === 'function') {
+      try {
+        window.__TAURI_INTERNALS__.invoke('plugin:notification|notify', {
+          options: {
+            title: payload.title || 'Desktop Mail',
+            body: payload.body || '',
+            icon: payload.icon || undefined
+          }
+        }).catch(function () {
+          // If IPC invoke rejected, push to queue fallback
+          dispatchQueue.push(payload);
+          if (!isDispatching) processDispatchQueue();
+        });
+        return;
+      } catch (_) {}
+    }
+
+    // 2. Queue-managed document.title bridge fallback
     dispatchQueue.push(payload);
     if (!isDispatching) {
       processDispatchQueue();

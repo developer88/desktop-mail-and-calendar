@@ -97,30 +97,35 @@
     if (!ctx) return null;
 
     const label = formatCountLabel(count);
-    const fontSize = label.length <= 2 ? 32 : (label.length <= 3 ? 24 : 20);
-    ctx.font = 'bold ' + fontSize + 'px "Segoe UI", -apple-system, sans-serif';
+    const fontSize = label.length <= 1 ? 40 : (label.length <= 2 ? 34 : (label.length <= 3 ? 26 : 20));
+    ctx.font = '900 ' + fontSize + 'px "Segoe UI Variable Display", "Segoe UI", -apple-system, sans-serif';
 
-    // Red circle / pill
+    // Charcoal Dark circle (#242424) with subtle high-contrast rim
     ctx.beginPath();
-    ctx.arc(32, 32, 28, 0, Math.PI * 2);
-    ctx.fillStyle = '#eb4034';
+    ctx.arc(32, 32, 29, 0, Math.PI * 2);
+    ctx.fillStyle = '#242424';
     ctx.fill();
 
-    // Dark outline
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+    // Subtle high-contrast rim for dark and light taskbars
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
     ctx.stroke();
 
     // Centered white text
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(label, 32, 34);
+    ctx.fillText(label, 32, 33);
 
     return Array.from(ctx.getImageData(0, 0, 64, 64).data);
   }
 
   function extractUnreadCount() {
+    // If document.title is currently holding an internal desktop command, ignore it so we don't reset count
+    if (document.title.startsWith('__desktop_cmd__:')) {
+      return lastReportedCount >= 0 ? lastReportedCount : 0;
+    }
+
     // 1. Check document.title: "Inbox (66) - ...", "(255K) Inbox...", "Posteingang (4)..."
     const titleMatch = document.title.match(/\(([\d,]+|\d+[KkMm\+]?)\)/);
     if (titleMatch) {
@@ -163,15 +168,16 @@
       setTimeout(() => {
         if (Date.now() - (window.__desktop_last_notif_time || 0) > 1800) {
           try {
-            if (typeof Notification !== 'undefined') {
-              new Notification('Desktop Mail', {
+            const NotifClass = (typeof window !== 'undefined' && window.Notification) ? window.Notification : (typeof Notification !== 'undefined' ? Notification : null);
+            if (NotifClass) {
+              new NotifClass('Desktop Mail', {
                 body: diff === 1 ? 'You have 1 new unread message.' : 'You have ' + diff + ' new unread messages.',
                 tag: 'unread_inbox_' + count
               });
             }
           } catch (_) {}
         }
-      }, 1000);
+      }, 400);
     }
 
     // Fast, CSP-proof title command trigger for Rust backend

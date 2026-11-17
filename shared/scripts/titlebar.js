@@ -942,6 +942,30 @@
           }
         );
 
+        // Test Notification Action Button
+        const testWrap = document.createElement('div');
+        testWrap.style.margin = '-4px 0 12px 42px';
+        const testBtn = document.createElement('button');
+        testBtn.className = 'desktop-test-notif-btn';
+        testBtn.textContent = 'Send test notification';
+        testBtn.addEventListener('click', () => {
+          testBtn.textContent = 'Notification Sent ✓';
+          try {
+            if (typeof Notification !== 'undefined') {
+              new Notification(isCalendar ? 'Desktop Calendar' : 'Desktop Mail', {
+                body: isCalendar
+                  ? 'Notifications are working! You will receive alerts for upcoming events.'
+                  : 'Notifications are working! You will receive alerts when new messages arrive.'
+              });
+            }
+          } catch (_) {}
+          setTimeout(() => {
+            testBtn.textContent = 'Send test notification';
+          }, 3000);
+        });
+        testWrap.appendChild(testBtn);
+        contentArea.appendChild(testWrap);
+
         // 2. Open at login (off by default)
         renderToggleCard(
           contentArea,
