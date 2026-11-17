@@ -20,7 +20,7 @@ async function main() {
   const { document } = window;
 
   window.APP_KIND = 'calendar';
-  window.APP_VERSION = '0.5.0';
+  window.APP_VERSION = '0.6.0';
   window.PRIMARY_HOST = 'calendar.google.com';
 
   // Inject shell styles
@@ -36,7 +36,7 @@ async function main() {
   };
 
   // Mock fetch
-  let mockReleaseTag = 'v0.5.0';
+  let mockReleaseTag = 'v0.6.0';
   let lastFetchedUrl = null;
   window.fetch = function(fetchUrl) {
     lastFetchedUrl = fetchUrl;
@@ -68,13 +68,13 @@ async function main() {
   // Test 1: Titlebar Update Pill Activation & Direct Open
   console.log('\n[1/4] Testing Titlebar Update Pill Activation & Direct Open...');
   {
-    window.__desktop_ui.showUpdateBanner('0.5.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.5.0');
+    window.__desktop_ui.showUpdateBanner('0.6.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.6.0');
 
     // Titlebar Update Pill
     const pill = document.getElementById('desktop-caption-update-pill');
     assert(pill, 'Titlebar update pill must exist in controls');
     assert.strictEqual(pill.style.display, 'inline-flex', 'Pill must be visible when update is ready');
-    assert.strictEqual(pill.title, 'Update available (v0.5.0)', 'Pill title must include version');
+    assert.strictEqual(pill.title, 'Update available (v0.6.0)', 'Pill title must include version');
 
     // Ensure no intrusive big banner exists
     const banner = document.getElementById('desktop-update-banner');
@@ -83,7 +83,7 @@ async function main() {
     // Test clicking the titlebar pill directly opens the release URL
     pill.click();
     assert.strictEqual(openedUrls.length, 1);
-    assert.strictEqual(openedUrls[0].url, 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.5.0');
+    assert.strictEqual(openedUrls[0].url, 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.6.0');
     assert.strictEqual(openedUrls[0].target, '_blank');
 
     console.log('PASS: Titlebar update pill created cleanly without Trusted Types violations and opens release page.');
@@ -104,13 +104,13 @@ async function main() {
   console.log('\n[3/4] Testing Subsequent Version Updates Seamlessly...');
   {
     // Re-trigger update with subsequent version
-    window.__desktop_ui.showUpdateBanner('0.6.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.6.0');
+    window.__desktop_ui.showUpdateBanner('0.7.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.7.0');
     const pill = document.getElementById('desktop-caption-update-pill');
-    assert.strictEqual(pill.title, 'Update available (v0.6.0)');
+    assert.strictEqual(pill.title, 'Update available (v0.7.0)');
 
     pill.click();
     assert.strictEqual(openedUrls.length, 2);
-    assert.strictEqual(openedUrls[1].url, 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.6.0');
+    assert.strictEqual(openedUrls[1].url, 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.7.0');
 
     console.log('PASS: Update pill handles subsequent version updates seamlessly.');
   }
@@ -118,16 +118,16 @@ async function main() {
   // Test 4: Background Release Checker
   console.log('\n[4/4] Testing Background Check Endpoint & SemVer Evaluation...');
   {
-    mockReleaseTag = 'v0.7.0';
+    mockReleaseTag = 'v0.8.0';
     const result = await window.__desktop_ui.checkForUpdates(false);
-    assert(result.updateAvailable, 'Must detect update available when latest (0.7.0) > current (0.5.0)');
-    assert.strictEqual(result.version, '0.7.0');
-    assert.strictEqual(result.tag, 'v0.7.0');
+    assert(result.updateAvailable, 'Must detect update available when latest (0.8.0) > current (0.6.0)');
+    assert.strictEqual(result.version, '0.8.0');
+    assert.strictEqual(result.tag, 'v0.8.0');
     assert(lastFetchedUrl.includes('releases/latest'), 'Fetch URL must target releases/latest endpoint');
 
     const pill = document.getElementById('desktop-caption-update-pill');
     assert.strictEqual(pill.style.display, 'inline-flex');
-    assert.strictEqual(pill.title, 'Update available (v0.7.0)');
+    assert.strictEqual(pill.title, 'Update available (v0.8.0)');
 
     const autoBanner = document.getElementById('desktop-update-banner');
     assert.strictEqual(autoBanner, null, 'Background check must NOT spawn an intrusive big banner');

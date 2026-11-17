@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-11-17
+
+### Added
+- **Native Windows Toast Notifications for Desktop Mail & Desktop Calendar:** Complete W3C `Notification` and `ServiceWorkerRegistration.showNotification` bridge injecting granted permissions and forwarding web notifications to Windows 10/11 Action Center native toasts. Clicking a toast notification unminimizes, focuses, and brings the application window to the foreground.
+- **Dual-Trigger Unread Email Observer Fallback:** Added background unread observer fallback that fires native notifications when unread email counts increase even if web push notifications are suppressed by browser tab state or account settings.
+- **Enabled Notifications by Default:** Desktop notifications are now enabled by default across both Desktop Mail and Desktop Calendar with customizable toggles in the Settings dialog.
+
+### Fixed
+- **Titlebar Update Pill Alignment & Compact Styling:** Refined vertical alignment, pill padding, typography, and contrast for the titlebar **↑ Update** pill, ensuring seamless integration with Windows 11 Fluent titlebar controls.
+
 ## [0.5.0] - 2026-11-16
 
 ### Added

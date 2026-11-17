@@ -329,7 +329,7 @@ const scenarios = [
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
-          window.__desktop_ui.showUpdateBanner('0.5.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.5.0');
+          window.__desktop_ui.showUpdateBanner('0.6.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.6.0');
         </script>
       </body>
       </html>
@@ -365,7 +365,7 @@ const scenarios = [
         </script>
         <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
         <script>
-          window.__desktop_ui.showUpdateBanner('0.5.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.5.0');
+          window.__desktop_ui.showUpdateBanner('0.6.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.6.0');
         </script>
       </body>
       </html>
