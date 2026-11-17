@@ -1004,22 +1004,22 @@ pub mod windows {
         let mem_dc = CreateCompatibleDC(0 as _);
         let old_bm = SelectObject(mem_dc, hbm_color as _);
 
-        // Charcoal Dark circle (#242424) with subtle high-contrast rim (#555555)
+        // Charcoal Dark circle (#242424) with subtle high-contrast rim (#555555), maximized to edge of 64x64 canvas
         let border_pen = CreatePen(PS_SOLID as i32, 1, 0x00555555);
         let dark_brush = CreateSolidBrush(0x00242424);
         let old_brush = SelectObject(mem_dc, dark_brush as _);
         let old_pen = SelectObject(mem_dc, border_pen as _);
-        Ellipse(mem_dc, 2, 2, 62, 62);
+        Ellipse(mem_dc, 0, 0, 64, 64);
 
-        // White centered bold text
+        // White centered bold text - large, prominent, filling badge height
         let font_size = if label.len() <= 1 {
-            42
+            48
         } else if label.len() <= 2 {
-            34
+            38
         } else if label.len() <= 3 {
-            26
+            30
         } else {
-            20
+            22
         };
         let font_name: Vec<u16> = "Segoe UI\0".encode_utf16().collect();
         let hfont = CreateFontW(
@@ -1045,7 +1045,7 @@ pub mod windows {
         let label_wide: Vec<u16> = format!("{}\0", label).encode_utf16().collect();
         let mut text_rect = RECT {
             left: 0,
-            top: 1,
+            top: 0,
             right: 64,
             bottom: 64,
         };
@@ -1057,17 +1057,17 @@ pub mod windows {
             DT_CENTER | DT_VCENTER | DT_SINGLELINE,
         );
 
-        // Anti-aliased radial alpha blending for smooth High-DPI circle edges
+        // Anti-aliased radial alpha blending maximizing circle diameter to outer edge
         for y in 0..64 {
             for x in 0..64 {
                 let dx = x as f32 - 31.5;
                 let dy = y as f32 - 31.5;
                 let dist = (dx * dx + dy * dy).sqrt();
                 let idx = ((y * 64 + x) * 4) as usize;
-                if dist <= 28.5 {
+                if dist <= 30.2 {
                     dest[idx + 3] = 255;
-                } else if dist < 30.5 {
-                    let factor = (30.5 - dist) / 2.0;
+                } else if dist < 31.8 {
+                    let factor = (31.8 - dist) / 1.6;
                     let alpha = (factor * 255.0).clamp(0.0, 255.0) as u8;
                     dest[idx + 3] = alpha;
                     dest[idx] = ((dest[idx] as u32 * alpha as u32) / 255) as u8;

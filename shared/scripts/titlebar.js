@@ -866,6 +866,7 @@
       card.appendChild(info);
       card.appendChild(switchEl);
       parent.appendChild(card);
+      return { card, info, textWrap, switchEl };
     }
 
     function renderActionCard(parent, iconName, title, desc, btnText, onAction) {
@@ -924,7 +925,7 @@
         contentArea.appendChild(secDesc);
 
         // 1. Desktop Notifications (enabled by default)
-        renderToggleCard(
+        const notifCardData = renderToggleCard(
           contentArea,
           'bell',
           'Desktop Notifications',
@@ -942,9 +943,9 @@
           }
         );
 
-        // Test Notification Action Button
+        // Test Notification Action Button inside Desktop Notifications card
         const testWrap = document.createElement('div');
-        testWrap.style.margin = '-4px 0 12px 42px';
+        testWrap.style.marginTop = '10px';
         const testBtn = document.createElement('button');
         testBtn.className = 'desktop-test-notif-btn';
         testBtn.textContent = 'Send test notification';
@@ -964,7 +965,7 @@
           }, 3000);
         });
         testWrap.appendChild(testBtn);
-        contentArea.appendChild(testWrap);
+        notifCardData.textWrap.appendChild(testWrap);
 
         // 2. Open at login (off by default)
         renderToggleCard(

@@ -119,7 +119,8 @@ console.log('\n[5/5] Testing Live Executable Window Creation & Icon Handle...');
 $p = Start-Process -FilePath '${winExePath.replace(/'/g, "''")}' -PassThru
 Start-Sleep -Seconds 3
 $hwnd = $p.MainWindowHandle
-Stop-Process -Id $p.Id -Force
+Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq $p.Id } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 Write-Output "PROCESS_LAUNCHED_OK PID:$($p.Id) HWND:$hwnd"
 `;
     try {
