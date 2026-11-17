@@ -347,21 +347,31 @@ async function run() {
   // ==========================================================================
   // [7/7] Live Windows WinRT Toast Notification Manager Execution
   // ==========================================================================
-  console.log('\n[7/7] Testing Live Windows Toast Notification Manager with Registered AUMID...');
+  console.log('\n[7/7] Testing Live Windows Toast Notification Manager with Registered AUMID & App Icons...');
   {
     const psScript = `
       [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
-      $template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
-      $textNodes = $template.GetElementsByTagName('text')
-      $textNodes.Item(0).AppendChild($template.CreateTextNode('Desktop Mail Live Test')) | Out-Null
-      $textNodes.Item(1).AppendChild($template.CreateTextNode('E2E Verification Toast: Notifications active.')) | Out-Null
-      $toast = [Windows.UI.Notifications.ToastNotification]::new($template)
+      $aumids = @('com.andrey.desktop-mail', 'com.andrey.desktop-calendar')
+      foreach ($aumid in $aumids) {
+          $regKey = 'HKCU:\\Software\\Classes\\AppUserModelId\\' + $aumid
+          if (Test-Path $regKey) {
+              $iconUri = (Get-ItemProperty -Path $regKey -Name 'IconUri' -ErrorAction SilentlyContinue).IconUri
+              if ($iconUri -and $iconUri.EndsWith(',0')) {
+                  throw 'Invalid IconUri containing resource index: ' + $iconUri
+              }
+          }
+          $template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
+          $textNodes = $template.GetElementsByTagName('text')
+          $textNodes.Item(0).AppendChild($template.CreateTextNode($aumid + ' Live Test')) | Out-Null
+          $textNodes.Item(1).AppendChild($template.CreateTextNode('E2E Verification Toast: Notifications active.')) | Out-Null
+          $toast = [Windows.UI.Notifications.ToastNotification]::new($template)
 
-      $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('com.andrey.desktop-mail')
-      if ($notifier.Setting -ne [Windows.UI.Notifications.NotificationSetting]::Enabled) {
-          throw 'NotificationSetting is not Enabled: ' + $notifier.Setting
+          $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($aumid)
+          if ($notifier.Setting -ne [Windows.UI.Notifications.NotificationSetting]::Enabled) {
+              throw 'NotificationSetting is not Enabled for ' + $aumid + ': ' + $notifier.Setting
+          }
+          $notifier.Show($toast)
       }
-      $notifier.Show($toast)
       Write-Output 'TOAST_SHOWN_SUCCESS'
     `;
 
@@ -370,7 +380,7 @@ async function run() {
     });
 
     if (res.status === 0 && res.stdout.includes('TOAST_SHOWN_SUCCESS')) {
-      console.log('PASS: Live Windows Toast Notification Manager verified with Setting: Enabled.');
+      console.log('PASS: Live Windows Toast Notification Manager verified with Setting: Enabled for both apps.');
     } else {
       console.warn('NOTE: Live WinRT toast dispatch output:', res.stdout, res.stderr);
       assert(res.status === 0, 'Live Windows toast dispatch must succeed');

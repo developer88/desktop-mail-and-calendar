@@ -70,6 +70,7 @@ function buildInstaller(config) {
   binaryPath = distBinaryPath;
 
   const iconPath = path.join(rootDir, config.iconRelPath);
+  const pngPath = path.join(rootDir, config.pngRelPath);
   const wizardBmpPath = path.join(rootDir, config.wizardBmp);
   const outInstallerPath = path.join(distDir, config.installerName);
 
@@ -124,7 +125,8 @@ function buildInstaller(config) {
   ; Action Center Notification AUMID Registration
   WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail" "DisplayName" "Desktop Mail"
   WriteRegDWORD HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail" "ShowInSettings" 1
-  WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail" "IconUri" '"$INSTDIR\\${config.binaryName}",0'
+  WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail" "IconUri" "$INSTDIR\\app.png"
+  WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail" "IconPath" "$INSTDIR\\app.ico"
 `;
     protocolUnregistration = `
   DeleteRegValue HKCU "Software\\RegisteredApplications" "${config.appName}"
@@ -197,7 +199,8 @@ function buildInstaller(config) {
   ; Action Center Notification AUMID Registration
   WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar" "DisplayName" "Desktop Calendar"
   WriteRegDWORD HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar" "ShowInSettings" 1
-  WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar" "IconUri" '"$INSTDIR\\${config.binaryName}",0'
+  WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar" "IconUri" "$INSTDIR\\app.png"
+  WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar" "IconPath" "$INSTDIR\\app.ico"
 `;
     protocolUnregistration = `
   DeleteRegValue HKCU "Software\\RegisteredApplications" "${config.appName}"
@@ -291,14 +294,16 @@ Section "Install"
   \${EndIf}
 
   File "${binaryPath.replace(/\\/g, '/')}"
+  File "/oname=app.ico" "${iconPath.replace(/\\/g, '/')}"
+  File "/oname=app.png" "${pngPath.replace(/\\/g, '/')}"
   
   WriteUninstaller "$INSTDIR\\uninstall.exe"
   
   ; Shortcuts
   CreateDirectory "$SMPROGRAMS\\${config.appName}"
-  CreateShortcut "$SMPROGRAMS\\${config.appName}\\${config.appName}.lnk" "$INSTDIR\\${config.binaryName}" "" "$INSTDIR\\${config.binaryName}" 0
+  CreateShortcut "$SMPROGRAMS\\${config.appName}\\${config.appName}.lnk" "$INSTDIR\\${config.binaryName}" "" "$INSTDIR\\app.ico" 0
   CreateShortcut "$SMPROGRAMS\\${config.appName}\\Uninstall.lnk" "$INSTDIR\\uninstall.exe" "" "$INSTDIR\\uninstall.exe" 0
-  CreateShortcut "$DESKTOP\\${config.appName}.lnk" "$INSTDIR\\${config.binaryName}" "" "$INSTDIR\\${config.binaryName}" 0
+  CreateShortcut "$DESKTOP\\${config.appName}.lnk" "$INSTDIR\\${config.binaryName}" "" "$INSTDIR\\app.ico" 0
 
   ; Registry for Add/Remove Programs
   WriteRegStr HKCU "Software\\${config.appId}" "Install_Dir" "$INSTDIR"
@@ -326,6 +331,8 @@ Section "Uninstall"
   RMDir "$SMPROGRAMS\\${config.appName}"
   
   Delete "$INSTDIR\\${config.binaryName}"
+  Delete "$INSTDIR\\app.ico"
+  Delete "$INSTDIR\\app.png"
   Delete "$INSTDIR\\uninstall.exe"
   RMDir "$INSTDIR"
   
@@ -358,6 +365,7 @@ function main() {
       binaryName: 'desktop-mail.exe',
       installerName: 'desktop-mail-setup.exe',
       iconRelPath: 'apps/desktop-mail/src-tauri/icons/icon.ico',
+      pngRelPath: 'apps/desktop-mail/src-tauri/icons/512x512.png',
       wizardBmp: 'shared/installer/wizard_mail.bmp'
     },
     {
@@ -367,6 +375,7 @@ function main() {
       binaryName: 'desktop-calendar.exe',
       installerName: 'desktop-calendar-setup.exe',
       iconRelPath: 'apps/desktop-calendar/src-tauri/icons/icon.ico',
+      pngRelPath: 'apps/desktop-calendar/src-tauri/icons/512x512.png',
       wizardBmp: 'shared/installer/wizard_cal.bmp'
     }
   ];

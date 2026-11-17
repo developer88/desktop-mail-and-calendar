@@ -5,7 +5,7 @@ pub mod navigation;
 pub mod protocol;
 pub mod scripts;
 
-pub use aumid::register_aumid;
+pub use aumid::{register_aumid, register_aumid_with_icons};
 pub use config::{AppKind, DesktopAppConfig};
 pub use navigation::{
     classify_url, extract_redirect_target, get_external_browser_target, is_google_host,

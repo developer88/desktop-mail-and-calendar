@@ -67,14 +67,17 @@ mod commands {
     }
 }
 
+static APP_ICON_PATH: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
+
 fn show_native_toast<R: Runtime>(app: &AppHandle<R>, title: &str, body: &str) {
     use tauri_plugin_notification::NotificationExt;
-    let res = app
-        .notification()
-        .builder()
-        .title(title)
-        .body(body)
-        .show();
+    let mut builder = app.notification().builder().title(title).body(body);
+    if let Some(path) = APP_ICON_PATH.get() {
+        if let Some(s) = path.to_str() {
+            builder = builder.icon(s);
+        }
+    }
+    let res = builder.show();
 
     if let Err(e) = res {
         eprintln!("[Notification] Primary toast failed: {:?}, attempting fallback", e);
@@ -82,12 +85,18 @@ fn show_native_toast<R: Runtime>(app: &AppHandle<R>, title: &str, body: &str) {
         {
             let escaped_title = title.replace('\'', "''");
             let escaped_body = body.replace('\'', "''");
+            let icon_setter = if let Some(path) = APP_ICON_PATH.get() {
+                let escaped_path = path.to_string_lossy().replace('\'', "''");
+                format!("$i = $t.GetElementsByTagName('image'); if ($i.Count -gt 0) {{ $i.Item(0).Attributes.GetNamedItem('src').NodeValue = '{}' }};", escaped_path)
+            } else {
+                String::new()
+            };
             let _ = std::process::Command::new("powershell.exe")
                 .arg("-NoProfile")
                 .arg("-Command")
                 .arg(format!(
-                    "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; $t = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02); $n = $t.GetElementsByTagName('text'); $n.Item(0).AppendChild($t.CreateTextNode('{}')) | Out-Null; $n.Item(1).AppendChild($t.CreateTextNode('{}')) | Out-Null; $toast = [Windows.UI.Notifications.ToastNotification]::new($t); [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}}\\WindowsPowerShell\\v1.0\\powershell.exe').Show($toast)",
-                    escaped_title, escaped_body
+                    "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; $t = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastImageAndText02); {} $n = $t.GetElementsByTagName('text'); $n.Item(0).AppendChild($t.CreateTextNode('{}')) | Out-Null; $n.Item(1).AppendChild($t.CreateTextNode('{}')) | Out-Null; $toast = [Windows.UI.Notifications.ToastNotification]::new($t); [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('com.andrey.desktop-calendar').Show($toast)",
+                    icon_setter, escaped_title, escaped_body
                 ))
                 .spawn();
         }
@@ -130,7 +139,15 @@ pub fn run() {
             commands::close_window
         ])
         .setup(move |app| {
-            desktop_google_core::register_aumid("com.andrey.desktop-calendar", "Desktop Calendar");
+            let icon_path = desktop_google_core::register_aumid_with_icons(
+                "com.andrey.desktop-calendar",
+                "Desktop Calendar",
+                Some(include_bytes!("../icons/512x512.png")),
+                Some(include_bytes!("../icons/icon.ico")),
+            );
+            if let Some(p) = icon_path {
+                let _ = APP_ICON_PATH.set(p);
+            }
             use tauri_plugin_notification::NotificationExt;
             let app_click = app.handle().clone();
             let _ = app.notification().on_action(move |_action| {
