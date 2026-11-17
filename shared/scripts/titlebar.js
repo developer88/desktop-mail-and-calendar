@@ -923,7 +923,7 @@
         contentArea.appendChild(secTitle);
         contentArea.appendChild(secDesc);
 
-        // 1. Desktop Notifications (off by default)
+        // 1. Desktop Notifications (enabled by default)
         renderToggleCard(
           contentArea,
           'bell',
@@ -932,10 +932,12 @@
             ? 'Allow notifications for upcoming calendar events and reminders.'
             : 'Allow notifications for incoming emails.',
           'notifications_enabled',
-          false,
+          true,
           (enabled) => {
-            if (enabled && typeof Notification !== 'undefined') {
-              Notification.requestPermission();
+            if (typeof Notification !== 'undefined') {
+              if (enabled) {
+                Notification.requestPermission();
+              }
             }
           }
         );

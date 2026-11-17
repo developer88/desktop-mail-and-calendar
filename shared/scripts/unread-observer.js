@@ -154,7 +154,25 @@
   function inspectAndReport() {
     const count = extractUnreadCount();
     if (count === lastReportedCount) return;
+    const prevCount = lastReportedCount;
     lastReportedCount = count;
+
+    // Fallback notification: if new email arrived and no web notification was dispatched recently
+    if (prevCount >= 0 && count > prevCount) {
+      const diff = count - prevCount;
+      setTimeout(() => {
+        if (Date.now() - (window.__desktop_last_notif_time || 0) > 1800) {
+          try {
+            if (typeof Notification !== 'undefined') {
+              new Notification('Desktop Mail', {
+                body: diff === 1 ? 'You have 1 new unread message.' : 'You have ' + diff + ' new unread messages.',
+                tag: 'unread_inbox_' + count
+              });
+            }
+          } catch (_) {}
+        }
+      }, 1000);
+    }
 
     // Fast, CSP-proof title command trigger for Rust backend
     try {

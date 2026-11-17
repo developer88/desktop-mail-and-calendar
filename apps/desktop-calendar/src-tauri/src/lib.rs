@@ -103,6 +103,16 @@ pub fn run() {
             commands::close_window
         ])
         .setup(move |app| {
+            use tauri_plugin_notification::NotificationExt;
+            let app_click = app.handle().clone();
+            let _ = app.notification().on_action(move |_action| {
+                if let Some(w) = app_click.get_webview_window("main") {
+                    let _ = w.show();
+                    let _ = w.unminimize();
+                    let _ = w.set_focus();
+                }
+            });
+
             let is_first_run = desktop_google_core::config::is_first_run("com.andrey.desktop-calendar");
             let injected_script = get_injected_bundle(config.kind, is_first_run);
 
@@ -143,6 +153,19 @@ pub fn run() {
                     let app_cmd = app.handle().clone();
                     move |window, title| {
                         if let Some(cmd) = title.strip_prefix("__desktop_cmd__:") {
+                            if let Some(hex_data) = cmd.strip_prefix("notify:") {
+                                if let Some(json_str) = desktop_google_core::scripts::from_hex(hex_data) {
+                                    if let Ok(payload) = serde_json::from_str::<desktop_google_core::scripts::NotificationPayload>(&json_str) {
+                                        let _ = app_cmd
+                                            .notification()
+                                            .builder()
+                                            .title(&payload.title)
+                                            .body(payload.body.as_deref().unwrap_or(""))
+                                            .show();
+                                    }
+                                }
+                                return;
+                            }
                             match cmd {
                                 "drag" => {
                                     let _ = window.start_dragging();

@@ -8,7 +8,40 @@ pub const NAVIGATION_INTERCEPTOR_SCRIPT: &str =
 pub const UNREAD_OBSERVER_SCRIPT: &str = include_str!("../../../shared/scripts/unread-observer.js");
 pub const CALENDAR_DATE_SCRIPT: &str =
     include_str!("../../../shared/scripts/calendar-date-observer.js");
+pub const NOTIFICATION_BRIDGE_SCRIPT: &str =
+    include_str!("../../../shared/scripts/notification-bridge.js");
 pub const TITLEBAR_SCRIPT: &str = include_str!("../../../shared/scripts/titlebar.js");
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+pub struct NotificationPayload {
+    pub title: String,
+    #[serde(default)]
+    pub body: Option<String>,
+    #[serde(default)]
+    pub tag: Option<String>,
+    #[serde(default)]
+    pub icon: Option<String>,
+    #[serde(default)]
+    pub silent: Option<bool>,
+}
+
+/// Decodes hex string into UTF-8 string
+pub fn from_hex(hex: &str) -> Option<String> {
+    if hex.len() % 2 != 0 {
+        return None;
+    }
+    let mut bytes = Vec::with_capacity(hex.len() / 2);
+    for i in (0..hex.len()).step_by(2) {
+        let b = u8::from_str_radix(&hex[i..i + 2], 16).ok()?;
+        bytes.push(b);
+    }
+    String::from_utf8(bytes).ok()
+}
+
+/// Encodes UTF-8 string into hex string
+pub fn to_hex(s: &str) -> String {
+    s.as_bytes().iter().map(|b| format!("{:02x}", b)).collect()
+}
 
 /// Constructs the complete consolidated JavaScript bundle injected into the webview on page initialization
 pub fn get_injected_bundle(app_kind: AppKind, is_first_run: bool) -> String {
@@ -120,6 +153,7 @@ pub fn get_injected_bundle(app_kind: AppKind, is_first_run: bool) -> String {
 
     // Interactive interceptors: only active within the main app
     if (!isAuthFlow()) {{
+        {notif}
         {nav}
         {unread}
     }}
@@ -131,6 +165,7 @@ pub fn get_injected_bundle(app_kind: AppKind, is_first_run: bool) -> String {
         shell = escaped_shell,
         theme = escaped_theme,
         declutter = escaped_declutter,
+        notif = NOTIFICATION_BRIDGE_SCRIPT,
         nav = NAVIGATION_INTERCEPTOR_SCRIPT,
         unread = unread_script,
         titlebar = TITLEBAR_SCRIPT,
@@ -158,7 +193,12 @@ mod tests {
         assert!(bundle.contains("desktop_first_run_completed"));
         assert!(bundle.contains("desktop-splash-overlay"));
 
+        assert!(bundle.contains("DesktopNotification"));
+        assert!(bundle.contains("__desktop_last_notif_time"));
+        assert!(bundle.contains("isNotificationsAllowed"));
+
         let cal_bundle = get_injected_bundle(AppKind::Calendar, false);
+        assert!(cal_bundle.contains("DesktopNotification"));
         assert!(cal_bundle.contains("APP_KIND = \"calendar\""));
         assert!(cal_bundle.contains("PRIMARY_HOST = \"calendar.google.com\""));
         assert!(cal_bundle.contains("window.__DESKTOP_FIRST_RUN__ = false"));
@@ -207,5 +247,32 @@ mod tests {
                 pkg_version
             );
         }
+    }
+
+    #[test]
+    fn test_notification_hex_encoding_and_serialization() {
+        let payload = NotificationPayload {
+            title: "Andrey: New Mail! 🎉".to_string(),
+            body: Some("Hey Andrey, let's meet tomorrow!\nBest regards.".to_string()),
+            tag: Some("msg_12345".to_string()),
+            icon: Some("https://mail.google.com/icon.png".to_string()),
+            silent: Some(false),
+        };
+
+        let json = serde_json::to_string(&payload).expect("Serialization failed");
+        let hex = to_hex(&json);
+        assert_eq!(hex.len() % 2, 0);
+
+        let decoded = from_hex(&hex).expect("Hex decoding failed");
+        assert_eq!(decoded, json);
+
+        let roundtrip: NotificationPayload =
+            serde_json::from_str(&decoded).expect("Deserialization failed");
+        assert_eq!(roundtrip, payload);
+
+        // Edge cases
+        assert!(from_hex("odd").is_none());
+        assert!(from_hex("zz").is_none());
+        assert_eq!(from_hex("").unwrap(), "");
     }
 }
