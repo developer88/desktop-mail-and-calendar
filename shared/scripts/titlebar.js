@@ -642,9 +642,9 @@
       svg.appendChild(path);
     } else if (type === 'update') {
       const path = document.createElementNS(svgNS, 'path');
-      path.setAttribute('d', 'M 8,12.5 L 8,3.5 M 4.5,7 L 8,3.5 L 11.5,7');
+      path.setAttribute('d', 'M 8,14 L 8,4.5 M 4,8.5 L 8,4.5 L 12,8.5');
       path.setAttribute('stroke', 'currentColor');
-      path.setAttribute('stroke-width', '1.6');
+      path.setAttribute('stroke-width', '2.2');
       path.setAttribute('stroke-linecap', 'round');
       path.setAttribute('stroke-linejoin', 'round');
       path.setAttribute('fill', 'none');
@@ -1657,8 +1657,8 @@
     updatePill.id = 'desktop-caption-update-pill';
     updatePill.title = 'Update available';
     const pillIcon = createSvgIcon('update');
-    pillIcon.setAttribute('width', '11');
-    pillIcon.setAttribute('height', '11');
+    pillIcon.setAttribute('width', '12');
+    pillIcon.setAttribute('height', '12');
     updatePill.appendChild(pillIcon);
     const pillText = document.createElement('span');
     pillText.textContent = 'Update';

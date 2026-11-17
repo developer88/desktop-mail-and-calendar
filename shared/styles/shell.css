@@ -678,65 +678,77 @@
   align-self: center !important;
   box-sizing: border-box !important;
   gap: 5px !important;
-  height: 22px !important;
+  height: 24px !important;
   line-height: 1 !important;
-  padding: 0 9px !important;
+  padding: 0 10px 0 8px !important;
   margin: 0 8px 0 0 !important;
-  border-radius: 11px !important;
+  border-radius: 12px !important;
   font-family: inherit !important;
-  font-size: 11.5px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
   cursor: pointer !important;
-  transition: all 0.15s ease !important;
-  -webkit-app-region: no-drag !important;
-  border: 1px solid transparent !important;
+  border: none !important;
   outline: none !important;
+  -webkit-app-region: no-drag !important;
+  user-select: none !important;
+  transition: background-color 0.15s ease, filter 0.15s ease, transform 0.1s ease !important;
+}
+
+.desktop-caption-update-pill svg {
+  display: block !important;
+  width: 12px !important;
+  height: 12px !important;
+  flex-shrink: 0 !important;
+}
+
+.desktop-caption-update-pill span {
+  display: inline-block !important;
+  line-height: 1 !important;
+}
+
+.desktop-caption-update-pill:active {
+  transform: scale(0.96) !important;
 }
 
 .desktop-caption-update-pill.calendar-theme {
-  background: rgba(22, 163, 74, 0.12) !important;
-  border-color: rgba(22, 163, 74, 0.3) !important;
-  color: #15803d !important;
+  background: #16a34a !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
 
 .desktop-caption-update-pill.calendar-theme:hover {
-  background: rgba(22, 163, 74, 0.22) !important;
-  border-color: rgba(22, 163, 74, 0.5) !important;
-  color: #166534 !important;
+  background: #15803d !important;
 }
 
 .desktop-caption-update-pill.mail-theme {
-  background: rgba(234, 88, 12, 0.15) !important;
-  border-color: rgba(234, 88, 12, 0.35) !important;
-  color: #c2410c !important;
+  background: #ea580c !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 
 .desktop-caption-update-pill.mail-theme:hover {
-  background: rgba(234, 88, 12, 0.25) !important;
-  border-color: rgba(234, 88, 12, 0.55) !important;
-  color: #9a3412 !important;
+  background: #c2410c !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-caption-update-pill.calendar-theme {
-    background: rgba(34, 197, 94, 0.18) !important;
-    border-color: rgba(34, 197, 94, 0.4) !important;
-    color: #4ade80 !important;
+    background: #16a34a !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
   }
 
   .desktop-caption-update-pill.calendar-theme:hover {
-    background: rgba(34, 197, 94, 0.28) !important;
-    color: #86efac !important;
+    background: #22c55e !important;
   }
 
   .desktop-caption-update-pill.mail-theme {
-    background: rgba(249, 115, 22, 0.2) !important;
-    border-color: rgba(249, 115, 22, 0.4) !important;
-    color: #fb923c !important;
+    background: #ea580c !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
   }
 
   .desktop-caption-update-pill.mail-theme:hover {
-    background: rgba(249, 115, 22, 0.3) !important;
-    color: #fdba74 !important;
+    background: #f97316 !important;
   }
 }
