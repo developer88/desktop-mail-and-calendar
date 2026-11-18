@@ -127,6 +127,7 @@ function buildInstaller(config) {
   WriteRegDWORD HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail" "ShowInSettings" 1
   WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail" "IconUri" "$INSTDIR\\app.png"
   WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail" "IconPath" "$INSTDIR\\app.ico"
+  WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-mail" "IconBackgroundColor" "0"
 `;
     protocolUnregistration = `
   DeleteRegValue HKCU "Software\\RegisteredApplications" "${config.appName}"
@@ -201,6 +202,7 @@ function buildInstaller(config) {
   WriteRegDWORD HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar" "ShowInSettings" 1
   WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar" "IconUri" "$INSTDIR\\app.png"
   WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar" "IconPath" "$INSTDIR\\app.ico"
+  WriteRegStr HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar" "IconBackgroundColor" "0"
 `;
     protocolUnregistration = `
   DeleteRegValue HKCU "Software\\RegisteredApplications" "${config.appName}"

@@ -101,7 +101,13 @@ mod tests {
 
     #[test]
     fn test_first_run_lifecycle() {
-        let test_id = format!("com.andrey.test-{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
+        let test_id = format!(
+            "com.andrey.test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        );
         assert!(is_first_run(&test_id));
         mark_first_run_completed(&test_id);
         assert!(!is_first_run(&test_id));

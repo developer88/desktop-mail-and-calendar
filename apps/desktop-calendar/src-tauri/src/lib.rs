@@ -69,37 +69,49 @@ mod commands {
 
 static APP_ICON_PATH: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
 
-fn show_native_toast<R: Runtime>(app: &AppHandle<R>, title: &str, body: &str) {
-    use tauri_plugin_notification::NotificationExt;
-    let mut builder = app.notification().builder().title(title).body(body);
-    if let Some(path) = APP_ICON_PATH.get() {
-        if let Some(s) = path.to_str() {
-            builder = builder.icon(s);
+fn show_native_toast<R: Runtime>(
+    app: &AppHandle<R>,
+    title: &str,
+    body: &str,
+    tag: Option<&str>,
+    silent: bool,
+) {
+    #[cfg(target_os = "windows")]
+    {
+        let app_click = app.clone();
+        let opts = desktop_google_core::toast::ToastOptions {
+            aumid: "com.andrey.desktop-calendar",
+            app_name: "Desktop Calendar",
+            title,
+            body,
+            icon_path: APP_ICON_PATH.get().map(|p| p.as_path()),
+            attribution: None,
+            open_label: "Open Calendar",
+            tag,
+            silent,
+        };
+        if let Err(e) = desktop_google_core::toast::show_windows_toast(&opts, move || {
+            if let Some(w) = app_click.get_webview_window("main") {
+                let _ = w.show();
+                let _ = w.unminimize();
+                let _ = w.set_focus();
+            }
+        }) {
+            eprintln!(
+                "[Notification] WinRT ToastGeneric failed: {}, falling back",
+                e
+            );
+            use tauri_plugin_notification::NotificationExt;
+            let _ = app.notification().builder().title(title).body(body).show();
         }
+        return;
     }
-    let res = builder.show();
 
-    if let Err(e) = res {
-        eprintln!("[Notification] Primary toast failed: {:?}, attempting fallback", e);
-        #[cfg(target_os = "windows")]
-        {
-            let escaped_title = title.replace('\'', "''");
-            let escaped_body = body.replace('\'', "''");
-            let icon_setter = if let Some(path) = APP_ICON_PATH.get() {
-                let escaped_path = path.to_string_lossy().replace('\'', "''");
-                format!("$i = $t.GetElementsByTagName('image'); if ($i.Count -gt 0) {{ $i.Item(0).Attributes.GetNamedItem('src').NodeValue = '{}' }};", escaped_path)
-            } else {
-                String::new()
-            };
-            let _ = std::process::Command::new("powershell.exe")
-                .arg("-NoProfile")
-                .arg("-Command")
-                .arg(format!(
-                    "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; $t = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastImageAndText02); {} $n = $t.GetElementsByTagName('text'); $n.Item(0).AppendChild($t.CreateTextNode('{}')) | Out-Null; $n.Item(1).AppendChild($t.CreateTextNode('{}')) | Out-Null; $toast = [Windows.UI.Notifications.ToastNotification]::new($t); [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('com.andrey.desktop-calendar').Show($toast)",
-                    icon_setter, escaped_title, escaped_body
-                ))
-                .spawn();
-        }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = (tag, silent);
+        use tauri_plugin_notification::NotificationExt;
+        let _ = app.notification().builder().title(title).body(body).show();
     }
 }
 
@@ -205,6 +217,8 @@ pub fn run() {
                                             &app_cmd,
                                             &payload.title,
                                             payload.body.as_deref().unwrap_or(""),
+                                            payload.tag.as_deref(),
+                                            payload.silent.unwrap_or(false),
                                         );
                                     }
                                 }
@@ -467,13 +481,17 @@ mod tests {
     fn test_calendar_blank_image_and_date_render() {
         let base_bytes = include_bytes!("../icons/blank_512.png");
         let base_img = tauri::image::Image::from_bytes(base_bytes);
-        assert!(base_img.is_ok(), "blank_512.png must be decoded by tauri::image::Image");
+        assert!(
+            base_img.is_ok(),
+            "blank_512.png must be decoded by tauri::image::Image"
+        );
         let img = base_img.unwrap();
         assert_eq!(img.width(), 512);
         assert_eq!(img.height(), 512);
         #[cfg(target_os = "windows")]
         unsafe {
-            let rendered = desktop_google_core::icon::windows::render_calendar_date_rgba(img.rgba(), 15);
+            let rendered =
+                desktop_google_core::icon::windows::render_calendar_date_rgba(img.rgba(), 15);
             assert!(rendered.is_some());
             let rgba = rendered.unwrap();
             assert_eq!(rgba.len(), 512 * 512 * 4);

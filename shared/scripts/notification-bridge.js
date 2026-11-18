@@ -68,25 +68,9 @@
     if (!isNotificationsAllowed()) return;
     window.__desktop_last_notif_time = Date.now();
 
-    // 1. If Tauri internals are available, invoke plugin:notification directly
-    if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__ && typeof window.__TAURI_INTERNALS__.invoke === 'function') {
-      try {
-        window.__TAURI_INTERNALS__.invoke('plugin:notification|notify', {
-          options: {
-            title: payload.title || 'Desktop Mail',
-            body: payload.body || '',
-            icon: payload.icon || undefined
-          }
-        }).catch(function () {
-          // If IPC invoke rejected, push to queue fallback
-          dispatchQueue.push(payload);
-          if (!isDispatching) processDispatchQueue();
-        });
-        return;
-      } catch (_) {}
-    }
-
-    // 2. Queue-managed document.title bridge fallback
+    // Dispatch through the queue-managed document.title bridge so the Rust host
+    // renders a styled Windows 11 ToastGeneric notification with appLogoOverride,
+    // proper AUMID header icon, and click-to-focus activation.
     dispatchQueue.push(payload);
     if (!isDispatching) {
       processDispatchQueue();

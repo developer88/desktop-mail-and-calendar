@@ -714,9 +714,9 @@ pub mod windows {
         let mut out_rgba = vec![0u8; (width * height * 4) as usize];
         for i in 0..(width * height) as usize {
             let idx = i * 4;
-            out_rgba[idx] = dest[idx + 2];     // R
+            out_rgba[idx] = dest[idx + 2]; // R
             out_rgba[idx + 1] = dest[idx + 1]; // G
-            out_rgba[idx + 2] = dest[idx];     // B
+            out_rgba[idx + 2] = dest[idx]; // B
             out_rgba[idx + 3] = dest[idx + 3]; // A
         }
 
@@ -1311,7 +1311,11 @@ pub mod windows {
 
     /// Sets or clears the taskbar overlay icon via ITaskbarList3::SetOverlayIcon.
     /// Ensures COM is properly initialized on the calling thread.
-    pub unsafe fn set_taskbar_overlay_icon(hwnd: isize, overlay_hicon: isize, description: &str) -> bool {
+    pub unsafe fn set_taskbar_overlay_icon(
+        hwnd: isize,
+        overlay_hicon: isize,
+        description: &str,
+    ) -> bool {
         if hwnd == 0 {
             return false;
         }
@@ -1338,7 +1342,8 @@ pub mod windows {
                     .encode_utf16()
                     .chain(std::iter::once(0))
                     .collect();
-                let set_res = (vtbl.set_overlay_icon)(taskbar, hwnd as _, overlay_hicon as _, wide.as_ptr());
+                let set_res =
+                    (vtbl.set_overlay_icon)(taskbar, hwnd as _, overlay_hicon as _, wide.as_ptr());
                 if set_res == 0 {
                     success = true;
                 }
@@ -1434,7 +1439,10 @@ pub mod windows {
                         class_name.as_ptr(),
                         title.as_ptr(),
                         WS_OVERLAPPEDWINDOW,
-                        0, 0, 100, 100,
+                        0,
+                        0,
+                        100,
+                        100,
                         0 as _,
                         0 as _,
                         0 as _,

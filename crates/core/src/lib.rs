@@ -4,6 +4,7 @@ pub mod icon;
 pub mod navigation;
 pub mod protocol;
 pub mod scripts;
+pub mod toast;
 
 pub use aumid::{register_aumid, register_aumid_with_icons};
 pub use config::{AppKind, DesktopAppConfig};

@@ -360,11 +360,15 @@ async function run() {
                   throw 'Invalid IconUri containing resource index: ' + $iconUri
               }
           }
-          $template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
-          $textNodes = $template.GetElementsByTagName('text')
-          $textNodes.Item(0).AppendChild($template.CreateTextNode($aumid + ' Live Test')) | Out-Null
-          $textNodes.Item(1).AppendChild($template.CreateTextNode('E2E Verification Toast: Notifications active.')) | Out-Null
-          $toast = [Windows.UI.Notifications.ToastNotification]::new($template)
+          $iconFile = Join-Path $env:LOCALAPPDATA ($aumid + '\\app.png')
+          $iconUriAttr = if (Test-Path $iconFile) { 'file:///' + ($iconFile -replace '\\\\', '/') } else { '' }
+          $imgXml = if ($iconUriAttr) { "<image placement='appLogoOverride' hint-crop='none' src='$iconUriAttr'/>" } else { '' }
+          $appTitle = if ($aumid -like '*mail*') { 'Desktop Mail' } else { 'Desktop Calendar' }
+          $openLabel = if ($aumid -like '*mail*') { 'Open Mail' } else { 'Open Calendar' }
+          $toastXmlStr = "<toast launch='open' activationType='foreground'><visual><binding template='ToastGeneric'>$imgXml<text>$appTitle E2E Verification</text><text>Notifications active with native Windows 11 ToastGeneric styling.</text><text placement='attribution'>$appTitle</text></binding></visual><actions><action content='$openLabel' arguments='open' activationType='foreground'/></actions></toast>"
+          $xmlDoc = New-Object Windows.Data.Xml.Dom.XmlDocument
+          $xmlDoc.LoadXml($toastXmlStr)
+          $toast = [Windows.UI.Notifications.ToastNotification]::new($xmlDoc)
 
           $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($aumid)
           if ($notifier.Setting -ne [Windows.UI.Notifications.NotificationSetting]::Enabled) {
