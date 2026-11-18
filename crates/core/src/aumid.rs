@@ -177,9 +177,10 @@ pub fn register_aumid_with_icons(
 fn set_start_menu_shortcut_aumid(display_name: &str, aumid: &str) {
     use windows::core::{Interface, GUID, HSTRING, PCWSTR};
     use windows::Win32::Foundation::PROPERTYKEY;
+    use windows::Win32::System::Com::StructuredStorage::PROPVARIANT;
     use windows::Win32::System::Com::{
-        CoCreateInstance, CoInitializeEx, CoUninitialize, IPersistFile, CLSCTX_INPROC_SERVER,
-        COINIT_APARTMENTTHREADED, STGM_READWRITE,
+        CoCreateInstance, CoInitializeEx, CoTaskMemAlloc, CoTaskMemFree, CoUninitialize,
+        IPersistFile, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED, STGM_READWRITE,
     };
     use windows::Win32::UI::Shell::PropertiesSystem::IPropertyStore;
     use windows::Win32::UI::Shell::{IShellLinkW, ShellLink};
@@ -200,6 +201,17 @@ fn set_start_menu_shortcut_aumid(display_name: &str, aumid: &str) {
         fmtid: GUID::from_u128(0x9F4C2855_9F79_4B39_A8D0_E1D42DE1D5F3),
         pid: 5,
     };
+    const VT_LPWSTR_RAW: u16 = 31;
+
+    #[repr(C)]
+    struct PropVariantLpWstr {
+        vt: u16,
+        reserved1: u16,
+        reserved2: u16,
+        reserved3: u16,
+        pwsz_val: *mut u16,
+        pad: usize,
+    }
 
     unsafe {
         let hr = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
@@ -215,12 +227,27 @@ fn set_start_menu_shortcut_aumid(display_name: &str, aumid: &str) {
                     .is_ok()
                 {
                     if let Ok(prop_store) = shell_link.cast::<IPropertyStore>() {
-                        let pv = windows::Win32::System::Com::StructuredStorage::PROPVARIANT::from(
-                            aumid,
-                        );
-                        if prop_store.SetValue(&PKEY_APP_USER_MODEL_ID, &pv).is_ok() {
-                            let _ = prop_store.Commit();
-                            let _ = persist_file.Save(PCWSTR(lnk_hstr.as_ptr()), true);
+                        let wide: Vec<u16> =
+                            aumid.encode_utf16().chain(std::iter::once(0)).collect();
+                        let byte_len = wide.len() * std::mem::size_of::<u16>();
+                        let ptr = CoTaskMemAlloc(byte_len) as *mut u16;
+                        if !ptr.is_null() {
+                            std::ptr::copy_nonoverlapping(wide.as_ptr(), ptr, wide.len());
+                            let raw_pv = PropVariantLpWstr {
+                                vt: VT_LPWSTR_RAW,
+                                reserved1: 0,
+                                reserved2: 0,
+                                reserved3: 0,
+                                pwsz_val: ptr,
+                                pad: 0,
+                            };
+                            let pv_ref =
+                                &*(&raw_pv as *const PropVariantLpWstr as *const PROPVARIANT);
+                            if prop_store.SetValue(&PKEY_APP_USER_MODEL_ID, pv_ref).is_ok() {
+                                let _ = prop_store.Commit();
+                                let _ = persist_file.Save(PCWSTR(lnk_hstr.as_ptr()), true);
+                            }
+                            CoTaskMemFree(Some(ptr as *const core::ffi::c_void));
                         }
                     }
                 }
