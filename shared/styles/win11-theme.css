@@ -63,10 +63,10 @@ input[type="text"], input[type="search"] {
   pointer-events: auto !important;
 }
 
-/* Calendar Titlebar: Dedicated solid titlebar matching Calendar background */
+/* Calendar Titlebar: Transparent to seamlessly blend with Calendar theme */
 #desktop-custom-titlebar.calendar-titlebar {
-  background: #ffffff !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: transparent !important;
+  border-bottom: none !important;
 }
 
 #desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn {
@@ -74,7 +74,7 @@ input[type="text"], input[type="search"] {
 }
 
 #desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn:hover {
-  background: rgba(0, 0, 0, 0.06) !important;
+  background: rgba(0, 0, 0, 0.08) !important;
   color: #1f1f1f !important;
 }
 
@@ -87,8 +87,8 @@ input[type="text"], input[type="search"] {
 
 /* Calendar Dark Mode */
 #desktop-custom-titlebar.calendar-titlebar.dark-mode {
-  background: #1f1f1f !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: transparent !important;
+  border-bottom: none !important;
 }
 
 #desktop-custom-titlebar.calendar-titlebar.dark-mode .desktop-caption-btn {
@@ -107,8 +107,8 @@ input[type="text"], input[type="search"] {
 
 @media (prefers-color-scheme: dark) {
   #desktop-custom-titlebar.calendar-titlebar {
-    background: #1f1f1f !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: transparent !important;
+    border-bottom: none !important;
   }
 
   #desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn {
@@ -126,7 +126,7 @@ input[type="text"], input[type="search"] {
   }
 }
 
-/* Calendar page layout: Sits cleanly 32px below the dedicated titlebar */
+/* Calendar page layout: Header extends behind transparent titlebar */
 html.desktop-calendar-app {
   background: #ffffff !important;
   overflow: hidden !important;
@@ -139,9 +139,10 @@ html.desktop-calendar-app {
 }
 
 html.desktop-calendar-app body {
-  margin-top: 32px !important;
-  height: calc(100vh - 32px) !important;
-  max-height: calc(100vh - 32px) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100% !important;
+  max-height: 100vh !important;
   box-sizing: border-box !important;
   background: #ffffff !important;
   overflow: hidden !important;
@@ -1195,10 +1196,10 @@ html.desktop-calendar-app body {
 }
 
 
-/* Offset Gmail top header so the frameless title row has clean dedicated space */
-body:not(.desktop-calendar-app) header.gb_Ja,
-body:not(.desktop-calendar-app) header[role="banner"],
-body:not(.desktop-calendar-app) header {
+/* Offset top header so the frameless title row has clean dedicated space */
+header.gb_Ja,
+header[role="banner"],
+header {
   padding-top: 32px !important;
 }
 

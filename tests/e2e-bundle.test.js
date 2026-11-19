@@ -396,6 +396,11 @@ console.log('\n[2/5] Testing Desktop Calendar full E2E lifecycle...');
   assert(document.documentElement.classList.contains('desktop-calendar-app'), 'html must have .desktop-calendar-app');
   const titlebar = document.getElementById('desktop-custom-titlebar');
   assert(titlebar && titlebar.classList.contains('calendar-titlebar'), 'Calendar titlebar must have .calendar-titlebar');
+  const calThemeEl = document.getElementById('desktop-theme');
+  assert(calThemeEl && calThemeEl.textContent.includes('#desktop-custom-titlebar.calendar-titlebar'), 'Calendar theme must style .calendar-titlebar');
+  assert(calThemeEl.textContent.includes('background: transparent !important'), 'Calendar titlebar must be transparent');
+  const calShellThemeEl = document.getElementById('desktop-shell-theme');
+  assert(calShellThemeEl && calShellThemeEl.textContent.includes('background: transparent !important'), 'Calendar titlebar in shell theme must be transparent');
 
   // 2b. Verify live day-of-the-month icon rendering (512x512 in emerald green #15803d)
   const expectedDay = new Date().getDate();

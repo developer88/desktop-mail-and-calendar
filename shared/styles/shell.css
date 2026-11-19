@@ -17,10 +17,10 @@
   font-family: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
-/* Calendar Titlebar */
+/* Calendar Titlebar: Transparent to seamlessly blend with Calendar theme */
 #desktop-custom-titlebar.calendar-titlebar {
-  background: #ffffff !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: transparent !important;
+  border-bottom: none !important;
 }
 
 #desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn {
@@ -28,7 +28,7 @@
 }
 
 #desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn:hover {
-  background: rgba(0, 0, 0, 0.06) !important;
+  background: rgba(0, 0, 0, 0.08) !important;
   color: #1f1f1f !important;
 }
 
@@ -40,8 +40,8 @@
 }
 
 #desktop-custom-titlebar.calendar-titlebar.dark-mode {
-  background: #1f1f1f !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: transparent !important;
+  border-bottom: none !important;
 }
 
 #desktop-custom-titlebar.calendar-titlebar.dark-mode .desktop-caption-btn {
@@ -60,8 +60,8 @@
 
 @media (prefers-color-scheme: dark) {
   #desktop-custom-titlebar.calendar-titlebar {
-    background: #1f1f1f !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: transparent !important;
+    border-bottom: none !important;
   }
 
   #desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn {
