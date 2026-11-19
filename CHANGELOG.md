@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-11-19
+
+### Added
+- **Native Windows 11 `ToastGeneric` Notifications:** Replaced legacy toast rendering with native WinRT `ToastGeneric` XML notifications featuring `appLogoOverride` app icons, structured title/body/attribution (`Inbox` / `Mail` / `Calendar`), foreground `"Open Mail"` / `"Open Calendar"` action buttons, tag-based replacement, and click-to-focus window restoration.
+
+### Changed
+- **High-DPI Unread Badge & Settings Polish:** Upgraded the Mail taskbar unread overlay badge to a crisp High-DPI charcoal dark style, enlarged app icons and unread overlay dot, and moved the **Send test notification** button inside the Desktop Notifications settings card.
+
+### Fixed
+- **AUMID Header Icons & Start Menu Shortcut Binding:** Registered standalone `app.png` and `app.ico` icons with `IconBackgroundColor = "0"` in `HKCU\Software\Classes\AppUserModelId` and stamped `System.AppUserModel.ID` (`VT_LPWSTR`) onto Start Menu `.lnk` shortcuts so Windows 11 displays the proper app icon in toast headers and Action Center.
+- **Unified Notification Bridge Routing:** Removed the `plugin:notification|notify` bypass in `shared/scripts/notification-bridge.js` so all Mail and Calendar web notifications route consistently through the native Windows toast renderer.
+
 ## [0.6.0] - 2026-11-17
 
 ### Added
