@@ -1,6 +1,6 @@
 {
   "name": "desktop-calendar",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Standalone Windows 11 Desktop client for Calendar",
   "private": true,
   "scripts": {
