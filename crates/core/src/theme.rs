@@ -185,6 +185,123 @@ pub fn query_registry_accent_color() -> Option<AccentColor> {
     None
 }
 
+/// Material backdrop options for Windows 11 Fluent Design window styling.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub enum WindowBackdrop {
+    None,
+    Mica,
+    #[default]
+    MicaAlt,
+    Acrylic,
+}
+
+impl WindowBackdrop {
+    /// Parses backdrop choice from a string identifier.
+    pub fn from_str_name(name: &str) -> Self {
+        match name.to_lowercase().trim() {
+            "mica" => Self::Mica,
+            "mica_alt" | "micaalt" | "tabbed" => Self::MicaAlt,
+            "acrylic" => Self::Acrylic,
+            "none" | "off" => Self::None,
+            _ => Self::MicaAlt,
+        }
+    }
+
+    /// String name of the backdrop option.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::Mica => "mica",
+            Self::MicaAlt => "mica_alt",
+            Self::Acrylic => "acrylic",
+        }
+    }
+
+    pub const DWMSBT_NONE: u32 = 1;
+    pub const DWMSBT_MAINWINDOW: u32 = 2;
+    pub const DWMSBT_TRANSIENTWINDOW: u32 = 3;
+    pub const DWMSBT_TABBEDWINDOW: u32 = 4;
+
+    /// Returns the Win32 `DWM_SYSTEMBACKDROP_TYPE` integer code.
+    pub const fn to_dwmsbt_code(&self) -> u32 {
+        match self {
+            Self::None => Self::DWMSBT_NONE,
+            Self::Mica => Self::DWMSBT_MAINWINDOW,
+            Self::Acrylic => Self::DWMSBT_TRANSIENTWINDOW,
+            Self::MicaAlt => Self::DWMSBT_TABBEDWINDOW,
+        }
+    }
+}
+
+/// Applies Windows 11 Mica, MicaAlt, or Acrylic backdrop to a window handle (HWND).
+/// Supports modern Windows 11 (build 22621+ DWMWA_SYSTEMBACKDROP_TYPE)
+/// with fallback to Windows 11 21H2 (build 22000 DWMWA_MICA_EFFECT).
+#[cfg(windows)]
+pub unsafe fn apply_window_backdrop_win32(hwnd: isize, backdrop: WindowBackdrop) -> bool {
+    use windows_sys::Win32::Foundation::FreeLibrary;
+    use windows_sys::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryA};
+
+    if hwnd == 0 {
+        return false;
+    }
+
+    let dwmapi = LoadLibraryA(b"dwmapi.dll\0".as_ptr());
+    if dwmapi.is_null() {
+        return false;
+    }
+
+    let proc = GetProcAddress(dwmapi, b"DwmSetWindowAttribute\0".as_ptr());
+    let success = if let Some(func) = proc {
+        type DwmSetWindowAttributeFn = unsafe extern "system" fn(
+            hwnd: isize,
+            dw_attribute: u32,
+            pv_attribute: *const std::ffi::c_void,
+            cb_attribute: u32,
+        ) -> i32;
+        let func: DwmSetWindowAttributeFn = std::mem::transmute(func);
+
+        // 1. Try DWMWA_SYSTEMBACKDROP_TYPE (attribute 38, Windows 11 22H2 / build 22621+)
+        const DWMWA_SYSTEMBACKDROP_TYPE: u32 = 38;
+        let backdrop_type = backdrop.to_dwmsbt_code();
+        let hr = func(
+            hwnd,
+            DWMWA_SYSTEMBACKDROP_TYPE,
+            &backdrop_type as *const u32 as *const std::ffi::c_void,
+            std::mem::size_of::<u32>() as u32,
+        );
+
+        if hr == 0 {
+            true
+        } else if backdrop == WindowBackdrop::Mica || backdrop == WindowBackdrop::MicaAlt {
+            // 2. Fallback for Windows 11 21H2 (build 22000): DWMWA_MICA_EFFECT = 1029
+            const DWMWA_MICA_EFFECT: u32 = 1029;
+            let enable_mica: i32 = 1;
+            let hr2 = func(
+                hwnd,
+                DWMWA_MICA_EFFECT,
+                &enable_mica as *const i32 as *const std::ffi::c_void,
+                std::mem::size_of::<i32>() as u32,
+            );
+            hr2 == 0
+        } else {
+            false
+        }
+    } else {
+        false
+    };
+
+    FreeLibrary(dwmapi);
+    success
+}
+
+#[cfg(not(windows))]
+pub unsafe fn apply_window_backdrop_win32(hwnd: isize, _backdrop: WindowBackdrop) -> bool {
+    if hwnd == 0 {
+        return false;
+    }
+    true
+}
+
 /// Generates scoped CSS rules strictly and exclusively for wrapper UI elements.
 ///
 /// Under NO circumstances are Google web elements, banner icons, or internal DOM modified.
@@ -384,5 +501,33 @@ mod tests {
         assert_eq!(accent.a, 255);
         // Under test environment without env var, falls back to Windows 11 default
         assert_eq!(accent.to_hex_rgb(), "#0078d4");
+    }
+
+    #[test]
+    fn test_window_backdrop_parsing_and_codes() {
+        assert_eq!(WindowBackdrop::from_str_name("mica"), WindowBackdrop::Mica);
+        assert_eq!(
+            WindowBackdrop::from_str_name("mica_alt"),
+            WindowBackdrop::MicaAlt
+        );
+        assert_eq!(
+            WindowBackdrop::from_str_name("tabbed"),
+            WindowBackdrop::MicaAlt
+        );
+        assert_eq!(
+            WindowBackdrop::from_str_name("acrylic"),
+            WindowBackdrop::Acrylic
+        );
+        assert_eq!(WindowBackdrop::from_str_name("none"), WindowBackdrop::None);
+
+        assert_eq!(WindowBackdrop::None.to_dwmsbt_code(), 1);
+        assert_eq!(WindowBackdrop::Mica.to_dwmsbt_code(), 2);
+        assert_eq!(WindowBackdrop::Acrylic.to_dwmsbt_code(), 3);
+        assert_eq!(WindowBackdrop::MicaAlt.to_dwmsbt_code(), 4);
+
+        assert_eq!(WindowBackdrop::MicaAlt.as_str_name(), "mica_alt");
+        unsafe {
+            assert!(apply_window_backdrop_win32(0, WindowBackdrop::MicaAlt) == false);
+        }
     }
 }

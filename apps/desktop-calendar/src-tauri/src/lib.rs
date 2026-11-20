@@ -68,6 +68,44 @@ mod commands {
     }
 
     #[tauri::command]
+    pub fn set_window_backdrop<R: Runtime>(
+        app: AppHandle<R>,
+        backdrop: String,
+    ) -> Result<(), String> {
+        let b = desktop_google_core::theme::WindowBackdrop::from_str_name(&backdrop);
+        if let Some(w) = app.get_webview_window("main") {
+            #[cfg(target_os = "windows")]
+            if let Ok(hwnd_obj) = w.hwnd() {
+                let hwnd = hwnd_obj.0 as isize;
+                if hwnd != 0 {
+                    unsafe {
+                        desktop_google_core::theme::apply_window_backdrop_win32(hwnd, b);
+                    }
+                }
+            }
+            let tauri_effect = match b {
+                desktop_google_core::theme::WindowBackdrop::Mica => tauri::window::Effect::Mica,
+                desktop_google_core::theme::WindowBackdrop::MicaAlt => {
+                    tauri::window::Effect::Tabbed
+                }
+                desktop_google_core::theme::WindowBackdrop::Acrylic => {
+                    tauri::window::Effect::Acrylic
+                }
+                desktop_google_core::theme::WindowBackdrop::None => tauri::window::Effect::Mica,
+            };
+            let effects = tauri::window::EffectsBuilder::new()
+                .effect(tauri_effect)
+                .build();
+            let _ = w.set_effects(if b == desktop_google_core::theme::WindowBackdrop::None {
+                None
+            } else {
+                Some(effects)
+            });
+        }
+        Ok(())
+    }
+
+    #[tauri::command]
     pub fn update_calendar_date_icon<R: Runtime>(
         app: AppHandle<R>,
         _day: u32,
@@ -162,6 +200,7 @@ pub fn run() {
             commands::handle_calendar_url,
             commands::register_calendar_protocols,
             commands::get_windows_accent_color,
+            commands::set_window_backdrop,
             commands::update_calendar_date_icon,
             commands::minimize_window,
             commands::maximize_window,
@@ -200,6 +239,10 @@ pub fn run() {
             let app_nav = app.handle().clone();
             let app_win = app.handle().clone();
 
+            let effects = tauri::window::EffectsBuilder::new()
+                .effect(tauri::window::Effect::Tabbed)
+                .build();
+
             let mut builder = WebviewWindowBuilder::new(app, "main", initial_url)
                 .title(&config.title)
                 .inner_size(config.width, config.height)
@@ -208,6 +251,7 @@ pub fn run() {
                 .resizable(true)
                 .decorations(false)
                 .shadow(true)
+                .effects(effects)
                 .user_agent(USER_AGENT)
                 .initialization_script(&injected_script);
 
@@ -281,6 +325,33 @@ pub fn run() {
                                 }
                                 "first_run_completed" => {
                                     desktop_google_core::config::mark_first_run_completed("com.andrey.desktop-calendar");
+                                }
+                                cmd if cmd.starts_with("backdrop:") => {
+                                    let mode = cmd.trim_start_matches("backdrop:");
+                                    let b = desktop_google_core::theme::WindowBackdrop::from_str_name(mode);
+                                    #[cfg(target_os = "windows")]
+                                    if let Ok(hwnd_obj) = window.hwnd() {
+                                        let hwnd = hwnd_obj.0 as isize;
+                                        if hwnd != 0 {
+                                            unsafe {
+                                                desktop_google_core::theme::apply_window_backdrop_win32(hwnd, b);
+                                            }
+                                        }
+                                    }
+                                    let tauri_effect = match b {
+                                        desktop_google_core::theme::WindowBackdrop::Mica => tauri::window::Effect::Mica,
+                                        desktop_google_core::theme::WindowBackdrop::MicaAlt => tauri::window::Effect::Tabbed,
+                                        desktop_google_core::theme::WindowBackdrop::Acrylic => tauri::window::Effect::Acrylic,
+                                        desktop_google_core::theme::WindowBackdrop::None => tauri::window::Effect::Mica,
+                                    };
+                                    let effects = tauri::window::EffectsBuilder::new()
+                                        .effect(tauri_effect)
+                                        .build();
+                                    let _ = window.set_effects(if b == desktop_google_core::theme::WindowBackdrop::None {
+                                        None
+                                    } else {
+                                        Some(effects)
+                                    });
                                 }
                                 _ => {}
                             }
@@ -397,6 +468,19 @@ pub fn run() {
                     }
                 })
                 .build()?;
+
+            #[cfg(target_os = "windows")]
+            if let Ok(hwnd_obj) = window.hwnd() {
+                let hwnd = hwnd_obj.0 as isize;
+                if hwnd != 0 {
+                    unsafe {
+                        desktop_google_core::theme::apply_window_backdrop_win32(
+                            hwnd,
+                            desktop_google_core::theme::WindowBackdrop::MicaAlt,
+                        );
+                    }
+                }
+            }
 
             #[cfg(target_os = "windows")]
             {

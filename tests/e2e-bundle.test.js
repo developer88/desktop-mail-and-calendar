@@ -327,12 +327,17 @@ console.log('\n[1/5] Testing Desktop Mail full E2E lifecycle...');
   const settingsOverlay = document.getElementById('desktop-settings-overlay');
   assert(settingsOverlay, 'Settings modal must open when clicking File -> Settings');
 
-  // Check General tab toggles (Notifications, Open at login, and Windows Accent Color)
+  // Check General tab toggles (Notifications, Open at login, Windows Accent Color, and Material Backdrop)
   const switches = settingsOverlay.querySelectorAll('.desktop-toggle-switch');
-  assert.strictEqual(switches.length, 3, 'General tab must have 3 toggle switches (Notifications, Login, Accent Color)');
+  assert.strictEqual(switches.length, 4, 'General tab must have 4 toggle switches (Notifications, Login, Accent Color, Material Backdrop)');
   switches[1].click(); // Open at login -> on
   assert.strictEqual(window.localStorage.getItem('desktop_pref_open_at_login'), 'true');
   assert(titleHistory.includes('__desktop_cmd__:autostart:on'), 'Enabling Open at login must trigger __desktop_cmd__:autostart:on');
+
+  // Test Material Backdrop switch (default: true -> click turns it off)
+  switches[3].click();
+  assert.strictEqual(window.localStorage.getItem('desktop_pref_window_backdrop_mica'), 'false');
+  assert(titleHistory.includes('__desktop_cmd__:backdrop:none'), 'Disabling Material Backdrop must trigger __desktop_cmd__:backdrop:none');
 
   const defaultAppBtn = settingsOverlay.querySelector('.desktop-settings-action-btn');
   assert(defaultAppBtn, 'Default Email App action button must exist');

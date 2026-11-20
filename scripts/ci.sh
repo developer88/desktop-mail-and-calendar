@@ -59,6 +59,7 @@ node tests/e2e-bundle.test.js
 node tests/e2e-binaries.test.js
 node tests/calendar-protocol.test.js
 node tests/accent-color.test.js
+node tests/window-backdrop.test.js
 
 echo ""
 echo "============================================================"

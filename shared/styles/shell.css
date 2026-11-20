@@ -11,6 +11,8 @@
   justify-content: space-between !important;
   align-items: center !important;
   background: transparent !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
   user-select: none !important;
   -webkit-app-region: drag !important;
   pointer-events: auto !important;

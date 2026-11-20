@@ -19,4 +19,7 @@ pub use protocol::{
     resolve_calendar_target_url, to_calendar_event_url, to_calendar_subscribe_url,
     to_gmail_compose_url, to_mail_compose_url, IcsEventData, MailtoData,
 };
-pub use theme::{generate_accent_css, get_windows_accent_color, AccentColor};
+pub use theme::{
+    apply_window_backdrop_win32, generate_accent_css, get_windows_accent_color, AccentColor,
+    WindowBackdrop,
+};
