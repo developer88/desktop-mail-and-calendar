@@ -31,6 +31,13 @@ function buildInjectedBundle(appKind, isFirstRun = true) {
 (function() {
     window.__DESKTOP_APP_KIND__ = "${appKindStr}";
     window.__DESKTOP_FIRST_RUN__ = ${isFirstRun};
+    window.__DESKTOP_ACCENT_COLOR__ = {
+        hex: "#0078d4",
+        r: 0,
+        g: 120,
+        b: 212,
+        a: 255
+    };
     var APP_KIND = "${appKindStr}";
     var PRIMARY_HOST = "${primaryHost}";
 
@@ -68,6 +75,15 @@ function buildInjectedBundle(appKind, isFirstRun = true) {
     }
 
     function applyShellStyles() {
+        if (!document.getElementById('desktop-accent-theme')) {
+            var target = document.head || document.documentElement;
+            if (target) {
+                var accentStyleEl = document.createElement('style');
+                accentStyleEl.id = 'desktop-accent-theme';
+                accentStyleEl.textContent = ':root { --win11-accent: #0078d4; --win11-wrapper-accent: #0078d4; }';
+                target.appendChild(accentStyleEl);
+            }
+        }
         if (document.getElementById('desktop-shell-theme')) return;
         var target = document.head || document.documentElement;
         if (target) {
@@ -311,9 +327,9 @@ console.log('\n[1/5] Testing Desktop Mail full E2E lifecycle...');
   const settingsOverlay = document.getElementById('desktop-settings-overlay');
   assert(settingsOverlay, 'Settings modal must open when clicking File -> Settings');
 
-  // Check General tab toggles ("Open at login" and "Default Email App")
+  // Check General tab toggles (Notifications, Open at login, and Windows Accent Color)
   const switches = settingsOverlay.querySelectorAll('.desktop-toggle-switch');
-  assert.strictEqual(switches.length, 2, 'General tab must have 2 toggle switches');
+  assert.strictEqual(switches.length, 3, 'General tab must have 3 toggle switches (Notifications, Login, Accent Color)');
   switches[1].click(); // Open at login -> on
   assert.strictEqual(window.localStorage.getItem('desktop_pref_open_at_login'), 'true');
   assert(titleHistory.includes('__desktop_cmd__:autostart:on'), 'Enabling Open at login must trigger __desktop_cmd__:autostart:on');

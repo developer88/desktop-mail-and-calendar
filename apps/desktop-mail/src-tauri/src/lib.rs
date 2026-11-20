@@ -73,6 +73,11 @@ mod commands {
     }
 
     #[tauri::command]
+    pub fn get_windows_accent_color() -> desktop_google_core::AccentColor {
+        desktop_google_core::get_windows_accent_color()
+    }
+
+    #[tauri::command]
     pub fn close_window<R: Runtime>(app: AppHandle<R>) {
         app.exit(0);
     }
@@ -229,6 +234,7 @@ pub fn run() {
             commands::update_unread_badge,
             commands::handle_mailto,
             commands::register_mail_protocols,
+            commands::get_windows_accent_color,
             commands::minimize_window,
             commands::maximize_window,
             commands::close_window

@@ -4,6 +4,7 @@ pub mod icon;
 pub mod navigation;
 pub mod protocol;
 pub mod scripts;
+pub mod theme;
 pub mod toast;
 
 pub use aumid::{register_aumid, register_aumid_with_icons};
@@ -18,3 +19,4 @@ pub use protocol::{
     resolve_calendar_target_url, to_calendar_event_url, to_calendar_subscribe_url,
     to_gmail_compose_url, to_mail_compose_url, IcsEventData, MailtoData,
 };
+pub use theme::{generate_accent_css, get_windows_accent_color, AccentColor};

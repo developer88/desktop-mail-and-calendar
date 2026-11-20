@@ -54,6 +54,11 @@ pub fn get_injected_bundle(app_kind: AppKind, is_first_run: bool) -> String {
         AppKind::Calendar => "calendar.google.com",
     };
 
+    let accent = crate::theme::get_windows_accent_color();
+    let accent_css = crate::theme::generate_accent_css(&accent);
+    let escaped_accent = accent_css.replace('\\', "\\\\").replace('`', "\\`");
+    let accent_hex = accent.to_hex_rgb();
+
     let escaped_shell = SHELL_CSS.replace('\\', "\\\\").replace('`', "\\`");
     let escaped_theme = WIN11_THEME_CSS.replace('\\', "\\\\").replace('`', "\\`");
     let escaped_declutter = DECLUTTER_CSS.replace('\\', "\\\\").replace('`', "\\`");
@@ -67,6 +72,13 @@ pub fn get_injected_bundle(app_kind: AppKind, is_first_run: bool) -> String {
 (function() {{
     window.__DESKTOP_APP_KIND__ = "{app_kind_str}";
     window.__DESKTOP_FIRST_RUN__ = {is_first_run};
+    window.__DESKTOP_ACCENT_COLOR__ = {{
+        hex: "{accent_hex}",
+        r: {accent_r},
+        g: {accent_g},
+        b: {accent_b},
+        a: {accent_a}
+    }};
     var APP_KIND = "{app_kind_str}";
     var PRIMARY_HOST = "{primary_host}";
 
@@ -113,9 +125,18 @@ pub fn get_injected_bundle(app_kind: AppKind, is_first_run: bool) -> String {
         return false;
     }}
 
-    // Shell UI styles: Titlebar and first-run Welcome modal styles are ALWAYS applied
+    // Shell UI styles: Titlebar, Personalization Accent, and first-run Welcome modal styles are ALWAYS applied
     // so wrapper controls and the welcome screen are properly rendered even during sign-in.
     function applyShellStyles() {{
+        if (!document.getElementById('desktop-accent-theme')) {{
+            var target = document.head || document.documentElement;
+            if (target) {{
+                var accentStyleEl = document.createElement('style');
+                accentStyleEl.id = 'desktop-accent-theme';
+                accentStyleEl.textContent = `{accent}`;
+                target.appendChild(accentStyleEl);
+            }}
+        }}
         if (document.getElementById('desktop-shell-theme')) return;
         var target = document.head || document.documentElement;
         if (target) {{
@@ -162,6 +183,12 @@ pub fn get_injected_bundle(app_kind: AppKind, is_first_run: bool) -> String {
         app_kind_str = app_kind_str,
         is_first_run = is_first_run,
         primary_host = primary_host,
+        accent_hex = accent_hex,
+        accent_r = accent.r,
+        accent_g = accent.g,
+        accent_b = accent.b,
+        accent_a = accent.a,
+        accent = escaped_accent,
         shell = escaped_shell,
         theme = escaped_theme,
         declutter = escaped_declutter,
@@ -185,6 +212,8 @@ mod tests {
         assert!(bundle.contains("window.self !== window.top"));
         assert!(bundle.contains("isAuthFlow"));
         assert!(bundle.contains("desktop-shell-theme"));
+        assert!(bundle.contains("desktop-accent-theme"));
+        assert!(bundle.contains("window.__DESKTOP_ACCENT_COLOR__"));
         assert!(bundle.contains("desktop-theme"));
         assert!(bundle.contains("initNavigationInterceptor"));
         assert!(bundle.contains("initUnreadObserver"));

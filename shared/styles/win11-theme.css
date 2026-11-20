@@ -2,6 +2,14 @@
 :root {
   --win11-font-family: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
   --win11-accent: #0078d4;
+  --win11-wrapper-accent: var(--win11-accent);
+  --win11-wrapper-accent-rgb: 0, 120, 212;
+  --win11-wrapper-accent-hover: #0842a0;
+  --win11-wrapper-accent-subtle: rgba(0, 120, 212, 0.12);
+  --win11-wrapper-accent-subtle-dark: rgba(0, 120, 212, 0.24);
+  --win11-wrapper-accent-border: rgba(0, 120, 212, 0.35);
+  --win11-wrapper-accent-light: #c2e7ff;
+  --win11-wrapper-accent-text: #ffffff;
   --win11-border-radius: 8px;
 }
 
@@ -490,8 +498,8 @@ html.desktop-calendar-app body {
 }
 
 .desktop-settings-nav-item.active {
-  background: #d3e3fd !important;
-  color: #041e49 !important;
+  background: var(--win11-wrapper-accent-subtle, #d3e3fd) !important;
+  color: var(--win11-wrapper-accent, #041e49) !important;
   font-weight: 600 !important;
 }
 
@@ -504,8 +512,8 @@ html.desktop-calendar-app body {
     color: #ffffff !important;
   }
   .desktop-settings-nav-item.active {
-    background: #004a77 !important;
-    color: #c2e7ff !important;
+    background: var(--win11-wrapper-accent-subtle-dark, #004a77) !important;
+    color: var(--win11-wrapper-accent-light, #c2e7ff) !important;
   }
 }
 
@@ -624,8 +632,8 @@ html.desktop-calendar-app body {
 }
 
 .desktop-toggle-switch.on {
-  background: #0b57d0 !important;
-  border-color: #0b57d0 !important;
+  background: var(--win11-wrapper-accent, #0b57d0) !important;
+  border-color: var(--win11-wrapper-accent, #0b57d0) !important;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -634,8 +642,8 @@ html.desktop-calendar-app body {
     border-color: #8e918f !important;
   }
   .desktop-toggle-switch.on {
-    background: #a8c7fa !important;
-    border-color: #a8c7fa !important;
+    background: var(--win11-wrapper-accent, #a8c7fa) !important;
+    border-color: var(--win11-wrapper-accent, #a8c7fa) !important;
   }
 }
 
@@ -671,8 +679,8 @@ html.desktop-calendar-app body {
 .desktop-settings-action-btn,
 .desktop-test-notif-btn {
   background: #f1f3f4 !important;
-  color: #1a73e8 !important;
-  border: 1px solid #dadce0 !important;
+  color: var(--win11-wrapper-accent, #1a73e8) !important;
+  border: 1px solid var(--win11-wrapper-accent-border, #dadce0) !important;
   border-radius: 8px !important;
   padding: 6px 14px !important;
   font-size: 13px !important;
@@ -684,21 +692,21 @@ html.desktop-calendar-app body {
 
 .desktop-settings-action-btn:hover,
 .desktop-test-notif-btn:hover {
-  background: #e8f0fe !important;
-  border-color: #1a73e8 !important;
+  background: var(--win11-wrapper-accent-subtle, #e8f0fe) !important;
+  border-color: var(--win11-wrapper-accent, #1a73e8) !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-settings-action-btn,
   .desktop-test-notif-btn {
     background: #3c4043 !important;
-    color: #8ab4f8 !important;
-    border-color: #5f6368 !important;
+    color: var(--win11-wrapper-accent-light, #8ab4f8) !important;
+    border-color: var(--win11-wrapper-accent-border, #5f6368) !important;
   }
   .desktop-settings-action-btn:hover,
   .desktop-test-notif-btn:hover {
-    background: #444746 !important;
-    border-color: #8ab4f8 !important;
+    background: var(--win11-wrapper-accent-subtle-dark, #444746) !important;
+    border-color: var(--win11-wrapper-accent-light, #8ab4f8) !important;
   }
 }
 
@@ -808,8 +816,8 @@ html.desktop-calendar-app body {
 
 .desktop-update-btn {
   background: transparent !important;
-  border: 1px solid #747775 !important;
-  color: #0b57d0 !important;
+  border: 1px solid var(--win11-wrapper-accent, #747775) !important;
+  color: var(--win11-wrapper-accent, #0b57d0) !important;
   border-radius: 20px !important;
   padding: 8px 18px !important;
   font-size: 13px !important;
@@ -819,16 +827,16 @@ html.desktop-calendar-app body {
 }
 
 .desktop-update-btn:hover {
-  background: rgba(11, 87, 208, 0.08) !important;
+  background: var(--win11-wrapper-accent-subtle, rgba(11, 87, 208, 0.08)) !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-update-btn {
-    border-color: #8e918f !important;
-    color: #a8c7fa !important;
+    border-color: var(--win11-wrapper-accent, #8e918f) !important;
+    color: var(--win11-wrapper-accent-light, #a8c7fa) !important;
   }
   .desktop-update-btn:hover {
-    background: rgba(168, 199, 250, 0.1) !important;
+    background: var(--win11-wrapper-accent-subtle-dark, rgba(168, 199, 250, 0.1)) !important;
   }
 }
 
@@ -902,8 +910,8 @@ html.desktop-calendar-app body {
 }
 
 .desktop-settings-done-btn {
-  background: #0b57d0 !important;
-  color: #ffffff !important;
+  background: var(--win11-wrapper-accent, #0b57d0) !important;
+  color: var(--win11-wrapper-accent-text, #ffffff) !important;
   border: none !important;
   border-radius: 20px !important;
   padding: 10px 28px !important;
@@ -914,17 +922,17 @@ html.desktop-calendar-app body {
 }
 
 .desktop-settings-done-btn:hover {
-  background: #0842a0 !important;
+  background: var(--win11-wrapper-accent-hover, #0842a0) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-settings-done-btn {
-    background: #a8c7fa !important;
-    color: #041e49 !important;
+    background: var(--win11-wrapper-accent, #a8c7fa) !important;
+    color: var(--win11-wrapper-accent-text, #041e49) !important;
   }
   .desktop-settings-done-btn:hover {
-    background: #c2e7ff !important;
+    background: var(--win11-wrapper-accent-hover, #c2e7ff) !important;
   }
 }
 

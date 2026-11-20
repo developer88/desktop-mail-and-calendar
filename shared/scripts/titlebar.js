@@ -257,6 +257,21 @@
       path.setAttribute('stroke', 'currentColor');
       path.setAttribute('stroke-width', '1.3');
       svg.appendChild(path);
+    } else if (type === 'palette') {
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', 'M 8,1.5 C 4.4,1.5 1.5,4.4 1.5,8 C 1.5,11.6 4.4,14.5 8,14.5 C 8.8,14.5 9.5,13.8 9.5,13 C 9.5,12.6 9.3,12.3 9.1,12 C 8.9,11.7 8.8,11.4 8.8,11 C 8.8,10.2 9.4,9.5 10.2,9.5 L 11.5,9.5 C 13.2,9.5 14.5,8.2 14.5,6.5 C 14.5,3.7 11.6,1.5 8,1.5 Z');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '1.3');
+      svg.appendChild(path);
+      [[4.5, 6], [7, 4.5], [10, 5], [5.5, 9.5]].forEach(([cx, cy]) => {
+        const dot = document.createElementNS(svgNS, 'circle');
+        dot.setAttribute('cx', cx.toString());
+        dot.setAttribute('cy', cy.toString());
+        dot.setAttribute('r', '0.9');
+        dot.setAttribute('fill', 'currentColor');
+        svg.appendChild(dot);
+      });
     } else if (type === 'login') {
       const path = document.createElementNS(svgNS, 'path');
       path.setAttribute('d', 'M 6,3 L 3,3 C 2.4,3 2,3.4 2,4 L 2,12 C 2,12.6 2.4,13 3,13 L 6,13 M 9,11 L 12,8 L 9,5 M 5,8 L 12,8');
@@ -982,7 +997,23 @@
           }
         );
 
-        // 3. Default app instruction with deep link to Windows Settings
+        // 3. Sync with Windows Personalization Accent Color (enabled by default)
+        renderToggleCard(
+          contentArea,
+          'palette',
+          'Sync with Windows Accent Color',
+          'Apply your active Windows 11 accent color strictly to desktop wrapper controls, tabs, and action buttons.',
+          'sync_windows_accent',
+          true,
+          (enabled) => {
+            const styleEl = document.getElementById('desktop-accent-theme');
+            if (styleEl) {
+              styleEl.disabled = !enabled;
+            }
+          }
+        );
+
+        // 4. Default app instruction with deep link to Windows Settings
         renderActionCard(
           contentArea,
           'link',
@@ -1812,6 +1843,18 @@
   // Initialize background update checker
   initAutoUpdateChecker();
 
+  // Initialize Windows 11 Personalization Accent Color Preference
+  function initAccentColorSync() {
+    try {
+      const isSyncEnabled = getPref('sync_windows_accent', true);
+      const styleEl = document.getElementById('desktop-accent-theme');
+      if (styleEl) {
+        styleEl.disabled = !isSyncEnabled;
+      }
+    } catch (_) {}
+  }
+  initAccentColorSync();
+
   // Expose UI methods for runtime interactions and headless UI testing
   window.__desktop_ui = {
     openSettings: function(tab) { openSettingsDialog(tab); },
@@ -1827,6 +1870,24 @@
     },
     dismissUpdateBanner: function() {
       dismissUpdateBanner(activeUpdateInfo ? activeUpdateInfo.version : null);
+    },
+    getAccentColor: function() {
+      return (typeof window !== 'undefined' && window.__DESKTOP_ACCENT_COLOR__) || null;
+    },
+    applyAccentColor: function(color) {
+      if (!color || !color.hex) return;
+      window.__DESKTOP_ACCENT_COLOR__ = color;
+      let styleEl = document.getElementById('desktop-accent-theme');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'desktop-accent-theme';
+        (document.head || document.documentElement).appendChild(styleEl);
+      }
+      const r = color.r !== undefined ? color.r : 0;
+      const g = color.g !== undefined ? color.g : 120;
+      const b = color.b !== undefined ? color.b : 212;
+      styleEl.textContent = ':root { --win11-accent: ' + color.hex + '; --win11-wrapper-accent: ' + color.hex + '; --win11-wrapper-accent-rgb: ' + r + ', ' + g + ', ' + b + '; --win11-wrapper-accent-subtle: rgba(' + r + ', ' + g + ', ' + b + ', 0.12); --win11-wrapper-accent-subtle-dark: rgba(' + r + ', ' + g + ', ' + b + ', 0.24); }';
+      initAccentColorSync();
     }
   };
 })();

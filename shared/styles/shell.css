@@ -27,9 +27,9 @@
   color: #444746 !important;
 }
 
-#desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn:hover {
-  background: rgba(0, 0, 0, 0.08) !important;
-  color: #1f1f1f !important;
+#desktop-custom-titlebar.calendar-titlebar .desktop-caption-btn:not(.close):hover {
+  background: var(--win11-wrapper-accent-subtle, rgba(0, 0, 0, 0.08)) !important;
+  color: var(--win11-wrapper-accent, #1f1f1f) !important;
 }
 
 #desktop-custom-titlebar.calendar-titlebar #desktop-custom-titlebar-title {
@@ -48,9 +48,9 @@
   color: #e3e3e3 !important;
 }
 
-#desktop-custom-titlebar.calendar-titlebar.dark-mode .desktop-caption-btn:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
-  color: #ffffff !important;
+#desktop-custom-titlebar.calendar-titlebar.dark-mode .desktop-caption-btn:not(.close):hover {
+  background: var(--win11-wrapper-accent-subtle-dark, rgba(255, 255, 255, 0.12)) !important;
+  color: var(--win11-wrapper-accent-light, #ffffff) !important;
 }
 
 #desktop-custom-titlebar.calendar-titlebar.dark-mode #desktop-custom-titlebar-title {
@@ -104,9 +104,9 @@
   filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.85)) !important;
 }
 
-#desktop-custom-titlebar.mail-titlebar.mail-light-mode .desktop-caption-btn:hover {
-  background: rgba(0, 0, 0, 0.08) !important;
-  color: #000000 !important;
+#desktop-custom-titlebar.mail-titlebar.mail-light-mode .desktop-caption-btn:not(.close):hover {
+  background: var(--win11-wrapper-accent-subtle, rgba(0, 0, 0, 0.08)) !important;
+  color: var(--win11-wrapper-accent, #000000) !important;
 }
 
 #desktop-custom-titlebar.mail-titlebar.mail-light-mode #desktop-custom-titlebar-title {
@@ -712,43 +712,43 @@
 }
 
 .desktop-caption-update-pill.calendar-theme {
-  background: #16a34a !important;
-  color: #ffffff !important;
+  background: var(--win11-wrapper-accent, #16a34a) !important;
+  color: var(--win11-wrapper-accent-text, #ffffff) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
 
 .desktop-caption-update-pill.calendar-theme:hover {
-  background: #15803d !important;
+  background: var(--win11-wrapper-accent-hover, #15803d) !important;
 }
 
 .desktop-caption-update-pill.mail-theme {
-  background: #ea580c !important;
-  color: #ffffff !important;
+  background: var(--win11-wrapper-accent, #ea580c) !important;
+  color: var(--win11-wrapper-accent-text, #ffffff) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 
 .desktop-caption-update-pill.mail-theme:hover {
-  background: #c2410c !important;
+  background: var(--win11-wrapper-accent-hover, #c2410c) !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-caption-update-pill.calendar-theme {
-    background: #16a34a !important;
-    color: #ffffff !important;
+    background: var(--win11-wrapper-accent, #16a34a) !important;
+    color: var(--win11-wrapper-accent-text, #ffffff) !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
   }
 
   .desktop-caption-update-pill.calendar-theme:hover {
-    background: #22c55e !important;
+    background: var(--win11-wrapper-accent-hover, #22c55e) !important;
   }
 
   .desktop-caption-update-pill.mail-theme {
-    background: #ea580c !important;
-    color: #ffffff !important;
+    background: var(--win11-wrapper-accent, #ea580c) !important;
+    color: var(--win11-wrapper-accent-text, #ffffff) !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
   }
 
   .desktop-caption-update-pill.mail-theme:hover {
-    background: #f97316 !important;
+    background: var(--win11-wrapper-accent-hover, #f97316) !important;
   }
 }

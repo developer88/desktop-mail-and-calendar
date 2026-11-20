@@ -63,6 +63,11 @@ mod commands {
     }
 
     #[tauri::command]
+    pub fn get_windows_accent_color() -> desktop_google_core::AccentColor {
+        desktop_google_core::get_windows_accent_color()
+    }
+
+    #[tauri::command]
     pub fn update_calendar_date_icon<R: Runtime>(
         app: AppHandle<R>,
         _day: u32,
@@ -156,6 +161,7 @@ pub fn run() {
             commands::open_external_url,
             commands::handle_calendar_url,
             commands::register_calendar_protocols,
+            commands::get_windows_accent_color,
             commands::update_calendar_date_icon,
             commands::minimize_window,
             commands::maximize_window,
