@@ -6,6 +6,7 @@ pub enum UrlCategory {
     InApp,
     Auth,
     Mailto,
+    Webcal,
     External,
 }
 
@@ -138,6 +139,9 @@ pub fn classify_url(raw_url: &str, _app_kind: AppKind) -> UrlCategory {
     if raw_url.starts_with("mailto:") {
         return UrlCategory::Mailto;
     }
+    if raw_url.starts_with("webcal:") || raw_url.starts_with("webcals:") {
+        return UrlCategory::Webcal;
+    }
 
     let parsed = match Url::parse(raw_url) {
         Ok(u) => u,
@@ -185,7 +189,11 @@ pub fn classify_url(raw_url: &str, _app_kind: AppKind) -> UrlCategory {
 }
 
 pub fn should_open_in_external_browser(raw_url: &str, app_kind: AppKind) -> bool {
-    matches!(classify_url(raw_url, app_kind), UrlCategory::External)
+    match classify_url(raw_url, app_kind) {
+        UrlCategory::External => true,
+        UrlCategory::Webcal => app_kind != AppKind::Calendar,
+        _ => false,
+    }
 }
 
 #[cfg(test)]
@@ -286,6 +294,28 @@ mod tests {
         );
         assert!(!should_open_in_external_browser(
             "mailto:support@example.com",
+            AppKind::Mail
+        ));
+    }
+
+    #[test]
+    fn test_webcal_classification() {
+        assert_eq!(
+            classify_url("webcal://example.com/cal.ics", AppKind::Calendar),
+            UrlCategory::Webcal
+        );
+        assert_eq!(
+            classify_url("webcals://example.com/cal.ics", AppKind::Calendar),
+            UrlCategory::Webcal
+        );
+        // Calendar keeps webcal in-app for subscription routing
+        assert!(!should_open_in_external_browser(
+            "webcal://example.com/cal.ics",
+            AppKind::Calendar
+        ));
+        // Mail delegates webcal to external handler/browser
+        assert!(should_open_in_external_browser(
+            "webcal://example.com/cal.ics",
             AppKind::Mail
         ));
     }

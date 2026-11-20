@@ -68,6 +68,11 @@ mod commands {
     }
 
     #[tauri::command]
+    pub fn register_mail_protocols() -> Result<(), String> {
+        desktop_google_core::register_mail_protocol_handlers(None)
+    }
+
+    #[tauri::command]
     pub fn close_window<R: Runtime>(app: AppHandle<R>) {
         app.exit(0);
     }
@@ -223,11 +228,13 @@ pub fn run() {
             commands::open_external_url,
             commands::update_unread_badge,
             commands::handle_mailto,
+            commands::register_mail_protocols,
             commands::minimize_window,
             commands::maximize_window,
             commands::close_window
         ])
         .setup(move |app| {
+            let _ = desktop_google_core::register_mail_protocol_handlers(None);
             let icon_path = desktop_google_core::register_aumid_with_icons(
                 "com.andrey.desktop-mail",
                 "Desktop Mail",
@@ -333,6 +340,10 @@ pub fn run() {
                                 "open:defaultapps" => {
                                     use tauri_plugin_shell::ShellExt;
                                     let _ = app_cmd.shell().open("ms-settings:defaultapps", None);
+                                }
+                                "register:protocols" => {
+                                    let _ =
+                                        desktop_google_core::register_mail_protocol_handlers(None);
                                 }
                                 "first_run_completed" => {
                                     desktop_google_core::config::mark_first_run_completed(

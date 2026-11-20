@@ -41,6 +41,28 @@ mod commands {
     }
 
     #[tauri::command]
+    pub fn handle_calendar_url<R: Runtime>(
+        app: AppHandle<R>,
+        url_or_path: String,
+    ) -> Result<(), String> {
+        if let Some(target_url) = desktop_google_core::resolve_calendar_target_url(&url_or_path) {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+                let script = format!("window.location.href = '{}';", target_url);
+                let _ = window.eval(&script);
+            }
+        }
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub fn register_calendar_protocols() -> Result<(), String> {
+        desktop_google_core::register_calendar_protocol_handlers(None)
+    }
+
+    #[tauri::command]
     pub fn update_calendar_date_icon<R: Runtime>(
         app: AppHandle<R>,
         _day: u32,
@@ -121,21 +143,8 @@ pub fn run() {
     let mut start_url = config.initial_url.clone();
     for arg in std::env::args().skip(1) {
         let clean = arg.trim_matches('"').trim_matches('\'');
-        if clean.starts_with("webcal://")
-            || clean.starts_with("webcals://")
-            || clean.ends_with(".ics")
-        {
-            let http_url = if let Some(stripped) = clean.strip_prefix("webcal://") {
-                format!("http://{}", stripped)
-            } else if let Some(stripped) = clean.strip_prefix("webcals://") {
-                format!("https://{}", stripped)
-            } else {
-                clean.to_string()
-            };
-            start_url = format!(
-                "https://calendar.google.com/calendar/u/0/r/settings/addcalendar?cid={}",
-                url::form_urlencoded::byte_serialize(http_url.as_bytes()).collect::<String>()
-            );
+        if let Some(target) = desktop_google_core::resolve_calendar_target_url(clean) {
+            start_url = target;
             break;
         }
     }
@@ -145,12 +154,15 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             commands::open_external_url,
+            commands::handle_calendar_url,
+            commands::register_calendar_protocols,
             commands::update_calendar_date_icon,
             commands::minimize_window,
             commands::maximize_window,
             commands::close_window
         ])
         .setup(move |app| {
+            let _ = desktop_google_core::register_calendar_protocol_handlers(None);
             let icon_path = desktop_google_core::register_aumid_with_icons(
                 "com.andrey.desktop-calendar",
                 "Desktop Calendar",
@@ -258,6 +270,9 @@ pub fn run() {
                                     use tauri_plugin_shell::ShellExt;
                                     let _ = app_cmd.shell().open("ms-settings:defaultapps", None);
                                 }
+                                "register:protocols" => {
+                                    let _ = desktop_google_core::register_calendar_protocol_handlers(None);
+                                }
                                 "first_run_completed" => {
                                     desktop_google_core::config::mark_first_run_completed("com.andrey.desktop-calendar");
                                 }
@@ -308,6 +323,16 @@ pub fn run() {
                     }
 
                     let url_str = url.as_str();
+                    if url.scheme() == "webcal" || url.scheme() == "webcals" {
+                        let target = desktop_google_core::to_calendar_subscribe_url(url_str);
+                        if let Ok(parsed_target) = target.parse() {
+                            if let Some(w) = app_nav.get_webview_window("main") {
+                                let _ = w.navigate(parsed_target);
+                            }
+                        }
+                        return false;
+                    }
+
                     if let Some(host) = url.host_str() {
                         if host == "workspace.google.com" {
                             if let Some(w) = app_nav.get_webview_window("main") {
@@ -331,6 +356,16 @@ pub fn run() {
                 })
                 .on_new_window(move |url, _features| {
                     let url_str = url.as_str();
+                    if url.scheme() == "webcal" || url.scheme() == "webcals" {
+                        let target = desktop_google_core::to_calendar_subscribe_url(url_str);
+                        if let Ok(parsed_target) = target.parse() {
+                            if let Some(w) = app_win.get_webview_window("main") {
+                                let _ = w.navigate(parsed_target);
+                            }
+                        }
+                        return tauri::webview::NewWindowResponse::Deny;
+                    }
+
                     if let Some(host) = url.host_str() {
                         if host == "workspace.google.com" {
                             if let Some(w) = app_win.get_webview_window("main") {

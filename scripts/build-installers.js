@@ -192,6 +192,9 @@ function buildInstaller(config) {
   WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics\\DefaultIcon" "" '"$INSTDIR\\${config.binaryName}",0'
   WriteRegStr HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics\\shell\\open\\command" "" '"$INSTDIR\\${config.binaryName}" "%1"'
 
+  ; Register .ics extension OpenWithProgids so Desktop Calendar appears in Windows "Open with" and Default apps
+  WriteRegStr HKCU "Software\\Classes\\.ics\\OpenWithProgids" "DesktopCalendar.Assoc.ics" ""
+
   ; Clients\\Calendar registration
   WriteRegStr HKCU "Software\\Clients\\Calendar\\Desktop Calendar" "" "${config.appName}"
   WriteRegStr HKCU "Software\\Clients\\Calendar\\Desktop Calendar\\DefaultIcon" "" '"$INSTDIR\\${config.binaryName}",0'
@@ -212,6 +215,7 @@ function buildInstaller(config) {
   DeleteRegKey HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${config.binaryName}"
   DeleteRegKey HKCU "Software\\Classes\\DesktopCalendar.Url.webcal"
   DeleteRegKey HKCU "Software\\Classes\\DesktopCalendar.Assoc.ics"
+  DeleteRegValue HKCU "Software\\Classes\\.ics\\OpenWithProgids" "DesktopCalendar.Assoc.ics"
   DeleteRegKey HKCU "Software\\Clients\\Calendar\\Desktop Calendar"
   DeleteRegKey HKCU "Software\\Classes\\AppUserModelId\\com.andrey.desktop-calendar"
 `;

@@ -131,6 +131,7 @@ console.log('\n[3/4] Verifying NSIS setup installers and embedded metadata...');
   assert(installerScript.includes('DesktopMail.Url.mailto'), 'NSIS script must register DesktopMail.Url.mailto for mailto: links');
   assert(installerScript.includes('DesktopCalendar.Url.webcal'), 'NSIS script must register DesktopCalendar.Url.webcal for webcal: links');
   assert(installerScript.includes('DesktopCalendar.Assoc.ics'), 'NSIS script must register DesktopCalendar.Assoc.ics for .ics files');
+  assert(installerScript.includes('.ics\\\\OpenWithProgids'), 'NSIS script must register .ics\\OpenWithProgids for Windows Explorer Open with support');
   assert(installerScript.includes('FriendlyAppName'), 'NSIS script must register FriendlyAppName in Classes\\Applications so Windows displays friendly app name');
   assert(installerScript.includes('AppUserModelId'), 'NSIS script must register AppUserModelId across protocol handlers');
   assert(installerScript.includes('SetOverwrite on'), 'NSIS script must enforce SetOverwrite on so already installed apps are always cleanly re-written');

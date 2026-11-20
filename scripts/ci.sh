@@ -57,6 +57,7 @@ echo ""
 echo "-> [6/6] Running End-to-End (E2E) bundle simulation and PE binary verification tests..."
 node tests/e2e-bundle.test.js
 node tests/e2e-binaries.test.js
+node tests/calendar-protocol.test.js
 
 echo ""
 echo "============================================================"

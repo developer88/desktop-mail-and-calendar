@@ -97,6 +97,14 @@
     }
   }, true);
 
+  function navigateInApp(targetUrl) {
+    if (typeof window.__DESKTOP_NAVIGATE__ === 'function') {
+      window.__DESKTOP_NAVIGATE__(targetUrl);
+    } else {
+      window.location.href = targetUrl;
+    }
+  }
+
   // Intercept clicks on links
   document.addEventListener('click', function(event) {
     let target = event.target;
@@ -113,20 +121,44 @@
         event.preventDefault();
         event.stopPropagation();
         const mailtoQuery = href.slice(7);
-        window.location.href = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(mailtoQuery);
+        navigateInApp('https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(mailtoQuery));
         return;
       }
     }
 
-    // In-app webcal: links route to add calendar subscription
-    if (href.startsWith('webcal:')) {
+    // In-app webcal: and webcals: links route to add calendar subscription
+    if (href.startsWith('webcal:') || href.startsWith('webcals:')) {
       if (typeof APP_KIND !== 'undefined' && APP_KIND === 'calendar') {
         event.preventDefault();
         event.stopPropagation();
-        const webcalUrl = 'https://calendar.google.com/calendar/u/0/r/settings/addcalendar?cid=' + encodeURIComponent(href);
-        window.location.href = webcalUrl;
+        let httpUrl = href;
+        if (href.startsWith('webcal://')) {
+          httpUrl = 'http://' + href.slice(9);
+        } else if (href.startsWith('webcal:')) {
+          httpUrl = 'http://' + href.slice(7);
+        } else if (href.startsWith('webcals://')) {
+          httpUrl = 'https://' + href.slice(10);
+        } else if (href.startsWith('webcals:')) {
+          httpUrl = 'https://' + href.slice(8);
+        }
+        const webcalUrl = 'https://calendar.google.com/calendar/u/0/r/settings/addcalendar?cid=' + encodeURIComponent(httpUrl);
+        navigateInApp(webcalUrl);
         return;
       }
+    }
+
+    // In-app .ics links route to calendar subscription
+    if (typeof APP_KIND !== 'undefined' && APP_KIND === 'calendar') {
+      try {
+        const parsedLink = new URL(href, window.location.href);
+        if (parsedLink.pathname && parsedLink.pathname.toLowerCase().endsWith('.ics')) {
+          event.preventDefault();
+          event.stopPropagation();
+          const calUrl = 'https://calendar.google.com/calendar/u/0/r/settings/addcalendar?cid=' + encodeURIComponent(href);
+          navigateInApp(calUrl);
+          return;
+        }
+      } catch (_) {}
     }
 
     try {

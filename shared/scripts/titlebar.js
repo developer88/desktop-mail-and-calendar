@@ -988,11 +988,25 @@
           'link',
           isCalendar ? 'Default Calendar App' : 'Default Email App',
           isCalendar
-            ? 'To set as default for calendar links, select Desktop Calendar under Default apps in Windows Settings.'
+            ? 'To set as default for calendar links (.ics & webcal://), select Desktop Calendar under Default apps in Windows Settings.'
             : 'To set as default for mailto: links, select Desktop Mail under Default apps in Windows Settings.',
           'Open Windows Settings',
           () => {
             triggerAction('open:defaultapps');
+          }
+        );
+
+        // 4. Protocol & file association registration
+        renderActionCard(
+          contentArea,
+          'link',
+          isCalendar ? 'Protocol & File Associations' : 'Protocol Associations',
+          isCalendar
+            ? 'Ensure webcal://, webcals:// protocols and .ics file associations are registered with Windows.'
+            : 'Ensure mailto: protocol association is registered with Windows.',
+          'Register Associations',
+          () => {
+            triggerAction('register:protocols');
           }
         );
       } else if (tabId === 'privacy') {

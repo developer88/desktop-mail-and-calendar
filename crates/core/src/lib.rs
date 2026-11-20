@@ -12,4 +12,9 @@ pub use navigation::{
     classify_url, extract_redirect_target, get_external_browser_target, is_google_host,
     should_open_in_external_browser, UrlCategory,
 };
-pub use protocol::{parse_mailto_url, to_gmail_compose_url, to_mail_compose_url, MailtoData};
+pub use protocol::{
+    calendar_import_export_url, parse_ics_content, parse_mailto_url,
+    register_calendar_protocol_handlers, register_mail_protocol_handlers,
+    resolve_calendar_target_url, to_calendar_event_url, to_calendar_subscribe_url,
+    to_gmail_compose_url, to_mail_compose_url, IcsEventData, MailtoData,
+};

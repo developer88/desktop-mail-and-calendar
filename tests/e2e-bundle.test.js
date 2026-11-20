@@ -128,6 +128,12 @@ function createSimulatedAppEnv(url, htmlBody = '<!DOCTYPE html><html><head><titl
   const { document } = window;
   const ipcCalls = [];
   const titleHistory = [];
+  const navigations = [];
+
+  // Track in-app simulated navigations
+  window.__DESKTOP_NAVIGATE__ = (targetUrl) => {
+    navigations.push(String(targetUrl));
+  };
 
   // Track document.title changes (simulating Tauri's on_document_title_changed)
   let currentTitle = document.title || '';
@@ -229,6 +235,7 @@ function createSimulatedAppEnv(url, htmlBody = '<!DOCTYPE html><html><head><titl
     document,
     ipcCalls,
     titleHistory,
+    navigations,
     drawnTexts,
     cleanup() {
       delete window.Element.prototype.innerHTML;
@@ -441,6 +448,41 @@ console.log('\n[2/5] Testing Desktop Calendar full E2E lifecycle...');
   assert(calCoffeeImg, 'Buy Me a Coffee link must contain image');
   assert.strictEqual(calCoffeeImg.getAttribute('src'), 'https://storage.ko-fi.com/cdn/kofi4.png?v=6');
   assert.strictEqual(calCoffeeImg.getAttribute('alt'), 'Buy Me a Coffee at ko-fi.com');
+
+  // 2e. Verify Protocol & File Association registration in Settings
+  navTabs[0].click(); // Back to General tab
+  const actionBtns = settingsOverlay.querySelectorAll('.desktop-settings-action-btn');
+  assert(actionBtns.length >= 2, 'General tab must have action buttons for Settings and Protocol registration');
+  actionBtns[1].click(); // Register Associations
+  assert(env.titleHistory.includes('__desktop_cmd__:register:protocols'), 'Clicking Register Associations must trigger __desktop_cmd__:register:protocols');
+
+  // 2f. Verify Navigation Interceptor routes webcal://, webcals:// and .ics links
+  const webcalLink = document.createElement('a');
+  webcalLink.href = 'webcal://example.com/calendar.ics';
+  document.body.appendChild(webcalLink);
+  webcalLink.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
+  assert(
+    env.navigations.some((u) => u.includes('addcalendar?cid=http%3A%2F%2Fexample.com%2Fcalendar.ics')),
+    'webcal: link click must redirect to addcalendar?cid='
+  );
+
+  const webcalsLink = document.createElement('a');
+  webcalsLink.href = 'webcals://secure.example.com/events.ics';
+  document.body.appendChild(webcalsLink);
+  webcalsLink.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
+  assert(
+    env.navigations.some((u) => u.includes('addcalendar?cid=https%3A%2F%2Fsecure.example.com%2Fevents.ics')),
+    'webcals: link click must redirect to addcalendar?cid='
+  );
+
+  const icsLink = document.createElement('a');
+  icsLink.href = 'https://example.com/meeting.ics';
+  document.body.appendChild(icsLink);
+  icsLink.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
+  assert(
+    env.navigations.some((u) => u.includes('addcalendar?cid=https%3A%2F%2Fexample.com%2Fmeeting.ics')),
+    '.ics link click must redirect to addcalendar?cid='
+  );
 
   env.cleanup();
   console.log('PASS: Desktop Calendar full E2E lifecycle verified.');
