@@ -137,6 +137,9 @@ console.log('\n[3/4] Verifying NSIS setup installers and embedded metadata...');
   assert(installerScript.includes('SetOverwrite on'), 'NSIS script must enforce SetOverwrite on so already installed apps are always cleanly re-written');
   assert(installerScript.includes('taskkill.exe'), 'NSIS script must use taskkill.exe with $SYSDIR to terminate running instances');
   assert(installerScript.includes('InitPluginsDir'), 'NSIS script must initialize plugins dir before calling nsExec in .onInit');
+  assert(installerScript.includes('MUI_PAGE_LICENSE'), 'NSIS script must configure MUI_PAGE_LICENSE for legal disclaimer');
+  assert(installerScript.includes('disclaimer.txt'), 'NSIS script must reference disclaimer.txt');
+  assert(fs.existsSync(path.join(root, 'shared', 'installer', 'disclaimer.txt')), 'shared/installer/disclaimer.txt must exist');
 
   console.log('PASS: Both NSIS setup installers verified with complete metadata, High-DPI awareness, and Default Apps protocol registrations.');
 }

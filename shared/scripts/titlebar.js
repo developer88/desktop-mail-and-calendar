@@ -1720,17 +1720,9 @@
     dragArea.id = 'desktop-custom-titlebar-drag';
     dragArea.setAttribute('data-tauri-drag-region', 'deep');
 
-    if (isCalendar) {
-      const titleIcon = createSvgIcon('calendar-logo');
-      titleIcon.setAttribute('width', '16');
-      titleIcon.setAttribute('height', '16');
-      titleIcon.id = 'desktop-custom-titlebar-icon';
-      dragArea.appendChild(titleIcon);
-    }
-
     const title = document.createElement('span');
     title.id = 'desktop-custom-titlebar-title';
-    title.textContent = isCalendar ? 'Google Calendar' : '';
+    title.textContent = '';
     dragArea.appendChild(title);
 
     const controls = document.createElement('div');

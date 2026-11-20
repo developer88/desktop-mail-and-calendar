@@ -72,6 +72,7 @@ function buildInstaller(config) {
   const iconPath = path.join(rootDir, config.iconRelPath);
   const pngPath = path.join(rootDir, config.pngRelPath);
   const wizardBmpPath = path.join(rootDir, config.wizardBmp);
+  const disclaimerPath = path.join(rootDir, 'shared', 'installer', 'disclaimer.txt');
   const outInstallerPath = path.join(distDir, config.installerName);
 
   // Generate protocol & default app registration commands
@@ -256,6 +257,9 @@ VIAddVersionKey "OriginalFilename" "${config.installerName}"
 !define MUI_ABORTWARNING
 
 !insertmacro MUI_PAGE_WELCOME
+!define MUI_LICENSEPAGE_TEXT_TOP "Please review the legal disclaimer and license terms before installing ${config.appName}."
+!define MUI_LICENSEPAGE_BUTTON "Agree"
+!insertmacro MUI_PAGE_LICENSE "${disclaimerPath.replace(/\\/g, '/')}"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_RUN "$INSTDIR\\${config.binaryName}"

@@ -424,6 +424,8 @@ console.log('\n[2/5] Testing Desktop Calendar full E2E lifecycle...');
   assert(document.documentElement.classList.contains('desktop-calendar-app'), 'html must have .desktop-calendar-app');
   const titlebar = document.getElementById('desktop-custom-titlebar');
   assert(titlebar && titlebar.classList.contains('calendar-titlebar'), 'Calendar titlebar must have .calendar-titlebar');
+  assert.strictEqual(document.getElementById('desktop-custom-titlebar-icon'), null, 'Calendar titlebar must NOT contain an icon (similar to Desktop Mail)');
+  assert.strictEqual(document.getElementById('desktop-custom-titlebar-title').textContent, '', 'Calendar titlebar title text must be empty (similar to Desktop Mail)');
   const calThemeEl = document.getElementById('desktop-theme');
   assert(calThemeEl && calThemeEl.textContent.includes('#desktop-custom-titlebar.calendar-titlebar'), 'Calendar theme must style .calendar-titlebar');
   assert(calThemeEl.textContent.includes('background: transparent !important'), 'Calendar titlebar must be transparent');
