@@ -65,6 +65,9 @@ function buildInstaller(config) {
   // Ensure dist has the freshest compiled binary before packaging installer
   const distBinaryPath = path.join(distDir, config.binaryName);
   if (binaryPath !== distBinaryPath) {
+    try {
+      require('child_process').execSync(`cmd.exe /c taskkill /F /IM ${config.binaryName} /T`, { stdio: 'ignore' });
+    } catch (_) {}
     fs.copyFileSync(binaryPath, distBinaryPath);
   }
   binaryPath = distBinaryPath;
