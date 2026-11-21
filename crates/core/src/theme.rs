@@ -320,7 +320,7 @@ pub fn generate_accent_css(accent: &AccentColor) -> String {
 
     format!(
         r#"/* Windows 11 Personalization Accent Color Override (Scoped strictly to Desktop Wrapper UI) */
-:root {{
+:root, :root:root, html {{
   --win11-accent: {hex};
   --win11-wrapper-accent: {hex};
   --win11-wrapper-accent-rgb: {r}, {g}, {b};
@@ -357,14 +357,16 @@ pub fn generate_accent_css(accent: &AccentColor) -> String {
 }}
 
 /* 3. Settings Modal Tabs */
-.desktop-settings-nav-item.active {{
+.desktop-settings-nav-item.active,
+#desktop-settings-dialog .desktop-settings-nav-item.active {{
   background: var(--win11-wrapper-accent-subtle, {subtle_light}) !important;
   color: var(--win11-wrapper-accent, {hex}) !important;
   font-weight: 600 !important;
 }}
 
 @media (prefers-color-scheme: dark) {{
-  .desktop-settings-nav-item.active {{
+  .desktop-settings-nav-item.active,
+  #desktop-settings-dialog .desktop-settings-nav-item.active {{
     background: var(--win11-wrapper-accent-subtle-dark, {subtle_dark}) !important;
     color: var(--win11-wrapper-accent-light, {light_hex}) !important;
   }}
@@ -375,12 +377,14 @@ pub fn generate_accent_css(accent: &AccentColor) -> String {
 }}
 
 /* 4. About Dialog & Settings Modal Buttons and Highlights */
-.desktop-settings-done-btn {{
+.desktop-settings-done-btn,
+#desktop-settings-dialog .desktop-settings-done-btn {{
   background: var(--win11-wrapper-accent, {hex}) !important;
   color: var(--win11-wrapper-accent-text, {text_color}) !important;
 }}
 
-.desktop-settings-done-btn:hover {{
+.desktop-settings-done-btn:hover,
+#desktop-settings-dialog .desktop-settings-done-btn:hover {{
   background: var(--win11-wrapper-accent-hover, {hover_hex}) !important;
 }}
 
@@ -394,18 +398,23 @@ pub fn generate_accent_css(accent: &AccentColor) -> String {
 }}
 
 .desktop-settings-action-btn,
-.desktop-test-notif-btn {{
+.desktop-test-notif-btn,
+#desktop-settings-dialog .desktop-settings-action-btn,
+#desktop-settings-dialog .desktop-test-notif-btn {{
   color: var(--win11-wrapper-accent, {hex}) !important;
   border-color: var(--win11-wrapper-accent-border, {border_color}) !important;
 }}
 
 .desktop-settings-action-btn:hover,
-.desktop-test-notif-btn:hover {{
+.desktop-test-notif-btn:hover,
+#desktop-settings-dialog .desktop-settings-action-btn:hover,
+#desktop-settings-dialog .desktop-test-notif-btn:hover {{
   background: var(--win11-wrapper-accent-subtle, {subtle_light}) !important;
   border-color: var(--win11-wrapper-accent, {hex}) !important;
 }}
 
-.desktop-toggle-switch.on {{
+.desktop-toggle-switch.on,
+#desktop-settings-dialog .desktop-toggle-switch.on {{
   background: var(--win11-wrapper-accent, {hex}) !important;
   border-color: var(--win11-wrapper-accent, {hex}) !important;
 }}

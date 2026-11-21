@@ -160,6 +160,11 @@ pub fn get_injected_bundle(app_kind: AppKind, is_first_run: bool) -> String {
                 styleEl.id = 'desktop-theme';
                 styleEl.textContent = `{theme}\n{declutter}`;
                 target.appendChild(styleEl);
+
+                var accentEl = document.getElementById('desktop-accent-theme');
+                if (accentEl) {{
+                    target.appendChild(accentEl);
+                }}
             }}
         }}
 

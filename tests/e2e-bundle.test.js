@@ -327,9 +327,9 @@ console.log('\n[1/5] Testing Desktop Mail full E2E lifecycle...');
   const settingsOverlay = document.getElementById('desktop-settings-overlay');
   assert(settingsOverlay, 'Settings modal must open when clicking File -> Settings');
 
-  // Check General tab toggles (Notifications, Open at login, Windows Accent Color)
+  // Check General tab toggles (Notifications, Open at login)
   const switches = settingsOverlay.querySelectorAll('.desktop-toggle-switch');
-  assert.strictEqual(switches.length, 3, 'General tab must have 3 toggle switches (Notifications, Login, Accent Color)');
+  assert.strictEqual(switches.length, 2, 'General tab must have 2 toggle switches (Notifications, Login)');
   switches[1].click(); // Open at login -> on
   assert.strictEqual(window.localStorage.getItem('desktop_pref_open_at_login'), 'true');
   assert(titleHistory.includes('__desktop_cmd__:autostart:on'), 'Enabling Open at login must trigger __desktop_cmd__:autostart:on');

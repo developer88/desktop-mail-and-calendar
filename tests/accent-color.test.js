@@ -106,15 +106,13 @@ assert(!rawTemplate.includes('.gb_'), 'theme.rs CSS template must NEVER style Go
 console.log('PASS: Wrapper UI elements correctly targeted; zero Google web DOM interference.');
 
 // =========================================================================
-// [4/5] Settings Dialog Personalization Sync Toggle & Palette Icon
+// [4/5] Default Windows Accent Color Synchronization (Enabled by default, no toggle)
 // =========================================================================
-console.log('\n[4/5] Verifying Settings dialog "Sync with Windows Accent Color" toggle & palette SVG...');
+console.log('\n[4/5] Verifying default Windows Accent Color synchronization and palette SVG...');
 
-assert(titlebarScript.includes("'Sync with Windows Accent Color'"), 'titlebar.js must include Sync with Windows Accent Color toggle card');
-assert(titlebarScript.includes("'sync_windows_accent'"), 'titlebar.js must use sync_windows_accent preference key');
+assert(!titlebarScript.includes("'sync_windows_accent'"), 'titlebar.js must not include toggle for sync_windows_accent (enabled by default)');
 assert(titlebarScript.includes("document.getElementById('desktop-accent-theme')"), 'titlebar.js must reference desktop-accent-theme element');
-assert(titlebarScript.includes("styleEl.disabled = !enabled"), 'titlebar.js must toggle disabled state of accent stylesheet');
-assert(titlebarScript.includes("initAccentColorSync"), 'titlebar.js must initialize accent color sync preference');
+assert(titlebarScript.includes("initAccentColorSync"), 'titlebar.js must initialize accent color sync by default');
 
 // Verify palette SVG icon renders with pure DOM APIs (no innerHTML)
 const mockDoc = createMockDocument();

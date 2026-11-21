@@ -782,6 +782,7 @@
   // Settings Modal Dialog with 3 sections matching Gemini
   function openSettingsDialog(initialTab) {
     if (document.getElementById('desktop-settings-overlay')) return;
+    initAccentColorSync();
     const existingSplash = document.getElementById('desktop-splash-overlay');
     if (existingSplash) existingSplash.remove();
 
@@ -994,22 +995,6 @@
           false,
           (enabled) => {
             triggerAction(enabled ? 'autostart:on' : 'autostart:off');
-          }
-        );
-
-        // 3. Sync with Windows Personalization Accent Color (enabled by default)
-        renderToggleCard(
-          contentArea,
-          'palette',
-          'Sync with Windows Accent Color',
-          'Apply your active Windows 11 accent color strictly to desktop wrapper controls, tabs, and action buttons.',
-          'sync_windows_accent',
-          true,
-          (enabled) => {
-            const styleEl = document.getElementById('desktop-accent-theme');
-            if (styleEl) {
-              styleEl.disabled = !enabled;
-            }
           }
         );
 
@@ -1836,13 +1821,12 @@
   // Initialize background update checker
   initAutoUpdateChecker();
 
-  // Initialize Windows 11 Personalization Accent Color Preference
+  // Windows 11 Personalization Accent Color: Enabled and applied by default
   function initAccentColorSync() {
     try {
-      const isSyncEnabled = getPref('sync_windows_accent', true);
       const styleEl = document.getElementById('desktop-accent-theme');
       if (styleEl) {
-        styleEl.disabled = !isSyncEnabled;
+        styleEl.disabled = false;
       }
     } catch (_) {}
   }
@@ -1879,8 +1863,11 @@
       const r = color.r !== undefined ? color.r : 0;
       const g = color.g !== undefined ? color.g : 120;
       const b = color.b !== undefined ? color.b : 212;
-      styleEl.textContent = ':root { --win11-accent: ' + color.hex + '; --win11-wrapper-accent: ' + color.hex + '; --win11-wrapper-accent-rgb: ' + r + ', ' + g + ', ' + b + '; --win11-wrapper-accent-subtle: rgba(' + r + ', ' + g + ', ' + b + ', 0.12); --win11-wrapper-accent-subtle-dark: rgba(' + r + ', ' + g + ', ' + b + ', 0.24); }';
-      initAccentColorSync();
+      styleEl.textContent = ':root, :root:root, html { --win11-accent: ' + color.hex + ' !important; --win11-wrapper-accent: ' + color.hex + ' !important; --win11-wrapper-accent-rgb: ' + r + ', ' + g + ', ' + b + ' !important; --win11-wrapper-accent-subtle: rgba(' + r + ', ' + g + ', ' + b + ', 0.12) !important; --win11-wrapper-accent-subtle-dark: rgba(' + r + ', ' + g + ', ' + b + ', 0.24) !important; }\n' +
+        '.desktop-toggle-switch.on, #desktop-settings-dialog .desktop-toggle-switch.on { background: ' + color.hex + ' !important; border-color: ' + color.hex + ' !important; }\n' +
+        '#desktop-settings-dialog .desktop-settings-nav-item.active { background: rgba(' + r + ', ' + g + ', ' + b + ', 0.12) !important; color: ' + color.hex + ' !important; }\n' +
+        '#desktop-settings-dialog .desktop-settings-done-btn { background: ' + color.hex + ' !important; }';
+      styleEl.disabled = false;
     }
   };
 })();
