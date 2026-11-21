@@ -64,7 +64,6 @@ node tests/calendar-protocol.test.js
 node tests/accent-color.test.js
 node tests/window-backdrop.test.js
 node tests/jumplist.test.js
-node tests/share-target.test.js
 
 echo ""
 echo "============================================================"

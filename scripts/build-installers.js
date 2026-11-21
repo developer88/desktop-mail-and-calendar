@@ -99,12 +99,15 @@ function buildInstaller(config) {
   WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "ApplicationName" "${config.appName}"
   WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "ApplicationCompany" "Andrey Eremin"
   WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "AppUserModelId" "com.andrey.desktop-mail"
-  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}" "SupportedTypes" "*"
   WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}\\DefaultIcon" "" '"$INSTDIR\\${config.binaryName}",0'
   WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}\\SupportedProtocols\\mailto" "" ""
   WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}\\shell\\open\\command" "" '"$INSTDIR\\${config.binaryName}" "%1"'
   WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}\\shell\\compose\\command" "" '"$INSTDIR\\${config.binaryName}" --compose'
-  WriteRegStr HKCU "Software\\Classes\\Applications\\${config.binaryName}\\shell\\share\\command" "" '"$INSTDIR\\${config.binaryName}" --share-file="%1"'
+
+  ; Clean up any obsolete share target keys and SendTo shortcuts
+  DeleteRegKey HKCU "Software\\Classes\\Applications\\${config.binaryName}\\shell\\share"
+  DeleteRegValue HKCU "Software\\Classes\\Applications\\${config.binaryName}" "SupportedTypes"
+  Delete "$SENDTO\\Desktop Mail.lnk"
 
   ; App Paths
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${config.binaryName}" "" '"$INSTDIR\\${config.binaryName}"'
@@ -322,8 +325,6 @@ Section "Install"
   CreateShortcut "$SMPROGRAMS\\${config.appName}\\${config.appName}.lnk" "$INSTDIR\\${config.binaryName}" "" "$INSTDIR\\app.ico" 0
   CreateShortcut "$SMPROGRAMS\\${config.appName}\\Uninstall.lnk" "$INSTDIR\\uninstall.exe" "" "$INSTDIR\\uninstall.exe" 0
   CreateShortcut "$DESKTOP\\${config.appName}.lnk" "$INSTDIR\\${config.binaryName}" "" "$INSTDIR\\app.ico" 0
-${config.appId === 'DesktopMail' ? `  ; Windows 11 Explorer SendTo shortcut for Native Share / File Attachments
-  CreateShortcut "$SENDTO\\Desktop Mail.lnk" "$INSTDIR\\${config.binaryName}" "" "$INSTDIR\\app.ico" 0` : ''}
 
   ; Registry for Add/Remove Programs
   WriteRegStr HKCU "Software\\${config.appId}" "Install_Dir" "$INSTDIR"

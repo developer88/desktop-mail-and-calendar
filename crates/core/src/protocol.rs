@@ -293,69 +293,12 @@ pub fn resolve_mail_target_url(raw: &str) -> Option<String> {
         }
     }
 
-    // 4. Explicit share-file flag
-    if let Some(path_str) = clean
-        .strip_prefix("--share-file=")
-        .or_else(|| clean.strip_prefix("--share="))
-    {
-        let path_clean = path_str.trim().trim_matches('"').trim_matches('\'');
-        return Some(create_file_share_compose_url(path_clean));
-    }
-
-    // 5. Existing local file path (e.g. invoked via Windows Explorer SendTo or Share context)
-    let path = std::path::Path::new(clean);
-    if path.is_file() {
-        return Some(create_file_share_compose_url(clean));
-    }
-
-    // 6. Direct external web link (e.g. shared via Microsoft Edge / Windows Share Contract)
-    if (lower.starts_with("http://") || lower.starts_with("https://"))
-        && !lower.contains("mail.google.com")
-    {
-        let mailto = MailtoData {
-            to: "".to_string(),
-            subject: Some(format!("Link: {}", clean)),
-            body: Some(clean.to_string()),
-            ..Default::default()
-        };
-        return Some(to_mail_compose_url(&mailto));
-    }
-
-    // 7. Internal mail.google.com target URL passed directly
+    // 4. Internal mail.google.com target URL passed directly
     if is_valid_mail_target(clean) {
         return Some(clean.to_string());
     }
 
     None
-}
-
-fn create_file_share_compose_url(path_str: &str) -> String {
-    let filename = extract_file_name_from_path(path_str);
-
-    let subject = format!("Sharing: {}", filename);
-    let body = format!(
-        "Attached: {}\r\nLocation: {}\r\n\r\n(Drag and drop this file into the message to attach)",
-        filename, path_str
-    );
-
-    let mailto = MailtoData {
-        to: "".to_string(),
-        subject: Some(subject),
-        body: Some(body),
-        ..Default::default()
-    };
-    to_mail_compose_url(&mailto)
-}
-
-fn extract_file_name_from_path(path_str: &str) -> String {
-    let clean = path_str.trim().trim_matches('"').trim_matches('\'');
-    let after_slash = clean.rsplit('/').next().unwrap_or(clean);
-    let after_backslash = after_slash.rsplit('\\').next().unwrap_or(after_slash);
-    if after_backslash.is_empty() {
-        "File".to_string()
-    } else {
-        after_backslash.to_string()
-    }
 }
 
 fn is_valid_mail_target(url_str: &str) -> bool {
@@ -1230,20 +1173,6 @@ END:VCALENDAR";
         assert!(res.contains("su=Proposal"));
         assert!(res.contains("body=Hello"));
         assert!(res.contains("view=cm"));
-    }
-
-    #[test]
-    fn test_resolve_mail_target_url_share_target() {
-        // Link shared from Edge / browser
-        let link_res = resolve_mail_target_url("https://www.rust-lang.org").unwrap();
-        assert!(link_res.contains("su=Link%3A+https%3A%2F%2Fwww.rust-lang.org"));
-        assert!(link_res.contains("body=https%3A%2F%2Fwww.rust-lang.org"));
-
-        // File shared via --share-file
-        let file_res =
-            resolve_mail_target_url(r#"--share-file="C:\Users\test\report.pdf""#).unwrap();
-        assert!(file_res.contains("su=Sharing%3A+report.pdf"));
-        assert!(file_res.contains("report.pdf"));
     }
 
     #[test]
