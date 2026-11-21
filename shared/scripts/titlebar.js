@@ -1723,6 +1723,7 @@
     const title = document.createElement('span');
     title.id = 'desktop-custom-titlebar-title';
     title.textContent = '';
+    title.style.display = 'none';
     dragArea.appendChild(title);
 
     const controls = document.createElement('div');
