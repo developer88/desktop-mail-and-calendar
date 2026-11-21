@@ -1013,19 +1013,6 @@
           }
         );
 
-        // 4. Windows 11 Material Backdrop (Mica / Acrylic) (enabled by default)
-        renderToggleCard(
-          contentArea,
-          'window',
-          'Windows 11 Material Backdrop',
-          'Subtly sample desktop wallpaper and Fluent material through the transparent titlebar.',
-          'window_backdrop_mica',
-          true,
-          (enabled) => {
-            triggerAction(enabled ? 'backdrop:mica_alt' : 'backdrop:none');
-          }
-        );
-
         // 4. Default app instruction with deep link to Windows Settings
         renderActionCard(
           contentArea,
@@ -1860,17 +1847,6 @@
     } catch (_) {}
   }
   initAccentColorSync();
-
-  // Initialize Windows 11 Material Backdrop Preference
-  function initWindowBackdropPref() {
-    try {
-      const isBackdropEnabled = getPref('window_backdrop_mica', true);
-      if (!isBackdropEnabled) {
-        triggerAction('backdrop:none');
-      }
-    } catch (_) {}
-  }
-  initWindowBackdropPref();
 
   // Expose UI methods for runtime interactions and headless UI testing
   window.__desktop_ui = {

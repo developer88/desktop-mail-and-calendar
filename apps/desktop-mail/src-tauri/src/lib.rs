@@ -97,44 +97,6 @@ mod commands {
     }
 
     #[tauri::command]
-    pub fn set_window_backdrop<R: Runtime>(
-        app: AppHandle<R>,
-        backdrop: String,
-    ) -> Result<(), String> {
-        let b = desktop_google_core::theme::WindowBackdrop::from_str_name(&backdrop);
-        if let Some(w) = app.get_webview_window("main") {
-            #[cfg(target_os = "windows")]
-            if let Ok(hwnd_obj) = w.hwnd() {
-                let hwnd = hwnd_obj.0 as isize;
-                if hwnd != 0 {
-                    unsafe {
-                        desktop_google_core::theme::apply_window_backdrop_win32(hwnd, b);
-                    }
-                }
-            }
-            let tauri_effect = match b {
-                desktop_google_core::theme::WindowBackdrop::Mica => tauri::window::Effect::Mica,
-                desktop_google_core::theme::WindowBackdrop::MicaAlt => {
-                    tauri::window::Effect::Tabbed
-                }
-                desktop_google_core::theme::WindowBackdrop::Acrylic => {
-                    tauri::window::Effect::Acrylic
-                }
-                desktop_google_core::theme::WindowBackdrop::None => tauri::window::Effect::Mica,
-            };
-            let effects = tauri::window::EffectsBuilder::new()
-                .effect(tauri_effect)
-                .build();
-            let _ = w.set_effects(if b == desktop_google_core::theme::WindowBackdrop::None {
-                None
-            } else {
-                Some(effects)
-            });
-        }
-        Ok(())
-    }
-
-    #[tauri::command]
     pub fn close_window<R: Runtime>(app: AppHandle<R>) {
         app.exit(0);
     }
@@ -292,7 +254,6 @@ pub fn run() {
             commands::register_mail_protocols,
             commands::register_mail_jumplist,
             commands::get_windows_accent_color,
-            commands::set_window_backdrop,
             commands::minimize_window,
             commands::maximize_window,
             commands::close_window
@@ -332,10 +293,6 @@ pub fn run() {
             let app_nav = app.handle().clone();
             let app_win = app.handle().clone();
 
-            let effects = tauri::window::EffectsBuilder::new()
-                .effect(tauri::window::Effect::Tabbed)
-                .build();
-
             let window = WebviewWindowBuilder::new(app, "main", initial_url)
                 .title(&config.title)
                 .inner_size(config.width, config.height)
@@ -344,7 +301,6 @@ pub fn run() {
                 .resizable(true)
                 .decorations(false)
                 .shadow(true)
-                .effects(effects)
                 .user_agent(USER_AGENT)
                 .initialization_script(&injected_script)
                 .on_document_title_changed({
@@ -420,33 +376,7 @@ pub fn run() {
                                         "com.andrey.desktop-mail",
                                     );
                                 }
-                                cmd if cmd.starts_with("backdrop:") => {
-                                    let mode = cmd.trim_start_matches("backdrop:");
-                                    let b = desktop_google_core::theme::WindowBackdrop::from_str_name(mode);
-                                    #[cfg(target_os = "windows")]
-                                    if let Ok(hwnd_obj) = window.hwnd() {
-                                        let hwnd = hwnd_obj.0 as isize;
-                                        if hwnd != 0 {
-                                            unsafe {
-                                                desktop_google_core::theme::apply_window_backdrop_win32(hwnd, b);
-                                            }
-                                        }
-                                    }
-                                    let tauri_effect = match b {
-                                        desktop_google_core::theme::WindowBackdrop::Mica => tauri::window::Effect::Mica,
-                                        desktop_google_core::theme::WindowBackdrop::MicaAlt => tauri::window::Effect::Tabbed,
-                                        desktop_google_core::theme::WindowBackdrop::Acrylic => tauri::window::Effect::Acrylic,
-                                        desktop_google_core::theme::WindowBackdrop::None => tauri::window::Effect::Mica,
-                                    };
-                                    let effects = tauri::window::EffectsBuilder::new()
-                                        .effect(tauri_effect)
-                                        .build();
-                                    let _ = window.set_effects(if b == desktop_google_core::theme::WindowBackdrop::None {
-                                        None
-                                    } else {
-                                        Some(effects)
-                                    });
-                                }
+
                                 _ => {}
                             }
                         } else {
@@ -572,10 +502,6 @@ pub fn run() {
             if let Ok(hwnd_obj) = window.hwnd() {
                 let hwnd = hwnd_obj.0 as isize;
                 unsafe {
-                    desktop_google_core::theme::apply_window_backdrop_win32(
-                        hwnd,
-                        desktop_google_core::theme::WindowBackdrop::MicaAlt,
-                    );
                     desktop_google_core::icon::windows::set_window_relaunch_properties(
                         hwnd,
                         "com.andrey.desktop-mail",
