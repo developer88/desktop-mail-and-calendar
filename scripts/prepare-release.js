@@ -61,11 +61,14 @@ function main() {
       const sha256 = calculateSha256(destPath);
       const stats = fs.statSync(destPath);
 
+      const isStandalone = !item.bName.endsWith('-setup.exe');
       releaseFiles.push({
         app: item.app,
         filename: item.bName,
         sizeBytes: stats.size,
-        sha256: sha256
+        sha256: sha256,
+        isInstaller: !isStandalone,
+        releaseAsset: !isStandalone
       });
       checksums.push(`${sha256}  ${item.bName}`);
       console.log(`[Release] Staged ${item.app} -> dist/${item.bName} (${stats.size} bytes)`);

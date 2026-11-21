@@ -9,7 +9,8 @@ This document specifies mandatory rules, design constraints, and operational gui
 * **Release Titles Strictly Version-Only:** GitHub release names and titles must be solely the version string (e.g. `0.3.1`, `0.3.2`), **NOT** prefixed with application names or 'v' (never `Desktop Mail & Desktop Calendar v0.3.1`).
 * **Never Touch Past Releases:** Once a GitHub release is published, **do not** delete, re-upload, retag, or overwrite it unless the user explicitly and unambiguously requests a new release publish. Do not touch or rename past releases; this requirement applies to all subsequent releases.
 * **Push to Master / Main:** All subsequent bug fixes, UI improvements, installer updates, and test expansions must be committed to the repository and pushed directly to `origin/main` (or `master`) without altering existing release assets.
-* **Keep Dual Packaging (Portable + Installers):** Always maintain both standalone portable executables (`desktop-mail.exe`, `desktop-calendar.exe`) and setup installers (`desktop-mail-setup.exe`, `desktop-calendar-setup.exe`) alongside `SHA256SUMS.txt` and `release-manifest.json` in `dist/`.
+* **Always Compile Both Standalone Exes & Setup Installers:** Local builds and `dist/` staging must always compile and maintain both standalone portable executables (`desktop-mail.exe`, `desktop-calendar.exe`) and setup installers (`desktop-mail-setup.exe`, `desktop-calendar-setup.exe`) alongside `SHA256SUMS.txt` and `release-manifest.json`.
+* **Exclude Standalone Executables from Releases:** For all future GitHub releases (when explicitly instructed by the user), **DO NOT add standalone .exe files (`desktop-mail.exe`, `desktop-calendar.exe`) to releases**. Release assets must strictly include only the setup installers (`desktop-mail-setup.exe`, `desktop-calendar-setup.exe`), `SHA256SUMS.txt`, and `release-manifest.json`.
 
 ---
 
