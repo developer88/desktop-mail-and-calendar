@@ -11,6 +11,79 @@ pub struct ToastOptions<'a> {
     pub open_label: &'a str,
     pub tag: Option<&'a str>,
     pub silent: bool,
+    pub meeting_url: Option<&'a str>,
+}
+
+/// Describes the user's action when activating a Windows toast notification.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ToastAction {
+    /// Restore, unminimize, and focus the application window.
+    OpenApp,
+    /// Launch a meeting or video conference URL in the user's default browser.
+    JoinMeeting(String),
+}
+
+/// Extracts a video conference URL (Google Meet, Zoom, Teams, Webex, Jitsi) from raw text.
+pub fn extract_meeting_url(text: &str) -> Option<String> {
+    for raw_word in text.split_whitespace() {
+        let trimmed = raw_word
+            .trim_start_matches(|c: char| {
+                c == '(' || c == '<' || c == '[' || c == '{' || c == '"' || c == '\''
+            })
+            .trim_end_matches(|c: char| {
+                c == ')'
+                    || c == '>'
+                    || c == ']'
+                    || c == '}'
+                    || c == '"'
+                    || c == '\''
+                    || c == '.'
+                    || c == ','
+                    || c == ';'
+                    || c == '!'
+                    || c == '?'
+            });
+
+        if trimmed.is_empty() {
+            continue;
+        }
+
+        let is_meet = trimmed.contains("meet.google.com/");
+        let is_zoom = trimmed.contains("zoom.us/j/") || trimmed.contains("zoom.us/my/");
+        let is_teams = trimmed.contains("teams.microsoft.com/l/meetup-join/")
+            || trimmed.contains("teams.live.com/meet/");
+        let is_webex = trimmed.contains(".webex.com/meet/")
+            || (trimmed.contains(".webex.com/") && trimmed.contains("/j.php"));
+        let is_jitsi = trimmed.contains("meet.jit.si/");
+
+        if is_meet || is_zoom || is_teams || is_webex || is_jitsi {
+            let candidate = if !trimmed.starts_with("http://") && !trimmed.starts_with("https://") {
+                format!("https://{}", trimmed)
+            } else {
+                trimmed.to_string()
+            };
+
+            if let Ok(parsed) = url::Url::parse(&candidate) {
+                if parsed.scheme() == "http" || parsed.scheme() == "https" {
+                    if let Some(host) = parsed.host_str() {
+                        let host_lower = host.to_ascii_lowercase();
+                        if host_lower == "meet.google.com"
+                            || host_lower == "zoom.us"
+                            || host_lower.ends_with(".zoom.us")
+                            || host_lower == "teams.microsoft.com"
+                            || host_lower == "teams.live.com"
+                            || host_lower == "webex.com"
+                            || host_lower.ends_with(".webex.com")
+                            || host_lower == "meet.jit.si"
+                        {
+                            return Some(candidate);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
 }
 
 /// Escapes special XML characters for safe embedding inside Toast XML payloads.
@@ -132,6 +205,24 @@ pub fn build_toast_xml(opts: &ToastOptions<'_>) -> String {
         ""
     };
 
+    let actions_xml = if let Some(meeting_url) = opts.meeting_url.filter(|u| !u.trim().is_empty()) {
+        format!(
+            "<actions>\
+                <action content=\"Join Video Call\" arguments=\"join:{meeting_url}\" activationType=\"foreground\"/>\
+                <action content=\"{open_label}\" arguments=\"open\" activationType=\"foreground\"/>\
+            </actions>",
+            meeting_url = escape_xml(meeting_url.trim()),
+            open_label = escape_xml(opts.open_label),
+        )
+    } else {
+        format!(
+            "<actions>\
+                <action content=\"{open_label}\" arguments=\"open\" activationType=\"foreground\"/>\
+            </actions>",
+            open_label = escape_xml(opts.open_label),
+        )
+    };
+
     format!(
         "<toast launch=\"open\" activationType=\"foreground\">\
             <visual>\
@@ -142,16 +233,14 @@ pub fn build_toast_xml(opts: &ToastOptions<'_>) -> String {
                     <text placement=\"attribution\">{attribution}</text>\
                 </binding>\
             </visual>\
-            <actions>\
-                <action content=\"{open_label}\" arguments=\"open\" activationType=\"foreground\"/>\
-            </actions>\
+            {actions_xml}\
             {audio_xml}\
         </toast>",
         image_xml = image_xml,
         title = escape_xml(&formatted_title),
         body_xml = body_xml,
         attribution = escape_xml(attribution),
-        open_label = escape_xml(opts.open_label),
+        actions_xml = actions_xml,
         audio_xml = audio_xml,
     )
 }
@@ -159,12 +248,14 @@ pub fn build_toast_xml(opts: &ToastOptions<'_>) -> String {
 #[cfg(target_os = "windows")]
 pub fn show_windows_toast<F>(opts: &ToastOptions<'_>, on_activate: F) -> Result<(), String>
 where
-    F: Fn() + Send + Sync + 'static,
+    F: Fn(ToastAction) + Send + Sync + 'static,
 {
     use windows::core::HSTRING;
     use windows::Data::Xml::Dom::XmlDocument;
     use windows::Foundation::TypedEventHandler;
-    use windows::UI::Notifications::{ToastNotification, ToastNotificationManager};
+    use windows::UI::Notifications::{
+        ToastActivatedEventArgs, ToastNotification, ToastNotificationManager,
+    };
 
     let xml = build_toast_xml(opts);
     let xml_doc = XmlDocument::new().map_err(|e| format!("XmlDocument::new failed: {e:?}"))?;
@@ -183,8 +274,23 @@ where
     }
 
     let handler = TypedEventHandler::<ToastNotification, windows::core::IInspectable>::new(
-        move |_sender, _args| {
-            on_activate();
+        move |_sender, args| {
+            let mut action = ToastAction::OpenApp;
+            if let Some(inspectable) = args.as_ref() {
+                use windows::core::Interface;
+                if let Ok(toast_args) = inspectable.cast::<ToastActivatedEventArgs>() {
+                    if let Ok(args_hstring) = toast_args.Arguments() {
+                        let arg_str = args_hstring.to_string_lossy();
+                        if let Some(url) = arg_str.strip_prefix("join:") {
+                            action = ToastAction::JoinMeeting(url.to_string());
+                        } else if arg_str.starts_with("http://") || arg_str.starts_with("https://")
+                        {
+                            action = ToastAction::JoinMeeting(arg_str);
+                        }
+                    }
+                }
+            }
+            on_activate(action);
             Ok(())
         },
     );
@@ -203,7 +309,7 @@ where
 #[cfg(not(target_os = "windows"))]
 pub fn show_windows_toast<F>(_opts: &ToastOptions<'_>, _on_activate: F) -> Result<(), String>
 where
-    F: Fn() + Send + Sync + 'static,
+    F: Fn(ToastAction) + Send + Sync + 'static,
 {
     Ok(())
 }
@@ -256,6 +362,7 @@ mod tests {
             open_label: "Open Mail",
             tag: Some("unread_inbox_1"),
             silent: false,
+            meeting_url: None,
         });
         assert!(xml.contains("template=\"ToastGeneric\""));
         assert!(xml.contains("placement=\"appLogoOverride\""));
@@ -281,9 +388,80 @@ mod tests {
             open_label: "Open Calendar",
             tag: None,
             silent: true,
+            meeting_url: None,
         });
         assert!(xml.contains("Q&amp;A &lt;Team&gt; &quot;Sync&quot;"));
         assert!(xml.contains("Room A &amp; B"));
         assert!(xml.contains("<audio silent=\"true\"/>"));
+    }
+
+    #[test]
+    fn test_extract_meeting_url_services_and_normalization() {
+        // Google Meet
+        assert_eq!(
+            extract_meeting_url("Sprint Demo\nhttps://meet.google.com/abc-defg-hij"),
+            Some("https://meet.google.com/abc-defg-hij".to_string())
+        );
+        assert_eq!(
+            extract_meeting_url("Join: meet.google.com/abc-defg-hij."),
+            Some("https://meet.google.com/abc-defg-hij".to_string())
+        );
+        assert_eq!(
+            extract_meeting_url("(meet.google.com/xyz-uvwx-rst?authuser=0)"),
+            Some("https://meet.google.com/xyz-uvwx-rst?authuser=0".to_string())
+        );
+
+        // Zoom
+        assert_eq!(
+            extract_meeting_url("Zoom call: https://us02web.zoom.us/j/1234567890?pwd=secret"),
+            Some("https://us02web.zoom.us/j/1234567890?pwd=secret".to_string())
+        );
+        assert_eq!(
+            extract_meeting_url("Personal room: zoom.us/my/johndoe!"),
+            Some("https://zoom.us/my/johndoe".to_string())
+        );
+
+        // Microsoft Teams
+        assert_eq!(
+            extract_meeting_url(
+                "Teams link: https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc"
+            ),
+            Some("https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc".to_string())
+        );
+
+        // Webex
+        assert_eq!(
+            extract_meeting_url("Webex: https://myorg.webex.com/meet/alice"),
+            Some("https://myorg.webex.com/meet/alice".to_string())
+        );
+
+        // Non-meeting text & docs
+        assert_eq!(extract_meeting_url("Just normal text with no link"), None);
+        assert_eq!(
+            extract_meeting_url("https://docs.google.com/document/d/123"),
+            None
+        );
+    }
+
+    #[test]
+    fn test_build_toast_xml_with_meeting_action_button() {
+        let xml = build_toast_xml(&ToastOptions {
+            aumid: "com.andrey.desktop-calendar",
+            app_name: "Desktop Calendar",
+            title: "Sprint Review",
+            body: "Join video call: https://meet.google.com/abc-defg-hij",
+            icon_path: None,
+            attribution: None,
+            open_label: "Open Calendar",
+            tag: Some("cal_evt_1"),
+            silent: false,
+            meeting_url: Some("https://meet.google.com/abc-defg-hij"),
+        });
+
+        assert!(xml.contains("content=\"Join Video Call\""));
+        assert!(xml.contains("arguments=\"join:https://meet.google.com/abc-defg-hij\""));
+        assert!(xml.contains("activationType=\"foreground\""));
+        assert!(xml.contains("content=\"Open Calendar\""));
+        assert!(xml.contains("arguments=\"open\""));
     }
 }

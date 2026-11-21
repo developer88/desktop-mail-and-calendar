@@ -64,6 +64,81 @@
     }
   }
 
+  // Regular expression to detect video conference URLs across major providers:
+  // Google Meet, Zoom, Microsoft Teams, Cisco Webex, Jitsi
+  const MEETING_URL_REGEX = /(?:https?:\/\/)?(?:[a-zA-Z0-9_\-]+\.)?(?:meet\.google\.com|zoom\.us\/(?:j|my)|teams\.microsoft\.com\/l\/meetup-join|teams\.live\.com\/meet|webex\.com\/(?:meet|[a-zA-Z0-9_\-]+\/j\.php)|meet\.jit\.si)\/[^\s<>"')]+/;
+
+  function normalizeMeetingUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return null;
+    let url = rawUrl.trim();
+    // Strip trailing punctuation common in text
+    url = url.replace(/[.,;!?)\]>]+$/, '');
+    if (!/^https?:\/\//i.test(url)) {
+      url = 'https://' + url;
+    }
+    return url;
+  }
+
+  function extractMeetingUrl(options, title, body) {
+    if (!options && !title && !body) return null;
+
+    // 1. Check options.data (object with url properties or direct string)
+    if (options && options.data) {
+      if (typeof options.data === 'string') {
+        const match = options.data.match(MEETING_URL_REGEX);
+        if (match) return normalizeMeetingUrl(match[0]);
+      } else if (typeof options.data === 'object' && options.data !== null) {
+        const candidates = [
+          options.data.url,
+          options.data.meetingUrl,
+          options.data.meetUrl,
+          options.data.hangoutUrl,
+          options.data.conferenceUrl,
+          options.data.joinUrl,
+          options.data.link,
+          options.data.uri
+        ];
+        for (let i = 0; i < candidates.length; i++) {
+          if (typeof candidates[i] === 'string') {
+            const match = candidates[i].match(MEETING_URL_REGEX);
+            if (match) return normalizeMeetingUrl(match[0]);
+          }
+        }
+      }
+    }
+
+    // 2. Check options.actions (action buttons array)
+    if (options && Array.isArray(options.actions)) {
+      for (let i = 0; i < options.actions.length; i++) {
+        const act = options.actions[i];
+        if (act) {
+          if (typeof act.url === 'string') {
+            const match = act.url.match(MEETING_URL_REGEX);
+            if (match) return normalizeMeetingUrl(match[0]);
+          }
+          if (typeof act.action === 'string') {
+            const match = act.action.match(MEETING_URL_REGEX);
+            if (match) return normalizeMeetingUrl(match[0]);
+          }
+        }
+      }
+    }
+
+    // 3. Check body text
+    if (body && typeof body === 'string') {
+      const match = body.match(MEETING_URL_REGEX);
+      if (match) return normalizeMeetingUrl(match[0]);
+    }
+
+    // 4. Check title text
+    if (title && typeof title === 'string') {
+      const match = title.match(MEETING_URL_REGEX);
+      if (match) return normalizeMeetingUrl(match[0]);
+    }
+
+    return null;
+  }
+
   function sendNativeNotification(payload) {
     if (!isNotificationsAllowed()) return;
     window.__desktop_last_notif_time = Date.now();
@@ -117,13 +192,17 @@
       this.onerror = null;
       this.onshow = null;
 
+      const meetingUrl = extractMeetingUrl(options, this.title, this.body);
+      this.meetingUrl = meetingUrl;
+
       if (DesktopNotification.permission === 'granted') {
         sendNativeNotification({
           title: this.title,
           body: this.body,
           icon: this.icon,
           tag: this.tag,
-          silent: this.silent
+          silent: this.silent,
+          meeting_url: meetingUrl
         });
       }
 
@@ -168,6 +247,9 @@
     }
     return Promise.resolve(perm);
   };
+
+  DesktopNotification.extractMeetingUrl = extractMeetingUrl;
+  DesktopNotification.normalizeMeetingUrl = normalizeMeetingUrl;
 
   DesktopNotification.toString = function () {
     return 'function Notification() { [native code] }';

@@ -176,7 +176,46 @@ async function run() {
     console.log('PASS: ServiceWorker showNotification successfully routes to native bridge.');
   }
 
-  console.log('\nALL 4 NOTIFICATION BRIDGE TESTS PASSED SUCCESSFULLY!');
+  // 5. Verify Meeting URL Extraction for 1-Click Join Video Call
+  console.log('\n[5/5] Testing Meeting URL Extraction for 1-Click Video Call Action...');
+  {
+    // Test helper methods directly
+    assert.strictEqual(
+      mockWindow.Notification.extractMeetingUrl(null, 'Sprint Demo', 'Join with Google Meet: meet.google.com/abc-defg-hij.'),
+      'https://meet.google.com/abc-defg-hij'
+    );
+    assert.strictEqual(
+      mockWindow.Notification.extractMeetingUrl({ data: { url: 'https://zoom.us/j/1234567890?pwd=xyz' } }, 'Zoom Sync', '10:00 AM'),
+      'https://zoom.us/j/1234567890?pwd=xyz'
+    );
+    assert.strictEqual(
+      mockWindow.Notification.extractMeetingUrl({ actions: [{ action: 'https://teams.microsoft.com/l/meetup-join/19%3axyz' }] }, 'Teams', ''),
+      'https://teams.microsoft.com/l/meetup-join/19%3axyz'
+    );
+    assert.strictEqual(
+      mockWindow.Notification.extractMeetingUrl(null, 'No link', 'Just regular text with https://google.com'),
+      null
+    );
+
+    // Test through full notification constructor dispatch
+    dispatchedCommands.length = 0;
+    new mockWindow.Notification('Project Sync & Review', {
+      body: '11:00 AM - 11:30 AM\nGoogle Meet: https://meet.google.com/xyz-uvwx-rst',
+      tag: 'cal_event_meet_1'
+    });
+
+    await new Promise((r) => setTimeout(r, 120));
+
+    assert(dispatchedCommands.length >= 1, 'Command must be dispatched for calendar event reminder');
+    const hex = dispatchedCommands[0].slice('__desktop_cmd__:notify:'.length);
+    const payload = JSON.parse(fromHex(hex));
+    assert.strictEqual(payload.title, 'Project Sync & Review');
+    assert.strictEqual(payload.meeting_url, 'https://meet.google.com/xyz-uvwx-rst');
+
+    console.log('PASS: Meeting URL extracted cleanly and serialized in native notification payload.');
+  }
+
+  console.log('\nALL 5 NOTIFICATION BRIDGE TESTS PASSED SUCCESSFULLY!');
 }
 
 run().catch((err) => {

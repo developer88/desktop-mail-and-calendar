@@ -288,17 +288,17 @@ async function run() {
   // ==========================================================================
   // [5/7] Google Calendar Event Reminder Notification Simulation
   // ==========================================================================
-  console.log('\n[5/7] Testing Google Calendar Event Reminder Notification...');
+  console.log('\n[5/7] Testing Google Calendar Event Reminder Notification & Meet URL Extraction...');
   {
     const { env, dispatchedCommands } = createMockBrowserEnv('calendar');
     const runner = new Function('window', 'document', 'navigator', 'localStorage', 'ServiceWorkerRegistration', notifBridgeScript);
     runner(env, env.document, env.navigator, env.localStorage, env.ServiceWorkerRegistration);
 
     const eventTitle = 'Sprint Review & Demo';
-    const eventTime = 'In 10 minutes (10:00 AM - 11:00 AM)';
+    const eventBody = 'In 10 minutes (10:00 AM - 11:00 AM)\nJoin Google Meet: https://meet.google.com/abc-defg-hij';
 
     new env.Notification(eventTitle, {
-      body: eventTime,
+      body: eventBody,
       tag: 'cal_event_20261117T100000Z'
     });
 
@@ -309,19 +309,21 @@ async function run() {
 
     const payload = JSON.parse(fromHex(cmd.slice('__desktop_cmd__:notify:'.length)));
     assert.strictEqual(payload.title, eventTitle);
-    assert.strictEqual(payload.body, eventTime);
+    assert.strictEqual(payload.body, eventBody);
+    assert.strictEqual(payload.meeting_url, 'https://meet.google.com/abc-defg-hij');
 
-    console.log('PASS: Google Calendar event reminder correctly serialized and dispatched.');
+    console.log('PASS: Google Calendar event reminder correctly serialized with meeting_url extracted.');
   }
 
   // ==========================================================================
-  // [6/7] Native Toast Action / Focus Simulation
+  // [6/7] Native Toast Action / Focus & 1-Click Join Video Call Simulation
   // ==========================================================================
-  console.log('\n[6/7] Testing Toast Click Action (Unminimize & Focus App)...');
+  console.log('\n[6/7] Testing Toast Actions (Join Video Call vs Open App)...');
   {
     let unminimized = false;
     let focused = false;
     let shown = false;
+    let browserOpenedUrl = null;
 
     const mockWindow = {
       show: () => { shown = true; return Ok(); },
@@ -329,19 +331,35 @@ async function run() {
       set_focus: () => { focused = true; return Ok(); }
     };
 
-    function Ok() { return { is_ok: true }; }
-
-    // Emulate on_action callback in lib.rs
-    const onAction = () => {
-      mockWindow.show();
-      mockWindow.unminimize();
-      mockWindow.set_focus();
+    const mockShell = {
+      open: (url) => { browserOpenedUrl = url; return Ok(); }
     };
 
-    onAction();
+    function Ok() { return { is_ok: true }; }
 
-    assert(shown && unminimized && focused, 'Window must be shown, unminimized, and focused on toast click');
-    console.log('PASS: Toast notification click handler restores and focuses application.');
+    // Emulate on_activate handler in lib.rs
+    const onActivate = (action) => {
+      if (action.type === 'JoinMeeting') {
+        mockShell.open(action.url);
+      } else if (action.type === 'OpenApp') {
+        mockWindow.show();
+        mockWindow.unminimize();
+        mockWindow.set_focus();
+      }
+    };
+
+    // 1. Join Video Call: launches browser directly without opening calendar window
+    onActivate({ type: 'JoinMeeting', url: 'https://meet.google.com/abc-defg-hij' });
+    assert.strictEqual(browserOpenedUrl, 'https://meet.google.com/abc-defg-hij');
+    assert.strictEqual(shown, false, 'Calendar window must NOT be shown when joining video call');
+    assert.strictEqual(unminimized, false, 'Calendar window must NOT be unminimized when joining video call');
+    assert.strictEqual(focused, false, 'Calendar window must NOT be focused when joining video call');
+
+    // 2. Open Calendar: restores, unminimizes, and focuses app
+    onActivate({ type: 'OpenApp' });
+    assert(shown && unminimized && focused, 'Window must be shown, unminimized, and focused on OpenApp action');
+
+    console.log('PASS: Toast actions verified: Join Video Call launches browser directly; OpenApp restores window.');
   }
 
   // ==========================================================================

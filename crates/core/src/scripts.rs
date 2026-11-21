@@ -23,6 +23,8 @@ pub struct NotificationPayload {
     pub icon: Option<String>,
     #[serde(default)]
     pub silent: Option<bool>,
+    #[serde(default)]
+    pub meeting_url: Option<String>,
 }
 
 /// Decodes hex string into UTF-8 string
@@ -291,6 +293,7 @@ mod tests {
             tag: Some("msg_12345".to_string()),
             icon: Some("https://mail.google.com/icon.png".to_string()),
             silent: Some(false),
+            meeting_url: None,
         };
 
         let json = serde_json::to_string(&payload).expect("Serialization failed");

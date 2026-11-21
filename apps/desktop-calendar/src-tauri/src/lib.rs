@@ -107,6 +107,7 @@ fn show_native_toast<R: Runtime>(
     body: &str,
     tag: Option<&str>,
     silent: bool,
+    meeting_url: Option<&str>,
 ) {
     #[cfg(target_os = "windows")]
     {
@@ -121,14 +122,24 @@ fn show_native_toast<R: Runtime>(
             open_label: "Open Calendar",
             tag,
             silent,
+            meeting_url,
         };
-        if let Err(e) = desktop_google_core::toast::show_windows_toast(&opts, move || {
-            if let Some(w) = app_click.get_webview_window("main") {
-                let _ = w.show();
-                let _ = w.unminimize();
-                let _ = w.set_focus();
-            }
-        }) {
+        let action_app = app_click.clone();
+        if let Err(e) =
+            desktop_google_core::toast::show_windows_toast(&opts, move |action| match action {
+                desktop_google_core::toast::ToastAction::JoinMeeting(url) => {
+                    use tauri_plugin_shell::ShellExt;
+                    let _ = action_app.shell().open(&url, None);
+                }
+                desktop_google_core::toast::ToastAction::OpenApp => {
+                    if let Some(w) = action_app.get_webview_window("main") {
+                        let _ = w.show();
+                        let _ = w.unminimize();
+                        let _ = w.set_focus();
+                    }
+                }
+            })
+        {
             eprintln!(
                 "[Notification] WinRT ToastGeneric failed: {}, falling back",
                 e
@@ -141,7 +152,7 @@ fn show_native_toast<R: Runtime>(
 
     #[cfg(not(target_os = "windows"))]
     {
-        let _ = (tag, silent);
+        let _ = (tag, silent, meeting_url);
         use tauri_plugin_notification::NotificationExt;
         let _ = app.notification().builder().title(title).body(body).show();
     }
@@ -238,12 +249,16 @@ pub fn run() {
                             if let Some(hex_data) = cmd.strip_prefix("notify:") {
                                 if let Some(json_str) = desktop_google_core::scripts::from_hex(hex_data) {
                                     if let Ok(payload) = serde_json::from_str::<desktop_google_core::scripts::NotificationPayload>(&json_str) {
+                                        let meeting_url = payload.meeting_url
+                                            .or_else(|| payload.body.as_deref().and_then(desktop_google_core::toast::extract_meeting_url))
+                                            .or_else(|| desktop_google_core::toast::extract_meeting_url(&payload.title));
                                         show_native_toast(
                                             &app_cmd,
                                             &payload.title,
                                             payload.body.as_deref().unwrap_or(""),
                                             payload.tag.as_deref(),
                                             payload.silent.unwrap_or(false),
+                                            meeting_url.as_deref(),
                                         );
                                     }
                                 }
