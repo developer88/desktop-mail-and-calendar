@@ -63,6 +63,14 @@ mod commands {
     }
 
     #[tauri::command]
+    pub fn register_calendar_jumplist() -> Result<(), String> {
+        desktop_google_core::register_jump_list(
+            "com.andrey.desktop-calendar",
+            &desktop_google_core::get_calendar_jumplist_tasks(),
+        )
+    }
+
+    #[tauri::command]
     pub fn get_windows_accent_color() -> desktop_google_core::AccentColor {
         desktop_google_core::get_windows_accent_color()
     }
@@ -199,6 +207,7 @@ pub fn run() {
             commands::open_external_url,
             commands::handle_calendar_url,
             commands::register_calendar_protocols,
+            commands::register_calendar_jumplist,
             commands::get_windows_accent_color,
             commands::set_window_backdrop,
             commands::update_calendar_date_icon,
@@ -208,6 +217,10 @@ pub fn run() {
         ])
         .setup(move |app| {
             let _ = desktop_google_core::register_calendar_protocol_handlers(None);
+            let _ = desktop_google_core::register_jump_list(
+                "com.andrey.desktop-calendar",
+                &desktop_google_core::get_calendar_jumplist_tasks(),
+            );
             let icon_path = desktop_google_core::register_aumid_with_icons(
                 "com.andrey.desktop-calendar",
                 "Desktop Calendar",

@@ -2,6 +2,9 @@
 set -euo pipefail
 
 # Ensure WSL node, npm, and cargo toolchains are available
+if [ -d "/home/andrey/.local/bin" ]; then
+  export PATH="/home/andrey/.local/bin:$PATH"
+fi
 if [ -d "/home/andrey/.nvm/versions/node/v22.22.0/bin" ]; then
   export PATH="/home/andrey/.nvm/versions/node/v22.22.0/bin:$PATH"
 fi
@@ -60,6 +63,8 @@ node tests/e2e-binaries.test.js
 node tests/calendar-protocol.test.js
 node tests/accent-color.test.js
 node tests/window-backdrop.test.js
+node tests/jumplist.test.js
+node tests/share-target.test.js
 
 echo ""
 echo "============================================================"

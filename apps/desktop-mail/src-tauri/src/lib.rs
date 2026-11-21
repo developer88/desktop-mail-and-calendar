@@ -1,6 +1,4 @@
-use desktop_google_core::{
-    parse_mailto_url, scripts::get_injected_bundle, to_mail_compose_url, DesktopAppConfig,
-};
+use desktop_google_core::{scripts::get_injected_bundle, DesktopAppConfig};
 use tauri::{AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 // Standard Microsoft Edge on Windows 11 User-Agent required by Google Services
@@ -34,17 +32,41 @@ mod commands {
 
     #[tauri::command]
     pub fn handle_mailto<R: Runtime>(app: AppHandle<R>, mailto: String) -> Result<(), String> {
-        if let Some(data) = parse_mailto_url(&mailto) {
-            let compose_url = to_mail_compose_url(&data);
+        if let Some(target_url) = desktop_google_core::resolve_mail_target_url(&mailto) {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.show();
                 let _ = window.unminimize();
                 let _ = window.set_focus();
-                let script = format!("window.location.href = '{}';", compose_url);
+                let script = format!("window.location.href = '{}';", target_url);
                 let _ = window.eval(&script);
             }
         }
         Ok(())
+    }
+
+    #[tauri::command]
+    pub fn handle_mail_url<R: Runtime>(
+        app: AppHandle<R>,
+        url_or_path: String,
+    ) -> Result<(), String> {
+        if let Some(target_url) = desktop_google_core::resolve_mail_target_url(&url_or_path) {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+                let script = format!("window.location.href = '{}';", target_url);
+                let _ = window.eval(&script);
+            }
+        }
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub fn register_mail_jumplist() -> Result<(), String> {
+        desktop_google_core::register_jump_list(
+            "com.andrey.desktop-mail",
+            &desktop_google_core::get_mail_jumplist_tasks(),
+        )
     }
 
     #[tauri::command]
@@ -256,11 +278,9 @@ pub fn run() {
     let mut start_url = config.initial_url.clone();
     for arg in std::env::args().skip(1) {
         let clean = arg.trim_matches('"').trim_matches('\'');
-        if clean.starts_with("mailto:") {
-            if let Some(data) = parse_mailto_url(clean) {
-                start_url = to_mail_compose_url(&data);
-                break;
-            }
+        if let Some(target) = desktop_google_core::resolve_mail_target_url(clean) {
+            start_url = target;
+            break;
         }
     }
 
@@ -271,7 +291,9 @@ pub fn run() {
             commands::open_external_url,
             commands::update_unread_badge,
             commands::handle_mailto,
+            commands::handle_mail_url,
             commands::register_mail_protocols,
+            commands::register_mail_jumplist,
             commands::get_windows_accent_color,
             commands::set_window_backdrop,
             commands::minimize_window,
@@ -280,6 +302,10 @@ pub fn run() {
         ])
         .setup(move |app| {
             let _ = desktop_google_core::register_mail_protocol_handlers(None);
+            let _ = desktop_google_core::register_jump_list(
+                "com.andrey.desktop-mail",
+                &desktop_google_core::get_mail_jumplist_tasks(),
+            );
             let icon_path = desktop_google_core::register_aumid_with_icons(
                 "com.andrey.desktop-mail",
                 "Desktop Mail",

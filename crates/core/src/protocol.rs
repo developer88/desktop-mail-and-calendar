@@ -264,6 +264,105 @@ pub fn to_calendar_event_url(event: &IcsEventData) -> String {
     }
 }
 
+/// Resolves an incoming command-line argument, URI, file path, or share target into the appropriate Mail URL.
+pub fn resolve_mail_target_url(raw: &str) -> Option<String> {
+    let clean = raw.trim().trim_matches('"').trim_matches('\'');
+    if clean.is_empty() {
+        return None;
+    }
+
+    let lower = clean.to_ascii_lowercase();
+
+    // 1. Direct compose flags
+    if lower == "--compose" || lower == "-c" || lower == "--new-message" || lower == "--new" {
+        return Some("https://mail.google.com/mail/u/0/?view=cm&fs=1".to_string());
+    }
+
+    // 2. Direct --url= flag
+    if let Some(target) = clean.strip_prefix("--url=") {
+        let unquoted = target.trim().trim_matches('"').trim_matches('\'');
+        if is_valid_mail_target(unquoted) {
+            return Some(unquoted.to_string());
+        }
+    }
+
+    // 3. mailto: URI
+    if lower.starts_with("mailto:") {
+        if let Some(data) = parse_mailto_url(clean) {
+            return Some(to_mail_compose_url(&data));
+        }
+    }
+
+    // 4. Explicit share-file flag
+    if let Some(path_str) = clean
+        .strip_prefix("--share-file=")
+        .or_else(|| clean.strip_prefix("--share="))
+    {
+        let path_clean = path_str.trim().trim_matches('"').trim_matches('\'');
+        return Some(create_file_share_compose_url(path_clean));
+    }
+
+    // 5. Existing local file path (e.g. invoked via Windows Explorer SendTo or Share context)
+    let path = std::path::Path::new(clean);
+    if path.is_file() {
+        return Some(create_file_share_compose_url(clean));
+    }
+
+    // 6. Direct external web link (e.g. shared via Microsoft Edge / Windows Share Contract)
+    if (lower.starts_with("http://") || lower.starts_with("https://"))
+        && !lower.contains("mail.google.com")
+    {
+        let mailto = MailtoData {
+            to: "".to_string(),
+            subject: Some(format!("Link: {}", clean)),
+            body: Some(clean.to_string()),
+            ..Default::default()
+        };
+        return Some(to_mail_compose_url(&mailto));
+    }
+
+    // 7. Internal mail.google.com target URL passed directly
+    if is_valid_mail_target(clean) {
+        return Some(clean.to_string());
+    }
+
+    None
+}
+
+fn create_file_share_compose_url(path_str: &str) -> String {
+    let filename = extract_file_name_from_path(path_str);
+
+    let subject = format!("Sharing: {}", filename);
+    let body = format!(
+        "Attached: {}\r\nLocation: {}\r\n\r\n(Drag and drop this file into the message to attach)",
+        filename, path_str
+    );
+
+    let mailto = MailtoData {
+        to: "".to_string(),
+        subject: Some(subject),
+        body: Some(body),
+        ..Default::default()
+    };
+    to_mail_compose_url(&mailto)
+}
+
+fn extract_file_name_from_path(path_str: &str) -> String {
+    let clean = path_str.trim().trim_matches('"').trim_matches('\'');
+    let after_slash = clean.rsplit('/').next().unwrap_or(clean);
+    let after_backslash = after_slash.rsplit('\\').next().unwrap_or(after_slash);
+    if after_backslash.is_empty() {
+        "File".to_string()
+    } else {
+        after_backslash.to_string()
+    }
+}
+
+fn is_valid_mail_target(url_str: &str) -> bool {
+    let lower = url_str.to_ascii_lowercase();
+    lower.starts_with("https://mail.google.com/") || lower.starts_with("http://mail.google.com/")
+}
+
 /// Resolves an incoming command-line argument, URI, or file path into the appropriate Google Calendar URL
 pub fn resolve_calendar_target_url(raw: &str) -> Option<String> {
     let clean = raw.trim().trim_matches('"').trim_matches('\'');
@@ -272,6 +371,35 @@ pub fn resolve_calendar_target_url(raw: &str) -> Option<String> {
     }
 
     let lower = clean.to_ascii_lowercase();
+
+    // 1. Direct view/event flags from Jump List or CLI
+    if lower == "--new-event" || lower == "--event" {
+        return Some("https://calendar.google.com/calendar/u/0/r/eventedit".to_string());
+    }
+    if lower == "--today" || lower == "--day" {
+        return Some("https://calendar.google.com/calendar/u/0/r/day".to_string());
+    }
+    if lower == "--week" {
+        return Some("https://calendar.google.com/calendar/u/0/r/week".to_string());
+    }
+    if lower == "--month" {
+        return Some("https://calendar.google.com/calendar/u/0/r/month".to_string());
+    }
+
+    // 2. Direct --url= flag
+    if let Some(target) = clean.strip_prefix("--url=") {
+        let unquoted = target.trim().trim_matches('"').trim_matches('\'');
+        if unquoted
+            .to_ascii_lowercase()
+            .starts_with("https://calendar.google.com/")
+            || unquoted
+                .to_ascii_lowercase()
+                .starts_with("http://calendar.google.com/")
+        {
+            return Some(unquoted.to_string());
+        }
+    }
+
     if lower.starts_with("webcal://")
         || lower.starts_with("webcals://")
         || lower.starts_with("webcal:")
@@ -283,6 +411,11 @@ pub fn resolve_calendar_target_url(raw: &str) -> Option<String> {
     if lower.starts_with("http://") || lower.starts_with("https://") {
         if lower.ends_with(".ics") || lower.contains(".ics?") || lower.contains("cid=") {
             return Some(to_calendar_subscribe_url(clean));
+        }
+        if lower.starts_with("https://calendar.google.com/")
+            || lower.starts_with("http://calendar.google.com/")
+        {
+            return Some(clean.to_string());
         }
         return None;
     }
@@ -1034,6 +1167,83 @@ END:VCALENDAR";
     fn test_resolve_calendar_target_url_empty_or_invalid() {
         assert!(resolve_calendar_target_url("").is_none());
         assert!(resolve_calendar_target_url("https://google.com").is_none());
+    }
+
+    #[test]
+    fn test_resolve_calendar_target_url_flags_and_urls() {
+        assert_eq!(
+            resolve_calendar_target_url("--new-event").unwrap(),
+            "https://calendar.google.com/calendar/u/0/r/eventedit"
+        );
+        assert_eq!(
+            resolve_calendar_target_url("--today").unwrap(),
+            "https://calendar.google.com/calendar/u/0/r/day"
+        );
+        assert_eq!(
+            resolve_calendar_target_url("--day").unwrap(),
+            "https://calendar.google.com/calendar/u/0/r/day"
+        );
+        assert_eq!(
+            resolve_calendar_target_url("--week").unwrap(),
+            "https://calendar.google.com/calendar/u/0/r/week"
+        );
+        assert_eq!(
+            resolve_calendar_target_url("--url=https://calendar.google.com/calendar/u/0/r/month")
+                .unwrap(),
+            "https://calendar.google.com/calendar/u/0/r/month"
+        );
+    }
+
+    #[test]
+    fn test_resolve_mail_target_url_compose_and_views() {
+        assert_eq!(
+            resolve_mail_target_url("--compose").unwrap(),
+            "https://mail.google.com/mail/u/0/?view=cm&fs=1"
+        );
+        assert_eq!(
+            resolve_mail_target_url("-c").unwrap(),
+            "https://mail.google.com/mail/u/0/?view=cm&fs=1"
+        );
+        assert_eq!(
+            resolve_mail_target_url("--new-message").unwrap(),
+            "https://mail.google.com/mail/u/0/?view=cm&fs=1"
+        );
+        assert_eq!(
+            resolve_mail_target_url("--url=https://mail.google.com/mail/u/0/#inbox").unwrap(),
+            "https://mail.google.com/mail/u/0/#inbox"
+        );
+        assert_eq!(
+            resolve_mail_target_url("--url=https://mail.google.com/mail/u/0/#starred").unwrap(),
+            "https://mail.google.com/mail/u/0/#starred"
+        );
+        assert_eq!(
+            resolve_mail_target_url("--url=https://mail.google.com/mail/u/0/#sent").unwrap(),
+            "https://mail.google.com/mail/u/0/#sent"
+        );
+    }
+
+    #[test]
+    fn test_resolve_mail_target_url_mailto() {
+        let res = resolve_mail_target_url("mailto:partner@example.com?subject=Proposal&body=Hello")
+            .unwrap();
+        assert!(res.contains("to=partner%40example.com"));
+        assert!(res.contains("su=Proposal"));
+        assert!(res.contains("body=Hello"));
+        assert!(res.contains("view=cm"));
+    }
+
+    #[test]
+    fn test_resolve_mail_target_url_share_target() {
+        // Link shared from Edge / browser
+        let link_res = resolve_mail_target_url("https://www.rust-lang.org").unwrap();
+        assert!(link_res.contains("su=Link%3A+https%3A%2F%2Fwww.rust-lang.org"));
+        assert!(link_res.contains("body=https%3A%2F%2Fwww.rust-lang.org"));
+
+        // File shared via --share-file
+        let file_res =
+            resolve_mail_target_url(r#"--share-file="C:\Users\test\report.pdf""#).unwrap();
+        assert!(file_res.contains("su=Sharing%3A+report.pdf"));
+        assert!(file_res.contains("report.pdf"));
     }
 
     #[test]
