@@ -63,10 +63,7 @@ mod commands {
 
     #[tauri::command]
     pub fn register_mail_jumplist() -> Result<(), String> {
-        desktop_google_core::register_jump_list(
-            "com.andrey.desktop-mail",
-            &desktop_google_core::get_mail_jumplist_tasks(),
-        )
+        desktop_google_core::delete_jump_list("com.andrey.desktop-mail")
     }
 
     #[tauri::command]
@@ -302,10 +299,7 @@ pub fn run() {
         ])
         .setup(move |app| {
             let _ = desktop_google_core::register_mail_protocol_handlers(None);
-            let _ = desktop_google_core::register_jump_list(
-                "com.andrey.desktop-mail",
-                &desktop_google_core::get_mail_jumplist_tasks(),
-            );
+            let _ = desktop_google_core::delete_jump_list("com.andrey.desktop-mail");
             let icon_path = desktop_google_core::register_aumid_with_icons(
                 "com.andrey.desktop-mail",
                 "Desktop Mail",

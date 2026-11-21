@@ -75,6 +75,7 @@ pub fn get_calendar_jumplist_tasks() -> Vec<JumpListTask> {
 }
 
 #[cfg(target_os = "windows")]
+#[allow(dead_code)]
 unsafe fn init_prop_variant_from_str(
     s: &str,
 ) -> Option<windows::Win32::System::Com::StructuredStorage::PROPVARIANT> {
@@ -103,101 +104,35 @@ unsafe fn init_prop_variant_from_str(
 }
 
 #[cfg(target_os = "windows")]
-pub fn register_jump_list(aumid: &str, tasks: &[JumpListTask]) -> Result<(), String> {
-    use windows::core::{Interface, GUID, HSTRING, PCWSTR};
-    use windows::Win32::Foundation::PROPERTYKEY;
+pub fn delete_jump_list(aumid: &str) -> Result<(), String> {
+    use windows::core::{HSTRING, PCWSTR};
     use windows::Win32::System::Com::{
         CoCreateInstance, CoInitializeEx, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED,
     };
-    use windows::Win32::UI::Shell::Common::{IObjectArray, IObjectCollection};
-    use windows::Win32::UI::Shell::PropertiesSystem::IPropertyStore;
-    use windows::Win32::UI::Shell::{
-        DestinationList, EnumerableObjectCollection, ICustomDestinationList, IShellLinkW, ShellLink,
-    };
-
-    let exe_path =
-        std::env::current_exe().map_err(|e| format!("Failed to get current_exe: {e}"))?;
-    let exe_path_str = exe_path.to_string_lossy();
-    let exe_hstring = HSTRING::from(exe_path_str.as_ref());
+    use windows::Win32::UI::Shell::{DestinationList, ICustomDestinationList};
 
     unsafe {
         let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
 
-        // 1. Create ICustomDestinationList
         let dest_list: ICustomDestinationList =
             CoCreateInstance(&DestinationList, None, CLSCTX_INPROC_SERVER)
                 .map_err(|e| format!("Failed to create DestinationList: {e:?}"))?;
 
-        // 2. Set AppID (AUMID)
         let aumid_hstring = HSTRING::from(aumid);
-        dest_list
-            .SetAppID(PCWSTR(aumid_hstring.as_ptr()))
-            .map_err(|e| format!("SetAppID failed: {e:?}"))?;
-
-        // 3. BeginList
-        let mut min_slots: u32 = 0;
-        let _removed: windows::core::Result<IObjectArray> = dest_list.BeginList(&mut min_slots);
-
-        // 4. Create IObjectCollection for user tasks
-        let collection: IObjectCollection =
-            CoCreateInstance(&EnumerableObjectCollection, None, CLSCTX_INPROC_SERVER)
-                .map_err(|e| format!("Failed to create EnumerableObjectCollection: {e:?}"))?;
-
-        // PKEY_Title = {F29F85E0-4FF9-1068-AB91-08002B27B3D9}, 2
-        let pkey_title = PROPERTYKEY {
-            fmtid: GUID::from_u128(0xf29f85e0_4ff9_1068_ab91_08002b27b3d9),
-            pid: 2,
-        };
-
-        for task in tasks {
-            let link: IShellLinkW = CoCreateInstance(&ShellLink, None, CLSCTX_INPROC_SERVER)
-                .map_err(|e| format!("Failed to create ShellLink: {e:?}"))?;
-
-            link.SetPath(PCWSTR(exe_hstring.as_ptr()))
-                .map_err(|e| format!("SetPath failed: {e:?}"))?;
-
-            let args_hstring = HSTRING::from(task.arguments);
-            link.SetArguments(PCWSTR(args_hstring.as_ptr()))
-                .map_err(|e| format!("SetArguments failed: {e:?}"))?;
-
-            let desc_hstring = HSTRING::from(task.description);
-            link.SetDescription(PCWSTR(desc_hstring.as_ptr()))
-                .map_err(|e| format!("SetDescription failed: {e:?}"))?;
-
-            link.SetIconLocation(PCWSTR(exe_hstring.as_ptr()), task.icon_index)
-                .map_err(|e| format!("SetIconLocation failed: {e:?}"))?;
-
-            // Set Title via IPropertyStore
-            let prop_store: IPropertyStore = link
-                .cast()
-                .map_err(|e| format!("Cast to IPropertyStore failed: {e:?}"))?;
-
-            if let Some(propvar) = init_prop_variant_from_str(task.title) {
-                let _ = prop_store.SetValue(&pkey_title, &propvar);
-                let _ = prop_store.Commit();
-            }
-
-            collection
-                .AddObject(&link)
-                .map_err(|e| format!("AddObject failed: {e:?}"))?;
-        }
-
-        // 5. Add user tasks to jump list
-        let obj_array: IObjectArray = collection
-            .cast()
-            .map_err(|e| format!("Cast to IObjectArray failed: {e:?}"))?;
-
-        dest_list
-            .AddUserTasks(&obj_array)
-            .map_err(|e| format!("AddUserTasks failed: {e:?}"))?;
-
-        // 6. CommitList
-        dest_list
-            .CommitList()
-            .map_err(|e| format!("CommitList failed: {e:?}"))?;
-
+        let _ = dest_list.DeleteList(PCWSTR(aumid_hstring.as_ptr()));
         Ok(())
     }
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn delete_jump_list(_aumid: &str) -> Result<(), String> {
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+pub fn register_jump_list(aumid: &str, _tasks: &[JumpListTask]) -> Result<(), String> {
+    // Jump lists are disabled per user request. Explicitly delete and hide custom jump lists.
+    delete_jump_list(aumid)
 }
 
 #[cfg(not(target_os = "windows"))]

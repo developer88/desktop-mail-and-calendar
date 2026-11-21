@@ -11,7 +11,8 @@ pub mod toast;
 pub use aumid::{register_aumid, register_aumid_with_icons};
 pub use config::{AppKind, DesktopAppConfig};
 pub use jumplist::{
-    get_calendar_jumplist_tasks, get_mail_jumplist_tasks, register_jump_list, JumpListTask,
+    delete_jump_list, get_calendar_jumplist_tasks, get_mail_jumplist_tasks, register_jump_list,
+    JumpListTask,
 };
 pub use navigation::{
     classify_url, extract_redirect_target, get_external_browser_target, is_google_host,

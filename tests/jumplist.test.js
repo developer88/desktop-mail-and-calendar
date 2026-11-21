@@ -48,18 +48,14 @@ console.log('✓ Desktop Calendar Jump List tasks verified in Rust');
 // Verify Win32 COM APIs in Rust
 assert(jumplistRs.includes('ICustomDestinationList'), 'Must use ICustomDestinationList');
 assert(jumplistRs.includes('DestinationList'), 'Must instantiate DestinationList coclass');
-assert(jumplistRs.includes('SetAppID'), 'Must call SetAppID');
-assert(jumplistRs.includes('BeginList'), 'Must call BeginList');
-assert(jumplistRs.includes('AddUserTasks'), 'Must call AddUserTasks');
-assert(jumplistRs.includes('CommitList'), 'Must call CommitList');
-assert(jumplistRs.includes('IShellLinkW'), 'Must construct IShellLinkW');
-assert(jumplistRs.includes('IPropertyStore'), 'Must set title via IPropertyStore');
-assert(jumplistRs.includes('0xf29f85e0_4ff9_1068_ab91_08002b27b3d9'), 'Must use PKEY_Title GUID');
-console.log('✓ Win32 ICustomDestinationList COM implementation verified');
+assert(jumplistRs.includes('delete_jump_list'), 'Must implement delete_jump_list');
+assert(jumplistRs.includes('DeleteList'), 'Must call DeleteList to disable and hide jump lists');
+console.log('✓ Win32 ICustomDestinationList COM deletion and disable implementation verified');
 
 // 2. Verify exports in crates/core/src/lib.rs
 const coreLibRs = fs.readFileSync(path.join(repoRoot, 'crates', 'core', 'src', 'lib.rs'), 'utf8');
 assert(coreLibRs.includes('pub mod jumplist;'), 'crates/core/src/lib.rs must declare pub mod jumplist');
+assert(coreLibRs.includes('delete_jump_list'), 'crates/core/src/lib.rs must export delete_jump_list');
 assert(coreLibRs.includes('register_jump_list'), 'crates/core/src/lib.rs must export register_jump_list');
 assert(coreLibRs.includes('get_mail_jumplist_tasks'), 'crates/core/src/lib.rs must export get_mail_jumplist_tasks');
 assert(coreLibRs.includes('get_calendar_jumplist_tasks'), 'crates/core/src/lib.rs must export get_calendar_jumplist_tasks');
@@ -68,16 +64,16 @@ console.log('✓ Crate core exports verified');
 // 3. Verify Desktop Mail app wiring
 const mailLibRs = fs.readFileSync(path.join(repoRoot, 'apps', 'desktop-mail', 'src-tauri', 'src', 'lib.rs'), 'utf8');
 assert(mailLibRs.includes('register_mail_jumplist'), 'Desktop Mail must declare register_mail_jumplist command');
-assert(mailLibRs.includes('register_jump_list'), 'Desktop Mail must call register_jump_list on startup');
+assert(mailLibRs.includes('delete_jump_list'), 'Desktop Mail must call delete_jump_list on startup');
 assert(mailLibRs.includes('resolve_mail_target_url'), 'Desktop Mail must use resolve_mail_target_url for arguments');
-console.log('✓ Desktop Mail startup jump list registration and CLI routing verified');
+console.log('✓ Desktop Mail startup jump list disabling and CLI routing verified');
 
 // 4. Verify Desktop Calendar app wiring
 const calLibRs = fs.readFileSync(path.join(repoRoot, 'apps', 'desktop-calendar', 'src-tauri', 'src', 'lib.rs'), 'utf8');
 assert(calLibRs.includes('register_calendar_jumplist'), 'Desktop Calendar must declare register_calendar_jumplist command');
-assert(calLibRs.includes('register_jump_list'), 'Desktop Calendar must call register_jump_list on startup');
+assert(calLibRs.includes('delete_jump_list'), 'Desktop Calendar must call delete_jump_list on startup');
 assert(calLibRs.includes('resolve_calendar_target_url'), 'Desktop Calendar must use resolve_calendar_target_url');
-console.log('✓ Desktop Calendar startup jump list registration and CLI routing verified');
+console.log('✓ Desktop Calendar startup jump list disabling and CLI routing verified');
 
 // 5. Verify protocol resolution matches Jump List tasks
 const protocolRs = fs.readFileSync(path.join(repoRoot, 'crates', 'core', 'src', 'protocol.rs'), 'utf8');
