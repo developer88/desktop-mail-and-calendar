@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-11-23
+
+### Added
+- **1-Click "Join Video Call" Toast Action:** Added direct 1-click video call join button to Google Calendar event reminder toast notifications. Automatically parses meeting URLs (Google Meet, Zoom, Microsoft Teams, Webex) and opens them immediately in the user's default browser alongside the "Open Calendar" window restoration action.
+- **Calendar File & Protocol Associations (`.ics` & `webcal://`):** Registered `.ics` iCalendar file and `webcal:` / `webcals:` URL protocol handlers in the Windows Shell and NSIS installer (`RegisteredApplications` / `Capabilities`). Desktop Calendar automatically intercepts and opens imported calendar events.
+- **Windows 11 Personalization Accent Color Synchronization:** Dynamically synchronizes application UI accents (titlebar controls, active indicators, modals, toggles) with native Windows 11 personalization settings via `DwmGetColorizationColor` with registry fallbacks, strictly scoped to wrapper UI elements without touching Google Workspace DOM.
+- **NSIS Installer Legal Disclaimer Agreement:** Added explicit legal disclaimer agreement step to setup installers clarifying independent third-party wrapper status and non-affiliation with Google LLC.
+
+### Changed
+- **Streamlined Desktop Calendar Titlebar:** Aligned Desktop Calendar's window title bar with Desktop Mail's clean transparent design, eliminating backdrop blur edge artifacts and border lines.
+
 ## [0.7.0] - 2026-11-19
 
 ### Added

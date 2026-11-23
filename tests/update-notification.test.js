@@ -104,13 +104,13 @@ async function main() {
   console.log('\n[3/4] Testing Subsequent Version Updates Seamlessly...');
   {
     // Re-trigger update with subsequent version
-    window.__desktop_ui.showUpdateBanner('0.7.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.7.0');
+    window.__desktop_ui.showUpdateBanner('0.8.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.8.0');
     const pill = document.getElementById('desktop-caption-update-pill');
-    assert.strictEqual(pill.title, 'Update available (v0.7.0)');
+    assert.strictEqual(pill.title, 'Update available (v0.8.0)');
 
     pill.click();
     assert.strictEqual(openedUrls.length, 2);
-    assert.strictEqual(openedUrls[1].url, 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.7.0');
+    assert.strictEqual(openedUrls[1].url, 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.8.0');
 
     console.log('PASS: Update pill handles subsequent version updates seamlessly.');
   }
@@ -118,16 +118,16 @@ async function main() {
   // Test 4: Background Release Checker
   console.log('\n[4/4] Testing Background Check Endpoint & SemVer Evaluation...');
   {
-    mockReleaseTag = 'v0.8.0';
+    mockReleaseTag = 'v0.9.0';
     const result = await window.__desktop_ui.checkForUpdates(false);
-    assert(result.updateAvailable, 'Must detect update available when latest (0.8.0) > current (0.6.0)');
-    assert.strictEqual(result.version, '0.8.0');
-    assert.strictEqual(result.tag, 'v0.8.0');
+    assert(result.updateAvailable, 'Must detect update available when latest (0.9.0) > current (0.6.0)');
+    assert.strictEqual(result.version, '0.9.0');
+    assert.strictEqual(result.tag, 'v0.9.0');
     assert(lastFetchedUrl.includes('releases/latest'), 'Fetch URL must target releases/latest endpoint');
 
     const pill = document.getElementById('desktop-caption-update-pill');
     assert.strictEqual(pill.style.display, 'inline-flex');
-    assert.strictEqual(pill.title, 'Update available (v0.8.0)');
+    assert.strictEqual(pill.title, 'Update available (v0.9.0)');
 
     const autoBanner = document.getElementById('desktop-update-banner');
     assert.strictEqual(autoBanner, null, 'Background check must NOT spawn an intrusive big banner');
