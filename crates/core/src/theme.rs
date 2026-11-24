@@ -336,12 +336,13 @@ pub fn generate_accent_css(accent: &AccentColor) -> String {
 #desktop-custom-titlebar .desktop-caption-update-pill {{
   background: var(--win11-wrapper-accent, {hex}) !important;
   color: var(--win11-wrapper-accent-text, {text_color}) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14), inset 0 0 0 1px rgba(255, 255, 255, 0.18) !important;
 }}
 
 #desktop-custom-titlebar .desktop-caption-update-pill:hover {{
   background: var(--win11-wrapper-accent-hover, {hover_hex}) !important;
-  filter: brightness(1.08) !important;
+  filter: brightness(1.12) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.25) !important;
 }}
 
 /* 2. Caption Hover Accents (excluding close button) */

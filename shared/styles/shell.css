@@ -24,6 +24,8 @@
 /* Calendar Titlebar: Transparent to seamlessly blend with Calendar theme */
 #desktop-custom-titlebar.calendar-titlebar {
   background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border-bottom: none !important;
 }
 
@@ -683,22 +685,22 @@
   justify-content: center !important;
   align-self: center !important;
   box-sizing: border-box !important;
-  gap: 5px !important;
-  height: 24px !important;
+  gap: 6px !important;
+  height: 26px !important;
   line-height: 1 !important;
-  padding: 0 10px 0 8px !important;
-  margin: 0 8px 0 0 !important;
-  border-radius: 12px !important;
+  padding: 0 12px 0 10px !important;
+  margin: 0 12px 0 0 !important;
+  border-radius: 13px !important;
   font-family: inherit !important;
   font-size: 12px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.01em !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.02em !important;
   cursor: pointer !important;
   border: none !important;
   outline: none !important;
   -webkit-app-region: no-drag !important;
   user-select: none !important;
-  transition: background-color 0.15s ease, filter 0.15s ease, transform 0.1s ease !important;
+  transition: background-color 0.15s ease, filter 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease !important;
 }
 
 .desktop-caption-update-pill svg {
@@ -706,6 +708,7 @@
   width: 12px !important;
   height: 12px !important;
   flex-shrink: 0 !important;
+  transform: translateY(-0.5px) !important;
 }
 
 .desktop-caption-update-pill span {
@@ -713,48 +716,57 @@
   line-height: 1 !important;
 }
 
+.desktop-caption-update-pill:hover {
+  filter: brightness(1.12) !important;
+}
+
 .desktop-caption-update-pill:active {
-  transform: scale(0.96) !important;
+  transform: scale(0.97) !important;
+  filter: brightness(0.96) !important;
 }
 
 .desktop-caption-update-pill.calendar-theme {
   background: var(--win11-wrapper-accent, #16a34a) !important;
   color: var(--win11-wrapper-accent-text, #ffffff) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.18) !important;
 }
 
 .desktop-caption-update-pill.calendar-theme:hover {
   background: var(--win11-wrapper-accent-hover, #15803d) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.25) !important;
 }
 
 .desktop-caption-update-pill.mail-theme {
   background: var(--win11-wrapper-accent, #ea580c) !important;
   color: var(--win11-wrapper-accent-text, #ffffff) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14), inset 0 0 0 1px rgba(255, 255, 255, 0.18) !important;
 }
 
 .desktop-caption-update-pill.mail-theme:hover {
   background: var(--win11-wrapper-accent-hover, #c2410c) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.25) !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .desktop-caption-update-pill.calendar-theme {
     background: var(--win11-wrapper-accent, #16a34a) !important;
     color: var(--win11-wrapper-accent-text, #ffffff) !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.16) !important;
   }
 
   .desktop-caption-update-pill.calendar-theme:hover {
     background: var(--win11-wrapper-accent-hover, #22c55e) !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.36), inset 0 0 0 1px rgba(255, 255, 255, 0.24) !important;
   }
 
   .desktop-caption-update-pill.mail-theme {
     background: var(--win11-wrapper-accent, #ea580c) !important;
     color: var(--win11-wrapper-accent-text, #ffffff) !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.16) !important;
   }
 
   .desktop-caption-update-pill.mail-theme:hover {
     background: var(--win11-wrapper-accent-hover, #f97316) !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.36), inset 0 0 0 1px rgba(255, 255, 255, 0.24) !important;
   }
 }

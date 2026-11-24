@@ -51,6 +51,38 @@
       if (document.body && !document.body.classList.contains('desktop-calendar-app')) {
         document.body.classList.add('desktop-calendar-app');
       }
+      const inEventEdit = Boolean(
+        window.location &&
+        typeof window.location.pathname === 'string' &&
+        window.location.pathname.includes('/eventedit')
+      );
+      if (document.documentElement) {
+        document.documentElement.classList.toggle('desktop-calendar-eventedit', inEventEdit);
+      }
+      if (document.body) {
+        document.body.classList.toggle('desktop-calendar-eventedit', inEventEdit);
+      }
+    }
+  }
+
+  if (isCalendar) {
+    window.addEventListener('popstate', ensureAppRootClasses);
+    window.addEventListener('hashchange', ensureAppRootClasses);
+    try {
+      if (window.history) {
+        ['pushState', 'replaceState'].forEach((method) => {
+          const orig = window.history[method];
+          if (typeof orig === 'function') {
+            window.history[method] = function () {
+              const res = orig.apply(this, arguments);
+              ensureAppRootClasses();
+              return res;
+            };
+          }
+        });
+      }
+    } catch (_) {
+      // Ignore if history methods are read-only in sandboxed test environments
     }
   }
 
@@ -657,9 +689,9 @@
       svg.appendChild(path);
     } else if (type === 'update') {
       const path = document.createElementNS(svgNS, 'path');
-      path.setAttribute('d', 'M 8,14 L 8,4.5 M 4,8.5 L 8,4.5 L 12,8.5');
+      path.setAttribute('d', 'M 4,7.5 L 8,3.5 L 12,7.5 M 8,3.5 L 8,12.5');
       path.setAttribute('stroke', 'currentColor');
-      path.setAttribute('stroke-width', '2.2');
+      path.setAttribute('stroke-width', '1.6');
       path.setAttribute('stroke-linecap', 'round');
       path.setAttribute('stroke-linejoin', 'round');
       path.setAttribute('fill', 'none');

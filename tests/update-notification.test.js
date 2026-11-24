@@ -95,7 +95,12 @@ async function main() {
     const pill = document.getElementById('desktop-caption-update-pill');
     assert(pill.classList.contains('calendar-theme'), 'Pill must have calendar-theme class');
     assert(pill.textContent.includes('Update'), 'Pill must display Update text');
-    assert(pill.querySelector('svg'), 'Pill must have arrow SVG icon');
+    const svg = pill.querySelector('svg');
+    assert(svg, 'Pill must have arrow SVG icon');
+    const path = svg.querySelector('path');
+    assert(path, 'Pill SVG must contain arrow path');
+    assert.strictEqual(path.getAttribute('d'), 'M 4,7.5 L 8,3.5 L 12,7.5 M 8,3.5 L 8,12.5', 'Update arrow must be geometrically centered in 16x16 viewBox');
+    assert.strictEqual(path.getAttribute('stroke-width'), '1.6', 'Update arrow must use refined 1.6 stroke width');
 
     console.log('PASS: Titlebar update pill has correct structure, icon, and theme.');
   }

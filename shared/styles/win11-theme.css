@@ -76,6 +76,8 @@ input[type="text"], input[type="search"] {
 /* Calendar Titlebar: Transparent to seamlessly blend with Calendar theme */
 #desktop-custom-titlebar.calendar-titlebar {
   background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border-bottom: none !important;
 }
 
@@ -1213,6 +1215,17 @@ header.gb_Ja,
 header[role="banner"],
 header {
   padding-top: 32px !important;
+}
+
+/* Offset Calendar event creation / edit view (/eventedit) below the frameless titlebar */
+html.desktop-calendar-app.desktop-calendar-eventedit body {
+  padding-top: 32px !important;
+}
+
+html.desktop-calendar-app.desktop-calendar-eventedit input,
+html.desktop-calendar-app.desktop-calendar-eventedit button,
+html.desktop-calendar-app.desktop-calendar-eventedit [role="button"] {
+  -webkit-app-region: no-drag !important;
 }
 
 /* Dark mode enhancements when system prefers dark */
