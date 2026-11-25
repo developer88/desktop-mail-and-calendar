@@ -111,25 +111,33 @@ pub fn get_content_bundle(app_kind: AppKind) -> String {
     // Read-only theme sampler so the separate 32px Shell titlebar matches the page background & contrast
     (function initThemeSampler() {{
         var lastKey = '';
+        function getEffectiveBg(startEl) {{
+            var el = startEl;
+            while (el && el.nodeType === 1) {{
+                var c = window.getComputedStyle(el).backgroundColor;
+                if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') {{
+                    return c;
+                }}
+                el = el.parentElement;
+            }}
+            return null;
+        }}
         function sampleAndReport() {{
             try {{
                 if (document.title && document.title.startsWith('__desktop_cmd__:')) return;
                 var isDark = Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                var bgColor = null;
+                var headerEl = document.querySelector('header, [role="banner"]');
+                var bgColor = getEffectiveBg(headerEl || document.body);
 
                 if (APP_KIND === 'calendar') {{
                     if ((document.documentElement && document.documentElement.getAttribute('data-theme') === 'dark') ||
                         (document.body && (document.body.classList.contains('dark-mode') || document.body.classList.contains('dark-theme')))) {{
                         isDark = true;
                     }}
-                    if (document.body) {{
-                        var c = window.getComputedStyle(document.body).backgroundColor;
-                        if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') bgColor = c;
-                    }}
-                    if (!bgColor) bgColor = isDark ? '#1f1f1f' : '#ffffff';
+                    if (!bgColor) bgColor = isDark ? '#1f1f1f' : '#f8fafd';
                 }} else {{
                     if (isAuthFlow()) {{
-                        bgColor = isDark ? '#202124' : '#f0f4f9';
+                        if (!bgColor) bgColor = isDark ? '#202124' : '#f0f4f9';
                     }} else {{
                         var headerIcons = document.querySelectorAll('header svg, [role="banner"] svg, .gb_d svg');
                         for (var i = 0; i < headerIcons.length; i++) {{
@@ -144,15 +152,6 @@ pub fn get_content_bundle(app_kind: AppKind) -> String {
                                 if (lum > 130) {{ isDark = true; break; }}
                                 if (lum < 110) {{ isDark = false; break; }}
                             }}
-                        }}
-                        var headerEl = document.querySelector('header, [role="banner"]');
-                        if (headerEl) {{
-                            var hc = window.getComputedStyle(headerEl).backgroundColor;
-                            if (hc && hc !== 'rgba(0, 0, 0, 0)' && hc !== 'transparent') bgColor = hc;
-                        }}
-                        if (!bgColor && document.body) {{
-                            var bc = window.getComputedStyle(document.body).backgroundColor;
-                            if (bc && bc !== 'rgba(0, 0, 0, 0)' && bc !== 'transparent') bgColor = bc;
                         }}
                         if (!bgColor) bgColor = isDark ? '#202124' : '#f6f8fc';
                     }}
@@ -183,6 +182,9 @@ pub fn get_content_bundle(app_kind: AppKind) -> String {
         }} else {{
             sampleAndReport();
         }}
+        window.addEventListener('load', sampleAndReport);
+        setTimeout(sampleAndReport, 300);
+        setTimeout(sampleAndReport, 900);
         setInterval(sampleAndReport, 1500);
         if (window.matchMedia) {{
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', sampleAndReport);

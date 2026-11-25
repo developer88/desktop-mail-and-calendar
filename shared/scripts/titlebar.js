@@ -14,7 +14,7 @@
   if (curSearch.includes('companion') || curSearch.includes('embed') || curPath.includes('/embed') || curPath.includes('/htmlembed')) {
     return;
   }
-  if (typeof PRIMARY_HOST !== 'undefined' && curHost && curHost !== PRIMARY_HOST && !curHost.includes('accounts.google.') && curHost !== 'accounts.google.com') {
+  if (!window.__DESKTOP_SHELL_ONLY__ && !window.__DESKTOP_DIALOG_MODE__ && typeof PRIMARY_HOST !== 'undefined' && curHost && curHost !== PRIMARY_HOST && !curHost.includes('accounts.google.') && curHost !== 'accounts.google.com') {
     return;
   }
 
@@ -128,13 +128,13 @@
     const titlebar = document.getElementById('desktop-custom-titlebar');
     if (bgColor && typeof bgColor === 'string') {
       if (document.documentElement) {
-        document.documentElement.style.backgroundColor = bgColor;
+        document.documentElement.style.setProperty('background', bgColor, 'important');
       }
       if (document.body) {
-        document.body.style.backgroundColor = bgColor;
+        document.body.style.setProperty('background', bgColor, 'important');
       }
       if (titlebar) {
-        titlebar.style.backgroundColor = bgColor;
+        titlebar.style.setProperty('background', bgColor, 'important');
       }
     }
     if (!titlebar) return;

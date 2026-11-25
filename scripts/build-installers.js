@@ -378,7 +378,16 @@ SectionEnd
   }
 }
 
+function closeRunningApps() {
+  try {
+    execSync('taskkill.exe /F /IM desktop-mail.exe /IM desktop-calendar.exe /T', { stdio: 'ignore' });
+  } catch (_) {
+    // Ignore if neither app is currently running
+  }
+}
+
 function main() {
+  closeRunningApps();
   const apps = [
     {
       appId: 'DesktopMail',
