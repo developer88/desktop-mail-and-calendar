@@ -63,6 +63,7 @@ node tests/e2e-binaries.test.js
 node tests/calendar-protocol.test.js
 node tests/accent-color.test.js
 node tests/jumplist.test.js
+node tests/shell-dialog-e2e.test.js
 
 echo ""
 echo "============================================================"

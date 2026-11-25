@@ -370,6 +370,136 @@ const scenarios = [
       </body>
       </html>
     `
+  },
+  {
+    name: '13-shell-titlebar-calendar',
+    title: 'Desktop Calendar 32px Shell WebView (Mica Backdrop Simulation)',
+    generateHarness: () => `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Desktop Shell</title>
+        <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'shell.css'))}">
+        <style>
+          html, body { margin: 0; padding: 0; background: #f3f3f3; font-family: 'Segoe UI Variable', system-ui, sans-serif; height: 100vh; overflow: hidden; }
+        </style>
+      </head>
+      <body>
+        <script>
+          window.APP_KIND = 'calendar';
+          window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_SHELL_ONLY__ = true;
+          window.__DESKTOP_FIRST_RUN__ = false;
+        </script>
+        <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
+        <script>
+          window.__desktop_ui.showUpdateBanner('0.9.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.9.0');
+        </script>
+      </body>
+      </html>
+    `
+  },
+  {
+    name: '14-shell-titlebar-mail',
+    title: 'Desktop Mail 32px Shell WebView (Mica Backdrop Simulation)',
+    generateHarness: () => `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Desktop Shell</title>
+        <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'shell.css'))}">
+        <style>
+          html, body { margin: 0; padding: 0; background: #f3f3f3; font-family: 'Segoe UI Variable', system-ui, sans-serif; height: 100vh; overflow: hidden; }
+        </style>
+      </head>
+      <body>
+        <script>
+          window.APP_KIND = 'mail';
+          window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_SHELL_ONLY__ = true;
+          window.__DESKTOP_FIRST_RUN__ = false;
+        </script>
+        <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
+        <script>
+          window.__desktop_ui.showUpdateBanner('0.9.0', 'https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v0.9.0');
+        </script>
+      </body>
+      </html>
+    `
+  },
+  {
+    name: '15-dialog-settings-general',
+    title: 'Child Dialog Window - Settings (General Tab)',
+    generateHarness: () => `
+      <!DOCTYPE html>
+      <html class="desktop-dialog-window">
+      <head>
+        <meta charset="utf-8">
+        <title>Settings</title>
+        <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'win11-theme.css'))}">
+        <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'shell.css'))}">
+      </head>
+      <body>
+        <script>
+          window.APP_KIND = 'calendar';
+          window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_DIALOG_MODE__ = 'settings';
+          window.__DESKTOP_FIRST_RUN__ = false;
+        </script>
+        <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
+      </body>
+      </html>
+    `
+  },
+  {
+    name: '16-dialog-settings-about',
+    title: 'Child Dialog Window - About',
+    generateHarness: () => `
+      <!DOCTYPE html>
+      <html class="desktop-dialog-window">
+      <head>
+        <meta charset="utf-8">
+        <title>About</title>
+        <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'win11-theme.css'))}">
+        <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'shell.css'))}">
+      </head>
+      <body>
+        <script>
+          window.APP_KIND = 'mail';
+          window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_DIALOG_MODE__ = 'about';
+          window.__DESKTOP_FIRST_RUN__ = false;
+        </script>
+        <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
+      </body>
+      </html>
+    `
+  },
+  {
+    name: '17-dialog-welcome',
+    title: 'Child Dialog Window - First-Run Welcome',
+    generateHarness: () => `
+      <!DOCTYPE html>
+      <html class="desktop-dialog-window">
+      <head>
+        <meta charset="utf-8">
+        <title>Welcome</title>
+        <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'win11-theme.css'))}">
+        <link rel="stylesheet" href="${toFileUrl(path.join(root, 'shared', 'styles', 'shell.css'))}">
+      </head>
+      <body>
+        <script>
+          window.APP_KIND = 'calendar';
+          window.APP_VERSION = '${appVersion}';
+          window.__DESKTOP_DIALOG_MODE__ = 'welcome';
+          window.__DESKTOP_FIRST_RUN__ = true;
+        </script>
+        <script src="${toFileUrl(path.join(root, 'shared', 'scripts', 'titlebar.js'))}"></script>
+      </body>
+      </html>
+    `
   }
 ];
 

@@ -27,13 +27,6 @@ pub struct NotificationPayload {
     pub meeting_url: Option<String>,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
-pub struct ThemePayload {
-    pub is_dark: bool,
-    #[serde(default)]
-    pub bg_color: Option<String>,
-}
-
 /// Decodes hex string into UTF-8 string
 pub fn from_hex(hex: &str) -> Option<String> {
     if hex.len() % 2 != 0 {
@@ -108,89 +101,6 @@ pub fn get_content_bundle(app_kind: AppKind) -> String {
         return false;
     }}
 
-    // Read-only theme sampler so the separate 32px Shell titlebar matches the page background & contrast
-    (function initThemeSampler() {{
-        var lastKey = '';
-        function getEffectiveBg(startEl) {{
-            var el = startEl;
-            while (el && el.nodeType === 1) {{
-                var c = window.getComputedStyle(el).backgroundColor;
-                if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') {{
-                    return c;
-                }}
-                el = el.parentElement;
-            }}
-            return null;
-        }}
-        function sampleAndReport() {{
-            try {{
-                if (document.title && document.title.startsWith('__desktop_cmd__:')) return;
-                var isDark = Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                var headerEl = document.querySelector('header, [role="banner"]');
-                var bgColor = getEffectiveBg(headerEl || document.body);
-
-                if (APP_KIND === 'calendar') {{
-                    if ((document.documentElement && document.documentElement.getAttribute('data-theme') === 'dark') ||
-                        (document.body && (document.body.classList.contains('dark-mode') || document.body.classList.contains('dark-theme')))) {{
-                        isDark = true;
-                    }}
-                    if (!bgColor) bgColor = isDark ? '#1f1f1f' : '#f8fafd';
-                }} else {{
-                    if (isAuthFlow()) {{
-                        if (!bgColor) bgColor = isDark ? '#202124' : '#f0f4f9';
-                    }} else {{
-                        var headerIcons = document.querySelectorAll('header svg, [role="banner"] svg, .gb_d svg');
-                        for (var i = 0; i < headerIcons.length; i++) {{
-                            var svg = headerIcons[i];
-                            var st = window.getComputedStyle(svg);
-                            var fill = st.fill || '';
-                            var col = st.color || '';
-                            var val = (fill && fill !== 'none' && !fill.startsWith('rgba(0, 0, 0, 0)')) ? fill : col;
-                            var rgb = val.match(/\d+/g);
-                            if (rgb && rgb.length >= 3) {{
-                                var lum = (parseInt(rgb[0], 10) * 299 + parseInt(rgb[1], 10) * 587 + parseInt(rgb[2], 10) * 114) / 1000;
-                                if (lum > 130) {{ isDark = true; break; }}
-                                if (lum < 110) {{ isDark = false; break; }}
-                            }}
-                        }}
-                        if (!bgColor) bgColor = isDark ? '#202124' : '#f6f8fc';
-                    }}
-                }}
-
-                var key = (isDark ? '1' : '0') + '|' + (bgColor || '');
-                if (key === lastKey) return;
-                lastKey = key;
-
-                var jsonStr = JSON.stringify({{ is_dark: isDark, bg_color: bgColor }});
-                var bytes = new TextEncoder().encode(jsonStr);
-                var hex = '';
-                for (var j = 0; j < bytes.length; j++) {{
-                    hex += bytes[j].toString(16).padStart(2, '0');
-                }}
-                var prevTitle = document.title;
-                document.title = '__desktop_cmd__:theme:' + hex;
-                setTimeout(function() {{
-                    if (document.title.startsWith('__desktop_cmd__:')) {{
-                        document.title = prevTitle;
-                    }}
-                }}, 40);
-            }} catch (_) {{}}
-        }}
-
-        if (document.readyState === 'loading') {{
-            document.addEventListener('DOMContentLoaded', sampleAndReport);
-        }} else {{
-            sampleAndReport();
-        }}
-        window.addEventListener('load', sampleAndReport);
-        setTimeout(sampleAndReport, 300);
-        setTimeout(sampleAndReport, 900);
-        setInterval(sampleAndReport, 1500);
-        if (window.matchMedia) {{
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', sampleAndReport);
-        }}
-    }})();
-
     if (!isAuthFlow()) {{
         {notif}
         {nav}
@@ -250,7 +160,7 @@ pub fn get_shell_bundle(app_kind: AppKind) -> String {
         if (!document.getElementById('desktop-shell-theme')) {{
             var styleEl = document.createElement('style');
             styleEl.id = 'desktop-shell-theme';
-            styleEl.textContent = `{shell}`;
+            styleEl.textContent = "html, body {{ background: transparent !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; }}\n" + `{shell}`;
             target.appendChild(styleEl);
         }}
     }}
@@ -571,10 +481,6 @@ mod tests {
             assert!(
                 !content.contains("dismissDataLoadToast"),
                 "Content bundle must never auto-dismiss Google toasts"
-            );
-            assert!(
-                content.contains("initThemeSampler"),
-                "Content bundle must include read-only theme sampler"
             );
             assert!(
                 content.contains("DesktopNotification"),

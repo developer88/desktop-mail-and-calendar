@@ -80,3 +80,4 @@ This document specifies mandatory rules, design constraints, and operational gui
   8. E2E binary, installer & metadata verification tests (`node tests/e2e-binaries.test.js`).
   9. Calendar date dynamic icon & clean taskbar E2E tests (`node tests/calendar-date-e2e.test.js`).
 * **Never Report Completion Without Verification:** Always verify changes with command execution and test output.
+* **100% Feature Test & Screenshot Coverage:** Every user-facing feature, menu structure, dialog, and UI surface must be covered by automated unit/E2E tests and headless browser screenshot tests (`tests/screenshot-ui.test.js`) whenever possible.

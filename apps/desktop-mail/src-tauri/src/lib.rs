@@ -1,10 +1,10 @@
 use desktop_google_core::{
-    scripts::{get_content_bundle, get_dialog_bundle, get_shell_bundle, ThemePayload},
+    scripts::{get_content_bundle, get_dialog_bundle, get_shell_bundle},
     AppKind, DesktopAppConfig,
 };
 use std::sync::atomic::{AtomicU64, Ordering};
 use tauri::{
-    menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder},
+    menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder},
     webview::WebviewBuilder,
     window::WindowBuilder,
     AppHandle, LogicalPosition, Manager, PhysicalPosition, PhysicalSize, Rect, Runtime, WebviewUrl,
@@ -54,16 +54,33 @@ fn sync_child_webview_bounds<R: Runtime>(
     }
 }
 
-fn open_dialog_window_impl<R: Runtime>(app: &AppHandle<R>, mode: &str, is_first_run: bool) {
-    if let Some(existing) = app.get_webview_window("dialog") {
-        let _ = existing.close();
-    }
-
+fn open_dialog_window_impl<R: Runtime>(
+    app: &AppHandle<R>,
+    mode: &str,
+    is_first_run: bool,
+    show_immediately: bool,
+) {
     let (w, h, title) = match mode {
         "welcome" => (500.0, 470.0, "Welcome to Desktop Mail"),
         "about" => (680.0, 520.0, "About Desktop Mail"),
         _ => (680.0, 520.0, "Settings"),
     };
+
+    if let Some(existing) = app.get_webview_window("dialog") {
+        let _ = existing.set_title(title);
+        let _ = existing.set_size(tauri::LogicalSize::new(w, h));
+        let js = format!(
+            "window.__desktop_open_dialog_mode && window.__desktop_open_dialog_mode('{}');",
+            mode
+        );
+        let _ = existing.eval(&js);
+        if show_immediately {
+            let _ = existing.center();
+            let _ = existing.show();
+            let _ = existing.set_focus();
+        }
+        return;
+    }
 
     let dialog_script = get_dialog_bundle(AppKind::Mail, mode, is_first_run);
     let mut builder =
@@ -73,17 +90,32 @@ fn open_dialog_window_impl<R: Runtime>(app: &AppHandle<R>, mode: &str, is_first_
             .resizable(false)
             .decorations(false)
             .shadow(true)
+            .visible(show_immediately)
+            .focused(show_immediately)
             .center()
             .initialization_script(&dialog_script);
 
     #[cfg(target_os = "windows")]
     if let Some(main_win) = app.get_window("main") {
         if let Ok(hwnd) = main_win.hwnd() {
-            builder = builder.parent_raw(hwnd);
+            builder = builder.owner_raw(hwnd);
         }
     }
 
-    let _ = builder.build();
+    match builder.build() {
+        Ok(dlg) => {
+            let dlg_hide = dlg.clone();
+            dlg.on_window_event(move |event| {
+                if let WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = dlg_hide.hide();
+                }
+            });
+        }
+        Err(e) => {
+            eprintln!("[Dialog] Failed to open {} dialog: {}", mode, e);
+        }
+    }
 }
 
 mod commands {
@@ -197,7 +229,7 @@ mod commands {
     #[tauri::command]
     pub fn close_dialog<R: Runtime>(app: AppHandle<R>) {
         if let Some(d) = app.get_webview_window("dialog") {
-            let _ = d.close();
+            let _ = d.hide();
         }
     }
 
@@ -235,11 +267,6 @@ mod commands {
 
         let file_menu = SubmenuBuilder::new(&app, "File")
             .item(
-                &MenuItemBuilder::with_id("file_new_message", "New Message")
-                    .build(&app)
-                    .map_err(|e| e.to_string())?,
-            )
-            .item(
                 &MenuItemBuilder::with_id("view_reload", "Reload")
                     .accelerator("CmdOrCtrl+R")
                     .build(&app)
@@ -248,6 +275,11 @@ mod commands {
             .separator()
             .item(
                 &MenuItemBuilder::with_id("app_settings", "Settings...")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .item(
+                &MenuItemBuilder::with_id("app_about", "About Desktop Mail...")
                     .build(&app)
                     .map_err(|e| e.to_string())?,
             )
@@ -357,17 +389,6 @@ mod commands {
             .item(&edit_menu)
             .item(&view_menu)
             .item(&window_menu)
-            .item(&PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?)
-            .item(
-                &MenuItemBuilder::with_id("app_settings_top", "Settings...")
-                    .build(&app)
-                    .map_err(|e| e.to_string())?,
-            )
-            .item(
-                &MenuItemBuilder::with_id("app_about", "About Desktop Mail...")
-                    .build(&app)
-                    .map_err(|e| e.to_string())?,
-            )
             .build()
             .map_err(|e| e.to_string())?;
 
@@ -554,11 +575,6 @@ pub fn run() {
         ])
         .on_menu_event(|app, event| {
             match event.id().as_ref() {
-                "file_new_message" => {
-                    if let Some(wv) = app.get_webview("content") {
-                        let _ = wv.eval("window.location.href = 'https://mail.google.com/mail/u/0/#compose';");
-                    }
-                }
                 "view_reload" => {
                     if let Some(wv) = app.get_webview("content") {
                         let _ = wv.reload();
@@ -621,11 +637,17 @@ pub fn run() {
                     }
                 }
                 "win_close" | "file_exit" => app.exit(0),
-                "app_settings" | "app_settings_top" => {
-                    open_dialog_window_impl(app, "settings", false);
+                "app_settings" => {
+                    let app_dlg = app.clone();
+                    std::thread::spawn(move || {
+                        open_dialog_window_impl(&app_dlg, "settings", false, true);
+                    });
                 }
                 "app_about" => {
-                    open_dialog_window_impl(app, "about", false);
+                    let app_dlg = app.clone();
+                    std::thread::spawn(move || {
+                        open_dialog_window_impl(&app_dlg, "about", false, true);
+                    });
                 }
                 _ => {}
             }
@@ -669,6 +691,7 @@ pub fn run() {
                 .center()
                 .resizable(true)
                 .decorations(false)
+                .transparent(true)
                 .shadow(true)
                 .build()?;
 
@@ -676,6 +699,10 @@ pub fn run() {
             if let Ok(hwnd_obj) = window.hwnd() {
                 let hwnd = hwnd_obj.0 as isize;
                 unsafe {
+                    desktop_google_core::apply_window_backdrop_win32(
+                        hwnd,
+                        desktop_google_core::WindowBackdrop::Mica,
+                    );
                     desktop_google_core::icon::windows::set_window_relaunch_properties(
                         hwnd,
                         "com.andrey.desktop-mail",
@@ -696,6 +723,7 @@ pub fn run() {
 
                 let shell_builder =
                     WebviewBuilder::new("shell", WebviewUrl::App("shell.html".into()))
+                        .transparent(true)
                         .initialization_script(&shell_script);
                 let _ = win_setup.add_child(
                     shell_builder,
@@ -742,25 +770,6 @@ pub fn run() {
                                             payload.silent.unwrap_or(false),
                                             meeting_url.as_deref(),
                                         );
-                                    }
-                                }
-                                return;
-                            }
-                            if let Some(hex_data) = cmd.strip_prefix("theme:") {
-                                if let Some(json_str) =
-                                    desktop_google_core::scripts::from_hex(hex_data)
-                                {
-                                    if let Ok(theme) = serde_json::from_str::<ThemePayload>(&json_str)
-                                    {
-                                        if let Some(shell) = app_cmd.get_webview("shell") {
-                                            let bg_json = serde_json::to_string(&theme.bg_color)
-                                                .unwrap_or_else(|_| "null".to_string());
-                                            let js = format!(
-                                                "window.__desktop_shell_set_theme && window.__desktop_shell_set_theme({}, {});",
-                                                theme.is_dark, bg_json
-                                            );
-                                            let _ = shell.eval(&js);
-                                        }
                                     }
                                 }
                                 return;
@@ -861,7 +870,13 @@ pub fn run() {
                 if is_first_run {
                     let app_welcome = app_setup.clone();
                     let _ = app_setup.run_on_main_thread(move || {
-                        open_dialog_window_impl(&app_welcome, "welcome", true);
+                        open_dialog_window_impl(&app_welcome, "welcome", true, true);
+                    });
+                } else {
+                    let app_prewarm = app_setup.clone();
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_millis(600));
+                        open_dialog_window_impl(&app_prewarm, "settings", false, false);
                     });
                 }
             });

@@ -964,6 +964,8 @@
     }
 
     function renderContent(tabId) {
+      contentArea.scrollTop = 0;
+      contentArea.scrollLeft = 0;
       contentArea.className = 'desktop-settings-content' + (tabId === 'about' ? ' about-view' : '');
       while (contentArea.firstChild) {
         contentArea.removeChild(contentArea.firstChild);
@@ -1351,15 +1353,46 @@
       }
     });
 
-    (document.documentElement || document.body).appendChild(overlay);
+    (document.body || document.documentElement).appendChild(overlay);
   }
 
+  window.__desktop_open_dialog_mode = function(mode) {
+    window.__DESKTOP_DIALOG_MODE__ = mode;
+    if (mode === 'welcome') {
+      const existingSettings = document.getElementById('desktop-settings-overlay');
+      if (existingSettings) existingSettings.remove();
+      if (!document.getElementById('desktop-splash-overlay')) {
+        showWelcomeSplash(false);
+      }
+      return;
+    }
+    const existingSplash = document.getElementById('desktop-splash-overlay');
+    if (existingSplash) existingSplash.remove();
+    const targetTab = (mode === 'about' || mode === 'privacy') ? mode : 'general';
+    const existingSettings = document.getElementById('desktop-settings-overlay');
+    if (!existingSettings) {
+      openSettingsDialog(targetTab);
+      return;
+    }
+    const navItems = existingSettings.querySelectorAll('.desktop-settings-nav-item');
+    const tabOrder = ['general', 'privacy', 'about'];
+    const idx = tabOrder.indexOf(targetTab);
+    if (idx >= 0 && navItems[idx]) {
+      navItems[idx].click();
+    }
+    const contentEl = existingSettings.querySelector('.desktop-settings-content');
+    if (contentEl) {
+      contentEl.scrollTop = 0;
+    }
+  };
+
   function closeSettingsDialog() {
-    const overlay = document.getElementById('desktop-settings-overlay');
-    if (overlay) overlay.remove();
     if (window.__DESKTOP_DIALOG_MODE__ && window.__TAURI__ && window.__TAURI__.core) {
       window.__TAURI__.core.invoke('close_dialog').catch(() => {});
+      return;
     }
+    const overlay = document.getElementById('desktop-settings-overlay');
+    if (overlay) overlay.remove();
   }
 
   // Welcome & Privacy Notice Splash Screen (shown on very first load)
@@ -1490,7 +1523,7 @@
       });
     }
 
-    const root = document.documentElement || document.body;
+    const root = document.body || document.documentElement;
     if (root) {
       root.appendChild(overlay);
     }
@@ -1726,6 +1759,10 @@
 
   function createTitlebar() {
     if (window.__DESKTOP_DIALOG_MODE__) {
+      if (!document.body) {
+        setTimeout(createTitlebar, 16);
+        return;
+      }
       const mode = window.__DESKTOP_DIALOG_MODE__;
       if (!document.getElementById('desktop-settings-overlay') && !document.getElementById('desktop-splash-overlay')) {
         if (mode === 'welcome') {
@@ -1742,9 +1779,7 @@
       checkFirstRunSplash();
     }
     if (document.getElementById('desktop-custom-titlebar')) {
-      if (!window.__DESKTOP_SHELL_ONLY__) {
-        updateAdaptiveTheme();
-      }
+      updateAdaptiveTheme();
       return;
     }
 
