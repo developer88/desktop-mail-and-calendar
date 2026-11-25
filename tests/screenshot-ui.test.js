@@ -2,14 +2,31 @@ const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
 const { execSync } = require('child_process');
+const { comparePngBuffers } = require('./lib/png-diff');
 
-console.log('Running UI Screenshot & Offline Visual Test Suite...');
+const updateBaselines =
+  process.argv.includes('--update-baselines') || process.env.UPDATE_BASELINES === '1';
+
+console.log(
+  updateBaselines
+    ? 'Running UI Screenshot Baseline Generator (--update-baselines)...'
+    : 'Running UI Screenshot & Visual Regression Test Suite...'
+);
 
 const root = path.resolve(__dirname, '..');
-const appVersion = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
+// Pin deterministic version & calendar day in screenshot harnesses so version bumps
+// or calendar rollovers do not cause false-positive pixel diffs against baselines.
+const appVersion = '0.8.0';
+const deterministicDateScript = '<script>Date.prototype.getDate = function () { return 25; };</script>';
+const disableAnimationsStyle =
+  '<style>*, *::before, *::after { animation: none !important; animation-duration: 0s !important; transition: none !important; transition-duration: 0s !important; }</style>';
+const baselinesDir = path.join(root, 'tests', 'baselines');
 const outputDir = path.join(root, 'tests', 'screenshots');
 const harnessDir = path.join(root, 'tests', '.screenshot-harness');
 
+if (updateBaselines && !fs.existsSync(baselinesDir)) {
+  fs.mkdirSync(baselinesDir, { recursive: true });
+}
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
@@ -507,6 +524,8 @@ const scenarios = [
 console.log(`\nExecuting ${scenarios.length} screenshot tests...`);
 
 let passedCount = 0;
+const maxDiffPercent = 0.2;
+
 for (let i = 0; i < scenarios.length; i++) {
   const sc = scenarios[i];
   console.log(`\n[${i + 1}/${scenarios.length}] Testing ${sc.title}...`);
@@ -516,15 +535,21 @@ for (let i = 0; i < scenarios.length; i++) {
     targetUrl = toFileUrl(sc.sourceHtml) + (sc.queryString || '');
   } else if (sc.generateHarness) {
     const harnessPath = path.join(harnessDir, `${sc.name}.html`);
-    fs.writeFileSync(harnessPath, sc.generateHarness());
+    const html = sc
+      .generateHarness()
+      .replace('<head>', `<head>\n        ${deterministicDateScript}`)
+      .replace('</body>', `        ${disableAnimationsStyle}\n      </body>`);
+    fs.writeFileSync(harnessPath, html);
     targetUrl = toFileUrl(harnessPath);
   }
 
   const outPngPath = path.join(outputDir, `${sc.name}.png`);
+  const baselinePngPath = path.join(baselinesDir, `${sc.name}.png`);
+  const diffPngPath = path.join(outputDir, `${sc.name}.diff.png`);
   const winOutPng = toWindowsPath(outPngPath);
 
   // Capture headless screenshot with 1280x800 resolution matching app windows
-  const cmd = `"${browserPath}" --headless=new "--screenshot=${winOutPng}" --window-size=1280,800 "${targetUrl}"`;
+  const cmd = `"${browserPath}" --headless=new --virtual-time-budget=1000 "--screenshot=${winOutPng}" --window-size=1280,800 "${targetUrl}"`;
   execSync(cmd, { stdio: 'pipe' });
 
   assert(fs.existsSync(outPngPath), `Screenshot file ${outPngPath} was not created`);
@@ -542,7 +567,36 @@ for (let i = 0; i < scenarios.length; i++) {
   assert.strictEqual(width, 1280, `Expected width 1280, got ${width}`);
   assert.strictEqual(height, 800, `Expected height 800, got ${height}`);
 
-  console.log(`  PASS: ${sc.name}.png (${buf.length} bytes, 1280x800)`);
+  if (updateBaselines) {
+    if (fs.existsSync(baselinePngPath)) {
+      fs.unlinkSync(baselinePngPath);
+    }
+    fs.writeFileSync(baselinePngPath, buf);
+    console.log(`  UPDATED BASELINE: ${sc.name}.png (${buf.length} bytes, 1280x800)`);
+  } else {
+    assert(
+      fs.existsSync(baselinePngPath),
+      `Missing baseline screenshot ${baselinePngPath}. Run "npm run test:update-baselines" inside WSL to generate baselines.`
+    );
+    const baselineBuf = fs.readFileSync(baselinePngPath);
+    const result = comparePngBuffers(baselineBuf, buf, { channelTolerance: 12 });
+
+    if (result.diffPercent > maxDiffPercent) {
+      if (result.diffPngBuffer) {
+        fs.writeFileSync(diffPngPath, result.diffPngBuffer);
+      }
+      assert.fail(
+        `Visual regression detected in ${sc.name}: ${result.diffPixels} pixels (${result.diffPercent.toFixed(3)}%) differ from baseline (max allowed ${maxDiffPercent}%). Diff saved to ${diffPngPath}`
+      );
+    } else if (fs.existsSync(diffPngPath)) {
+      fs.unlinkSync(diffPngPath);
+    }
+
+    console.log(
+      `  PASS: ${sc.name}.png (${buf.length} bytes, 1280x800, diff: ${result.diffPercent.toFixed(3)}%)`
+    );
+  }
+
   passedCount++;
 }
 
@@ -551,5 +605,9 @@ try {
   fs.rmSync(harnessDir, { recursive: true, force: true });
 } catch (_) {}
 
-console.log(`\nALL ${passedCount} UI SCREENSHOT TESTS PASSED SUCCESSFULLY!`);
-console.log(`Artifacts saved in: ${outputDir}`);
+if (updateBaselines) {
+  console.log(`\nUPDATED ${passedCount} BASELINE SCREENSHOTS IN: ${baselinesDir}`);
+} else {
+  console.log(`\nALL ${passedCount} UI SCREENSHOT VISUAL REGRESSION TESTS PASSED SUCCESSFULLY!`);
+  console.log(`Artifacts saved in: ${outputDir}`);
+}
