@@ -50,7 +50,8 @@ console.log('\n[2/5] Verifying Calendar Injected Date Observer Script...');
 
   assert(scriptContent.includes('update_calendar_date_icon'), 'Observer must invoke update_calendar_date_icon command');
   assert(scriptContent.includes('getDate()'), 'Observer must extract date using local Date().getDate()');
-  assert(scriptContent.includes('MutationObserver'), 'Observer must use MutationObserver for dynamic calendar navigation');
+  assert(scriptContent.includes('setInterval(updateCalendarDate, 60000)'), 'Observer must periodically check for date change across midnight');
+  assert(!scriptContent.includes('dismissDataLoadToast'), 'Observer must NOT auto-dismiss or modify Google Calendar DOM');
 
   console.log('PASS: Calendar Date Observer script verified.');
 }

@@ -75,35 +75,4 @@
 
   // Check periodically (every 60s) for date change across midnight
   setInterval(updateCalendarDate, 60000);
-
-  // Auto-dismiss and hide erroneous "could not load the data" toast
-  function dismissDataLoadToast() {
-    const alerts = document.querySelectorAll('div[role="status"], div[role="alert"], .YuhOnd, .M6CB1c, [jsaction*="toast"]');
-    for (let i = 0; i < alerts.length; i++) {
-      const el = alerts[i];
-      if (el.textContent && el.textContent.includes('could not load the data')) {
-        el.style.setProperty('display', 'none', 'important');
-        const closeBtn = el.querySelector('button, [aria-label*="Dismiss"], [aria-label*="Close"], svg');
-        if (closeBtn && typeof closeBtn.click === 'function') {
-          try { closeBtn.click(); } catch (_) {}
-        }
-      }
-    }
-  }
-
-  try {
-    const toastObserver = new MutationObserver(dismissDataLoadToast);
-    if (document.body) {
-      toastObserver.observe(document.body, { childList: true, subtree: true });
-    } else {
-      document.addEventListener('DOMContentLoaded', () => {
-        if (document.body) {
-          toastObserver.observe(document.body, { childList: true, subtree: true });
-        }
-      });
-    }
-    // Initial sweep
-    dismissDataLoadToast();
-    setInterval(dismissDataLoadToast, 1000);
-  } catch (_) {}
 })();

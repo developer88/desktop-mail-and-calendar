@@ -1,4 +1,4 @@
-/* Windows 11 Modern Theme Override */
+/* Windows 11 Modern Theme Override (Wrapper Shell & Dialogs Only) */
 :root {
   --win11-font-family: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
   --win11-accent: #0078d4;
@@ -13,26 +13,16 @@
   --win11-border-radius: 8px;
 }
 
-/* Lock root viewport: Google Calendar & Mail have internal scroll containers.
-   The root document must never scroll vertically or horizontally, preventing the
-   header from sliding underneath the custom frameless titlebar. */
+/* Lock root viewport for wrapper shell & dialog windows */
 html, body {
   overflow: hidden !important;
   height: 100% !important;
   max-height: 100vh !important;
   margin: 0 !important;
   padding: 0 !important;
-}
-
-body, input, textarea, select, button {
   font-family: var(--win11-font-family) !important;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-}
-
-/* Rounded search bars */
-input[type="text"], input[type="search"] {
-  border-radius: var(--win11-border-radius) !important;
 }
 
 /* Custom Windows 11 sleek scrollbars */
@@ -1210,22 +1200,22 @@ html.desktop-calendar-app body {
 }
 
 
-/* Offset top header so the frameless title row has clean dedicated space */
-header.gb_Ja,
-header[role="banner"],
-header {
-  padding-top: 32px !important;
+/* Standalone Child Dialog Window Overrides */
+html.desktop-dialog-window #desktop-settings-overlay,
+html.desktop-dialog-window #desktop-splash-overlay {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-/* Offset Calendar event creation / edit view (/eventedit) below the frameless titlebar */
-html.desktop-calendar-app.desktop-calendar-eventedit body {
-  padding-top: 32px !important;
-}
-
-html.desktop-calendar-app.desktop-calendar-eventedit input,
-html.desktop-calendar-app.desktop-calendar-eventedit button,
-html.desktop-calendar-app.desktop-calendar-eventedit [role="button"] {
-  -webkit-app-region: no-drag !important;
+html.desktop-dialog-window #desktop-settings-dialog,
+html.desktop-dialog-window #desktop-splash-dialog {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
 }
 
 /* Dark mode enhancements when system prefers dark */

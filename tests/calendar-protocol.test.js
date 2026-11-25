@@ -36,7 +36,7 @@ assert(calLibRs.includes('handle_calendar_url'), 'Calendar lib.rs must provide h
 assert(calLibRs.includes('register_calendar_protocols'), 'Calendar lib.rs must provide register_calendar_protocols command');
 assert(calLibRs.includes('register_calendar_protocol_handlers(None)'), 'Calendar setup must call register_calendar_protocol_handlers');
 assert(calLibRs.includes('resolve_calendar_target_url'), 'Calendar startup must resolve calendar target url from args');
-assert(calLibRs.includes('"register:protocols"'), 'Calendar must handle register:protocols command from UI');
+assert(calLibRs.includes('register_app_protocols'), 'Calendar must handle register_app_protocols command from UI');
 console.log('PASS: Desktop Calendar Tauri commands and lifecycle registration verified.');
 
 // ============================================================================

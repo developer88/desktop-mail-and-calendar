@@ -42,7 +42,7 @@
 
   window.addEventListener('scroll', preventRootScroll, { passive: true });
 
-  // Tag calendar root so CSS can cleanly position Calendar content below the dedicated titlebar
+  // Tag calendar root so CSS can cleanly position wrapper shell elements
   function ensureAppRootClasses() {
     if (isCalendar) {
       if (document.documentElement && !document.documentElement.classList.contains('desktop-calendar-app')) {
@@ -51,38 +51,6 @@
       if (document.body && !document.body.classList.contains('desktop-calendar-app')) {
         document.body.classList.add('desktop-calendar-app');
       }
-      const inEventEdit = Boolean(
-        window.location &&
-        typeof window.location.pathname === 'string' &&
-        window.location.pathname.includes('/eventedit')
-      );
-      if (document.documentElement) {
-        document.documentElement.classList.toggle('desktop-calendar-eventedit', inEventEdit);
-      }
-      if (document.body) {
-        document.body.classList.toggle('desktop-calendar-eventedit', inEventEdit);
-      }
-    }
-  }
-
-  if (isCalendar) {
-    window.addEventListener('popstate', ensureAppRootClasses);
-    window.addEventListener('hashchange', ensureAppRootClasses);
-    try {
-      if (window.history) {
-        ['pushState', 'replaceState'].forEach((method) => {
-          const orig = window.history[method];
-          if (typeof orig === 'function') {
-            window.history[method] = function () {
-              const res = orig.apply(this, arguments);
-              ensureAppRootClasses();
-              return res;
-            };
-          }
-        });
-      }
-    } catch (_) {
-      // Ignore if history methods are read-only in sandboxed test environments
     }
   }
 
@@ -156,9 +124,49 @@
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateAdaptiveTheme);
   }
 
-  // Fast, CSP-proof native action trigger via document.title interceptor
+  window.__desktop_shell_set_theme = function(isDark, bgColor) {
+    const titlebar = document.getElementById('desktop-custom-titlebar');
+    if (bgColor && typeof bgColor === 'string') {
+      if (document.documentElement) {
+        document.documentElement.style.backgroundColor = bgColor;
+      }
+      if (document.body) {
+        document.body.style.backgroundColor = bgColor;
+      }
+      if (titlebar) {
+        titlebar.style.backgroundColor = bgColor;
+      }
+    }
+    if (!titlebar) return;
+    if (isCalendar) {
+      titlebar.classList.toggle('dark-mode', Boolean(isDark));
+    } else {
+      titlebar.classList.toggle('mail-light-mode', !isDark);
+      titlebar.classList.toggle('dark-mode', Boolean(isDark));
+    }
+  };
+
+  // Fast, CSP-proof native action trigger via Tauri invoke or document.title interceptor
   let lastNonCmdTitle = document.title || (isCalendar ? 'Desktop Calendar' : 'Desktop Mail');
   function triggerAction(action) {
+    if ((window.__DESKTOP_SHELL_ONLY__ || window.__DESKTOP_DIALOG_MODE__) && window.__TAURI__ && window.__TAURI__.core) {
+      const cmdMap = {
+        drag: 'drag_window',
+        minimize: 'minimize_window',
+        maximize: 'maximize_window',
+        close: 'close_window',
+        first_run_completed: 'mark_first_run_completed',
+        'open:defaultapps': 'open_default_apps',
+        'register:protocols': 'register_app_protocols',
+        'autostart:on': 'set_autostart_on',
+        'autostart:off': 'set_autostart_off'
+      };
+      const cmd = cmdMap[action];
+      if (cmd) {
+        window.__TAURI__.core.invoke(cmd).catch(() => {});
+        return;
+      }
+    }
     if (!document.title.startsWith('__desktop_cmd__:')) {
       lastNonCmdTitle = document.title;
     }
@@ -827,6 +835,7 @@
     // Header
     const header = document.createElement('div');
     header.className = 'desktop-settings-header';
+    header.setAttribute('data-tauri-drag-region', 'deep');
 
     const titleGroup = document.createElement('div');
     titleGroup.className = 'desktop-settings-title-group';
@@ -1348,6 +1357,9 @@
   function closeSettingsDialog() {
     const overlay = document.getElementById('desktop-settings-overlay');
     if (overlay) overlay.remove();
+    if (window.__DESKTOP_DIALOG_MODE__ && window.__TAURI__ && window.__TAURI__.core) {
+      window.__TAURI__.core.invoke('close_dialog').catch(() => {});
+    }
   }
 
   // Welcome & Privacy Notice Splash Screen (shown on very first load)
@@ -1454,6 +1466,9 @@
       overlay.classList.add('closing');
       setTimeout(() => {
         overlay.remove();
+        if (window.__DESKTOP_DIALOG_MODE__ && window.__TAURI__ && window.__TAURI__.core) {
+          window.__TAURI__.core.invoke('close_dialog').catch(() => {});
+        }
       }, 200);
     }
 
@@ -1710,9 +1725,26 @@
   });
 
   function createTitlebar() {
-    checkFirstRunSplash();
+    if (window.__DESKTOP_DIALOG_MODE__) {
+      const mode = window.__DESKTOP_DIALOG_MODE__;
+      if (!document.getElementById('desktop-settings-overlay') && !document.getElementById('desktop-splash-overlay')) {
+        if (mode === 'welcome') {
+          showWelcomeSplash(false);
+        } else if (mode === 'about') {
+          openSettingsDialog('about');
+        } else {
+          openSettingsDialog('general');
+        }
+      }
+      return;
+    }
+    if (!window.__DESKTOP_SHELL_ONLY__) {
+      checkFirstRunSplash();
+    }
     if (document.getElementById('desktop-custom-titlebar')) {
-      updateAdaptiveTheme();
+      if (!window.__DESKTOP_SHELL_ONLY__) {
+        updateAdaptiveTheme();
+      }
       return;
     }
 
@@ -1803,6 +1835,14 @@
     menuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       e.preventDefault();
+      if (window.__DESKTOP_SHELL_ONLY__ && window.__TAURI__ && window.__TAURI__.core) {
+        const rect = menuBtn.getBoundingClientRect();
+        window.__TAURI__.core.invoke('show_app_menu', {
+          x: Math.round(rect.left),
+          y: 32
+        }).catch(() => {});
+        return;
+      }
       toggleMenu(menuBtn);
     });
 

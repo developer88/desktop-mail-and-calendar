@@ -1,8 +1,90 @@
-use desktop_google_core::{scripts::get_injected_bundle, DesktopAppConfig};
-use tauri::{AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder, WindowEvent};
+use desktop_google_core::{
+    scripts::{get_content_bundle, get_dialog_bundle, get_shell_bundle, ThemePayload},
+    AppKind, DesktopAppConfig,
+};
+use std::sync::atomic::{AtomicU64, Ordering};
+use tauri::{
+    menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder},
+    webview::WebviewBuilder,
+    window::WindowBuilder,
+    AppHandle, LogicalPosition, Manager, PhysicalPosition, PhysicalSize, Rect, Runtime, WebviewUrl,
+    WebviewWindowBuilder, WindowEvent,
+};
 
 // Standard Microsoft Edge on Windows 11 User-Agent required by Google Calendar and Google Services
 const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0";
+const TITLEBAR_LOGICAL_HEIGHT: f64 = 32.0;
+
+static CONTENT_ZOOM_BITS: AtomicU64 = AtomicU64::new(0x3ff0_0000_0000_0000); // 1.0f64
+
+fn get_zoom() -> f64 {
+    f64::from_bits(CONTENT_ZOOM_BITS.load(Ordering::Relaxed))
+}
+
+fn set_zoom_level<R: Runtime>(app: &AppHandle<R>, zoom: f64) {
+    let clamped = zoom.clamp(0.5, 2.5);
+    CONTENT_ZOOM_BITS.store(clamped.to_bits(), Ordering::Relaxed);
+    if let Some(wv) = app.get_webview("content") {
+        let _ = wv.set_zoom(clamped);
+    }
+}
+
+fn titlebar_physical_height(scale_factor: f64) -> u32 {
+    (TITLEBAR_LOGICAL_HEIGHT * scale_factor.max(1.0)).round() as u32
+}
+
+fn sync_child_webview_bounds<R: Runtime>(
+    app: &AppHandle<R>,
+    width: u32,
+    height: u32,
+    scale_factor: f64,
+) {
+    let bar_h = titlebar_physical_height(scale_factor).min(height);
+    if let Some(shell) = app.get_webview("shell") {
+        let _ = shell.set_bounds(Rect {
+            position: PhysicalPosition::new(0, 0).into(),
+            size: PhysicalSize::new(width, bar_h).into(),
+        });
+    }
+    if let Some(content) = app.get_webview("content") {
+        let _ = content.set_bounds(Rect {
+            position: PhysicalPosition::new(0, bar_h as i32).into(),
+            size: PhysicalSize::new(width, height.saturating_sub(bar_h)).into(),
+        });
+    }
+}
+
+fn open_dialog_window_impl<R: Runtime>(app: &AppHandle<R>, mode: &str, is_first_run: bool) {
+    if let Some(existing) = app.get_webview_window("dialog") {
+        let _ = existing.close();
+    }
+
+    let (w, h, title) = match mode {
+        "welcome" => (500.0, 470.0, "Welcome to Desktop Calendar"),
+        "about" => (680.0, 520.0, "About Desktop Calendar"),
+        _ => (680.0, 520.0, "Settings"),
+    };
+
+    let dialog_script = get_dialog_bundle(AppKind::Calendar, mode, is_first_run);
+    let mut builder =
+        WebviewWindowBuilder::new(app, "dialog", WebviewUrl::App("dialog.html".into()))
+            .title(title)
+            .inner_size(w, h)
+            .resizable(false)
+            .decorations(false)
+            .shadow(true)
+            .center()
+            .initialization_script(&dialog_script);
+
+    #[cfg(target_os = "windows")]
+    if let Some(main_win) = app.get_window("main") {
+        if let Ok(hwnd) = main_win.hwnd() {
+            builder = builder.parent_raw(hwnd);
+        }
+    }
+
+    let _ = builder.build();
+}
 
 mod commands {
     use super::*;
@@ -16,15 +98,22 @@ mod commands {
     }
 
     #[tauri::command]
+    pub fn drag_window<R: Runtime>(app: AppHandle<R>) {
+        if let Some(w) = app.get_window("main") {
+            let _ = w.start_dragging();
+        }
+    }
+
+    #[tauri::command]
     pub fn minimize_window<R: Runtime>(app: AppHandle<R>) {
-        if let Some(w) = app.get_webview_window("main") {
+        if let Some(w) = app.get_window("main") {
             let _ = w.minimize();
         }
     }
 
     #[tauri::command]
     pub fn maximize_window<R: Runtime>(app: AppHandle<R>) {
-        if let Some(w) = app.get_webview_window("main") {
+        if let Some(w) = app.get_window("main") {
             if let Ok(is_max) = w.is_maximized() {
                 if is_max {
                     let _ = w.unmaximize();
@@ -41,17 +130,201 @@ mod commands {
     }
 
     #[tauri::command]
+    pub fn close_dialog<R: Runtime>(app: AppHandle<R>) {
+        if let Some(d) = app.get_webview_window("dialog") {
+            let _ = d.close();
+        }
+    }
+
+    #[tauri::command]
+    pub fn mark_first_run_completed() {
+        desktop_google_core::config::mark_first_run_completed("com.andrey.desktop-calendar");
+    }
+
+    #[tauri::command]
+    pub fn open_default_apps<R: Runtime>(app: AppHandle<R>) {
+        use tauri_plugin_shell::ShellExt;
+        let _ = app.shell().open("ms-settings:defaultapps", None);
+    }
+
+    #[tauri::command]
+    pub fn register_app_protocols() -> Result<(), String> {
+        desktop_google_core::register_calendar_protocol_handlers(None)
+    }
+
+    #[tauri::command]
+    pub fn set_autostart_on() {
+        set_windows_autostart(true);
+    }
+
+    #[tauri::command]
+    pub fn set_autostart_off() {
+        set_windows_autostart(false);
+    }
+
+    #[tauri::command]
+    pub fn show_app_menu<R: Runtime>(app: AppHandle<R>, x: f64, y: f64) -> Result<(), String> {
+        let Some(window) = app.get_window("main") else {
+            return Ok(());
+        };
+
+        let file_menu = SubmenuBuilder::new(&app, "File")
+            .item(
+                &MenuItemBuilder::with_id("file_new_event", "New Event")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .item(
+                &MenuItemBuilder::with_id("view_reload", "Reload")
+                    .accelerator("CmdOrCtrl+R")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .separator()
+            .item(
+                &MenuItemBuilder::with_id("app_settings", "Settings...")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .separator()
+            .item(
+                &MenuItemBuilder::with_id("file_exit", "Exit")
+                    .accelerator("Alt+F4")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .build()
+            .map_err(|e| e.to_string())?;
+
+        let edit_menu = SubmenuBuilder::new(&app, "Edit")
+            .item(
+                &MenuItemBuilder::with_id("edit_undo", "Undo")
+                    .accelerator("CmdOrCtrl+Z")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .item(
+                &MenuItemBuilder::with_id("edit_redo", "Redo")
+                    .accelerator("CmdOrCtrl+Y")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .separator()
+            .item(
+                &MenuItemBuilder::with_id("edit_cut", "Cut")
+                    .accelerator("CmdOrCtrl+X")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .item(
+                &MenuItemBuilder::with_id("edit_copy", "Copy")
+                    .accelerator("CmdOrCtrl+C")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .item(
+                &MenuItemBuilder::with_id("edit_paste", "Paste")
+                    .accelerator("CmdOrCtrl+V")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .separator()
+            .item(
+                &MenuItemBuilder::with_id("edit_select_all", "Select All")
+                    .accelerator("CmdOrCtrl+A")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .build()
+            .map_err(|e| e.to_string())?;
+
+        let view_menu = SubmenuBuilder::new(&app, "View")
+            .item(
+                &MenuItemBuilder::with_id("view_zoom_reset", "Actual Size")
+                    .accelerator("CmdOrCtrl+0")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .item(
+                &MenuItemBuilder::with_id("view_zoom_in", "Zoom In")
+                    .accelerator("CmdOrCtrl+=")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .item(
+                &MenuItemBuilder::with_id("view_zoom_out", "Zoom Out")
+                    .accelerator("CmdOrCtrl+-")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .separator()
+            .item(
+                &MenuItemBuilder::with_id("view_fullscreen", "Toggle Fullscreen")
+                    .accelerator("F11")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .build()
+            .map_err(|e| e.to_string())?;
+
+        let window_menu = SubmenuBuilder::new(&app, "Window")
+            .item(
+                &MenuItemBuilder::with_id("win_minimize", "Minimize")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .item(
+                &MenuItemBuilder::with_id("win_maximize", "Maximize / Restore")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .separator()
+            .item(
+                &MenuItemBuilder::with_id("win_close", "Close")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .build()
+            .map_err(|e| e.to_string())?;
+
+        let menu = MenuBuilder::new(&app)
+            .item(&file_menu)
+            .item(&edit_menu)
+            .item(&view_menu)
+            .item(&window_menu)
+            .item(&PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?)
+            .item(
+                &MenuItemBuilder::with_id("app_settings_top", "Settings...")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .item(
+                &MenuItemBuilder::with_id("app_about", "About Desktop Calendar...")
+                    .build(&app)
+                    .map_err(|e| e.to_string())?,
+            )
+            .build()
+            .map_err(|e| e.to_string())?;
+
+        window
+            .popup_menu_at(&menu, LogicalPosition::new(x, y))
+            .map_err(|e| e.to_string())
+    }
+
+    #[tauri::command]
     pub fn handle_calendar_url<R: Runtime>(
         app: AppHandle<R>,
         url_or_path: String,
     ) -> Result<(), String> {
         if let Some(target_url) = desktop_google_core::resolve_calendar_target_url(&url_or_path) {
-            if let Some(window) = app.get_webview_window("main") {
+            if let Some(window) = app.get_window("main") {
                 let _ = window.show();
                 let _ = window.unminimize();
                 let _ = window.set_focus();
+            }
+            if let Some(wv) = app.get_webview("content") {
                 let script = format!("window.location.href = '{}';", target_url);
-                let _ = window.eval(&script);
+                let _ = wv.eval(&script);
             }
         }
         Ok(())
@@ -80,7 +353,7 @@ mod commands {
         width: Option<u32>,
         height: Option<u32>,
     ) -> Result<(), String> {
-        if let Some(window) = app.get_webview_window("main") {
+        if let Some(window) = app.get_window("main") {
             #[cfg(target_os = "windows")]
             if let Ok(hwnd_obj) = window.hwnd() {
                 let hwnd = hwnd_obj.0 as isize;
@@ -132,7 +405,7 @@ fn show_native_toast<R: Runtime>(
                     let _ = action_app.shell().open(&url, None);
                 }
                 desktop_google_core::toast::ToastAction::OpenApp => {
-                    if let Some(w) = action_app.get_webview_window("main") {
+                    if let Some(w) = action_app.get_window("main") {
                         let _ = w.show();
                         let _ = w.unminimize();
                         let _ = w.set_focus();
@@ -180,10 +453,96 @@ pub fn run() {
             commands::register_calendar_jumplist,
             commands::get_windows_accent_color,
             commands::update_calendar_date_icon,
+            commands::drag_window,
             commands::minimize_window,
             commands::maximize_window,
-            commands::close_window
+            commands::close_window,
+            commands::close_dialog,
+            commands::show_app_menu,
+            commands::mark_first_run_completed,
+            commands::open_default_apps,
+            commands::register_app_protocols,
+            commands::set_autostart_on,
+            commands::set_autostart_off
         ])
+        .on_menu_event(|app, event| {
+            match event.id().as_ref() {
+                "file_new_event" => {
+                    if let Some(wv) = app.get_webview("content") {
+                        let _ = wv.eval("window.location.href = 'https://calendar.google.com/calendar/u/0/r/eventedit';");
+                    }
+                }
+                "view_reload" => {
+                    if let Some(wv) = app.get_webview("content") {
+                        let _ = wv.reload();
+                    }
+                }
+                "edit_undo" => {
+                    if let Some(wv) = app.get_webview("content") {
+                        let _ = wv.eval("document.execCommand('undo');");
+                    }
+                }
+                "edit_redo" => {
+                    if let Some(wv) = app.get_webview("content") {
+                        let _ = wv.eval("document.execCommand('redo');");
+                    }
+                }
+                "edit_cut" => {
+                    if let Some(wv) = app.get_webview("content") {
+                        let _ = wv.eval("document.execCommand('cut');");
+                    }
+                }
+                "edit_copy" => {
+                    if let Some(wv) = app.get_webview("content") {
+                        let _ = wv.eval("document.execCommand('copy');");
+                    }
+                }
+                "edit_paste" => {
+                    if let Some(wv) = app.get_webview("content") {
+                        let _ = wv.eval("document.execCommand('paste');");
+                    }
+                }
+                "edit_select_all" => {
+                    if let Some(wv) = app.get_webview("content") {
+                        let _ = wv.eval("document.execCommand('selectAll');");
+                    }
+                }
+                "view_zoom_reset" => set_zoom_level(app, 1.0),
+                "view_zoom_in" => set_zoom_level(app, get_zoom() + 0.1),
+                "view_zoom_out" => set_zoom_level(app, get_zoom() - 0.1),
+                "view_fullscreen" => {
+                    if let Some(w) = app.get_window("main") {
+                        if let Ok(is_full) = w.is_fullscreen() {
+                            let _ = w.set_fullscreen(!is_full);
+                        }
+                    }
+                }
+                "win_minimize" => {
+                    if let Some(w) = app.get_window("main") {
+                        let _ = w.minimize();
+                    }
+                }
+                "win_maximize" => {
+                    if let Some(w) = app.get_window("main") {
+                        if let Ok(is_max) = w.is_maximized() {
+                            if is_max {
+                                let _ = w.unmaximize();
+                            } else {
+                                let _ = w.maximize();
+                            }
+                        }
+                    }
+                }
+                "win_close" | "file_exit" => app.exit(0),
+                "app_settings" | "app_settings_top" => {
+                    open_dialog_window_impl(app, "settings", false);
+                }
+                "app_about" => {
+                    open_dialog_window_impl(app, "about", false);
+                }
+                _ => {}
+            }
+        })
         .setup(move |app| {
             let _ = desktop_google_core::register_calendar_protocol_handlers(None);
             let _ = desktop_google_core::delete_jump_list("com.andrey.desktop-calendar");
@@ -199,7 +558,7 @@ pub fn run() {
             use tauri_plugin_notification::NotificationExt;
             let app_click = app.handle().clone();
             let _ = app.notification().on_action(move |_action| {
-                if let Some(w) = app_click.get_webview_window("main") {
+                if let Some(w) = app_click.get_window("main") {
                     let _ = w.show();
                     let _ = w.unminimize();
                     let _ = w.set_focus();
@@ -207,7 +566,8 @@ pub fn run() {
             });
 
             let is_first_run = desktop_google_core::config::is_first_run("com.andrey.desktop-calendar");
-            let injected_script = get_injected_bundle(config.kind, is_first_run);
+            let content_script = get_content_bundle(config.kind);
+            let shell_script = get_shell_bundle(config.kind);
 
             let initial_url = WebviewUrl::External(
                 start_url
@@ -215,19 +575,14 @@ pub fn run() {
                     .expect("Failed to parse initial URL for Calendar"),
             );
 
-            let app_nav = app.handle().clone();
-            let app_win = app.handle().clone();
-
-            let mut builder = WebviewWindowBuilder::new(app, "main", initial_url)
+            let mut win_builder = WindowBuilder::new(app, "main")
                 .title(&config.title)
                 .inner_size(config.width, config.height)
                 .min_inner_size(config.min_width, config.min_height)
                 .center()
                 .resizable(true)
                 .decorations(false)
-                .shadow(true)
-                .user_agent(USER_AGENT)
-                .initialization_script(&injected_script);
+                .shadow(true);
 
             #[cfg(target_os = "windows")]
             {
@@ -236,15 +591,40 @@ pub fn run() {
                     if let Some(rgba) = unsafe {
                         desktop_google_core::icon::windows::render_calendar_date_rgba(base_img.rgba(), day)
                     } {
-                        builder = builder.icon(tauri::image::Image::new_owned(rgba, 256, 256)).expect("valid icon");
+                        win_builder = win_builder.icon(tauri::image::Image::new_owned(rgba, 256, 256)).expect("valid icon");
                     }
                 }
             }
 
-            let window = builder
-                .on_document_title_changed({
-                    let app_cmd = app.handle().clone();
-                    move |window, title| {
+            let window = win_builder.build()?;
+
+            // Spawn child webviews on a worker thread to avoid WebView2 synchronous deadlock on Windows
+            let app_setup = app.handle().clone();
+            let win_setup = window.clone();
+            std::thread::spawn(move || {
+                let scale = win_setup.scale_factor().unwrap_or(1.0);
+                let size = win_setup
+                    .inner_size()
+                    .unwrap_or(PhysicalSize::new(config.width as u32, config.height as u32));
+                let bar_h = titlebar_physical_height(scale).min(size.height);
+
+                let shell_builder =
+                    WebviewBuilder::new("shell", WebviewUrl::App("shell.html".into()))
+                        .initialization_script(&shell_script);
+                let _ = win_setup.add_child(
+                    shell_builder,
+                    PhysicalPosition::new(0, 0),
+                    PhysicalSize::new(size.width, bar_h),
+                );
+
+                let app_cmd = app_setup.clone();
+                let app_nav = app_setup.clone();
+                let app_win = app_setup.clone();
+
+                let content_builder = WebviewBuilder::new("content", initial_url)
+                    .user_agent(USER_AGENT)
+                    .initialization_script(&content_script)
+                    .on_document_title_changed(move |_webview, title| {
                         if let Some(cmd) = title.strip_prefix("__desktop_cmd__:") {
                             if let Some(hex_data) = cmd.strip_prefix("notify:") {
                                 if let Some(json_str) = desktop_google_core::scripts::from_hex(hex_data) {
@@ -264,163 +644,111 @@ pub fn run() {
                                 }
                                 return;
                             }
-                            match cmd {
-                                "drag" => {
-                                    let _ = window.start_dragging();
-                                }
-                                "minimize" => {
-                                    let _ = window.minimize();
-                                }
-                                "maximize" => {
-                                    if let Ok(is_max) = window.is_maximized() {
-                                        if is_max {
-                                            let _ = window.unmaximize();
-                                        } else {
-                                            let _ = window.maximize();
+                            if let Some(hex_data) = cmd.strip_prefix("theme:") {
+                                if let Some(json_str) = desktop_google_core::scripts::from_hex(hex_data) {
+                                    if let Ok(theme) = serde_json::from_str::<ThemePayload>(&json_str) {
+                                        if let Some(shell) = app_cmd.get_webview("shell") {
+                                            let bg_json = serde_json::to_string(&theme.bg_color)
+                                                .unwrap_or_else(|_| "null".to_string());
+                                            let js = format!(
+                                                "window.__desktop_shell_set_theme && window.__desktop_shell_set_theme({}, {});",
+                                                theme.is_dark, bg_json
+                                            );
+                                            let _ = shell.eval(&js);
                                         }
                                     }
                                 }
-                                "close" => {
-                                    app_cmd.exit(0);
-                                }
-                                "fullscreen" => {
-                                    if let Ok(is_full) = window.is_fullscreen() {
-                                        let _ = window.set_fullscreen(!is_full);
-                                    }
-                                }
-                                "autostart:on" => {
-                                    set_windows_autostart(true);
-                                }
-                                "autostart:off" => {
-                                    set_windows_autostart(false);
-                                }
-                                "open:defaultapps" => {
-                                    use tauri_plugin_shell::ShellExt;
-                                    let _ = app_cmd.shell().open("ms-settings:defaultapps", None);
-                                }
-                                "register:protocols" => {
-                                    let _ = desktop_google_core::register_calendar_protocol_handlers(None);
-                                }
-                                "first_run_completed" => {
-                                    desktop_google_core::config::mark_first_run_completed("com.andrey.desktop-calendar");
-                                }
-
-                                _ => {}
+                                return;
                             }
                         }
-                    }
-                })
-                .on_navigation(move |url| {
-                    if url.scheme() == "desktop-app" {
-                        if url.host_str() == Some("window") {
-                            match url.path() {
-                                "/drag" => {
-                                    if let Some(w) = app_nav.get_webview_window("main") {
-                                        let _ = w.start_dragging();
-                                    }
-                                }
-                                "/minimize" => {
-                                    if let Some(w) = app_nav.get_webview_window("main") {
-                                        let _ = w.minimize();
-                                    }
-                                }
-                                "/maximize" => {
-                                    if let Some(w) = app_nav.get_webview_window("main") {
-                                        if let Ok(is_max) = w.is_maximized() {
-                                            if is_max {
-                                                let _ = w.unmaximize();
-                                            } else {
-                                                let _ = w.maximize();
-                                            }
-                                        }
-                                    }
-                                }
-                                "/close" => {
-                                    app_nav.exit(0);
-                                }
-                                "/fullscreen" => {
-                                    if let Some(w) = app_nav.get_webview_window("main") {
-                                        if let Ok(is_full) = w.is_fullscreen() {
-                                            let _ = w.set_fullscreen(!is_full);
-                                        }
-                                    }
-                                }
-                                _ => {}
-                            }
+                    })
+                    .on_navigation(move |url| {
+                        if url.scheme() == "desktop-app" {
+                            return false;
                         }
-                        return false;
-                    }
 
-                    let url_str = url.as_str();
-                    if url.scheme() == "webcal" || url.scheme() == "webcals" {
-                        let target = desktop_google_core::to_calendar_subscribe_url(url_str);
-                        if let Ok(parsed_target) = target.parse() {
-                            if let Some(w) = app_nav.get_webview_window("main") {
-                                let _ = w.navigate(parsed_target);
-                            }
-                        }
-                        return false;
-                    }
-
-                    if let Some(host) = url.host_str() {
-                        if host == "workspace.google.com" {
-                            if let Some(w) = app_nav.get_webview_window("main") {
-                                let _ = w.eval("window.location.replace('https://calendar.google.com/calendar/u/0/r');");
+                        let url_str = url.as_str();
+                        if url.scheme() == "webcal" || url.scheme() == "webcals" {
+                            let target = desktop_google_core::to_calendar_subscribe_url(url_str);
+                            if let Ok(parsed_target) = target.parse() {
+                                if let Some(wv) = app_nav.get_webview("content") {
+                                    let _ = wv.navigate(parsed_target);
+                                }
                             }
                             return false;
                         }
-                    }
 
-                    if desktop_google_core::should_open_in_external_browser(
-                        url_str,
-                        desktop_google_core::AppKind::Calendar,
-                    ) {
-                        use tauri_plugin_shell::ShellExt;
-                        let target = desktop_google_core::get_external_browser_target(url_str);
-                        let _ = app_nav.shell().open(target, None);
-                        false
-                    } else {
-                        true
-                    }
-                })
-                .on_new_window(move |url, _features| {
-                    let url_str = url.as_str();
-                    if url.scheme() == "webcal" || url.scheme() == "webcals" {
-                        let target = desktop_google_core::to_calendar_subscribe_url(url_str);
-                        if let Ok(parsed_target) = target.parse() {
-                            if let Some(w) = app_win.get_webview_window("main") {
-                                let _ = w.navigate(parsed_target);
+                        if let Some(host) = url.host_str() {
+                            if host == "workspace.google.com" {
+                                if let Some(wv) = app_nav.get_webview("content") {
+                                    let _ = wv.eval("window.location.replace('https://calendar.google.com/calendar/u/0/r');");
+                                }
+                                return false;
                             }
                         }
-                        return tauri::webview::NewWindowResponse::Deny;
-                    }
 
-                    if let Some(host) = url.host_str() {
-                        if host == "workspace.google.com" {
-                            if let Some(w) = app_win.get_webview_window("main") {
-                                let _ = w.eval("window.location.replace('https://calendar.google.com/calendar/u/0/r');");
+                        if desktop_google_core::should_open_in_external_browser(
+                            url_str,
+                            desktop_google_core::AppKind::Calendar,
+                        ) {
+                            use tauri_plugin_shell::ShellExt;
+                            let target = desktop_google_core::get_external_browser_target(url_str);
+                            let _ = app_nav.shell().open(target, None);
+                            false
+                        } else {
+                            true
+                        }
+                    })
+                    .on_new_window(move |url, _features| {
+                        let url_str = url.as_str();
+                        if url.scheme() == "webcal" || url.scheme() == "webcals" {
+                            let target = desktop_google_core::to_calendar_subscribe_url(url_str);
+                            if let Ok(parsed_target) = target.parse() {
+                                if let Some(wv) = app_win.get_webview("content") {
+                                    let _ = wv.navigate(parsed_target);
+                                }
                             }
                             return tauri::webview::NewWindowResponse::Deny;
                         }
-                    }
 
-                    if desktop_google_core::should_open_in_external_browser(
-                        url_str,
-                        desktop_google_core::AppKind::Calendar,
-                    ) {
-                        use tauri_plugin_shell::ShellExt;
-                        let target = desktop_google_core::get_external_browser_target(url_str);
-                        let _ = app_win.shell().open(target, None);
-                        tauri::webview::NewWindowResponse::Deny
-                    } else {
-                        if let Some(w) = app_win.get_webview_window("main") {
-                            let _ = w.navigate(url);
+                        if let Some(host) = url.host_str() {
+                            if host == "workspace.google.com" {
+                                if let Some(wv) = app_win.get_webview("content") {
+                                    let _ = wv.eval("window.location.replace('https://calendar.google.com/calendar/u/0/r');");
+                                }
+                                return tauri::webview::NewWindowResponse::Deny;
+                            }
                         }
-                        tauri::webview::NewWindowResponse::Deny
-                    }
-                })
-                .build()?;
 
+                        if desktop_google_core::should_open_in_external_browser(
+                            url_str,
+                            desktop_google_core::AppKind::Calendar,
+                        ) {
+                            use tauri_plugin_shell::ShellExt;
+                            let target = desktop_google_core::get_external_browser_target(url_str);
+                            let _ = app_win.shell().open(target, None);
+                            tauri::webview::NewWindowResponse::Deny
+                        } else {
+                            if let Some(wv) = app_win.get_webview("content") {
+                                let _ = wv.navigate(url);
+                            }
+                            tauri::webview::NewWindowResponse::Deny
+                        }
+                    });
+
+                let _ = win_setup.add_child(
+                    content_builder,
+                    PhysicalPosition::new(0, bar_h as i32),
+                    PhysicalSize::new(size.width, size.height.saturating_sub(bar_h)),
+                );
+
+                if is_first_run {
+                    let app_welcome = app_setup.clone();
+                    let _ = app_setup.run_on_main_thread(move || {
+                        open_dialog_window_impl(&app_welcome, "welcome", true);
+                    });
+                }
+            });
 
             #[cfg(target_os = "windows")]
             {
@@ -430,7 +758,7 @@ pub fn run() {
                     let base_bytes = include_bytes!("../icons/blank_256.png");
                     let base_img = tauri::image::Image::from_bytes(base_bytes).ok();
 
-                    let update_icon = |win: &tauri::WebviewWindow, current_day: u32| {
+                    let update_icon = |win: &tauri::Window, current_day: u32| {
                         if let Some(ref img) = base_img {
                             unsafe {
                                 if let Some(rgba) = desktop_google_core::icon::windows::render_calendar_date_rgba(
@@ -450,7 +778,6 @@ pub fn run() {
                                                 desktop_google_core::icon::windows::set_window_hicon(hwnd, hicon);
                                             }
 
-                                            // Ensure taskbar has no overlay badge/dot for calendar day
                                             desktop_google_core::icon::windows::set_taskbar_overlay_icon(
                                                 hwnd,
                                                 0,
@@ -465,8 +792,6 @@ pub fn run() {
                         }
                     };
 
-                    // Re-apply several times during startup to ensure Tauri / WebView2 window
-                    // creation and display does not overwrite the dynamic date icon.
                     let startup_delays_ms = [50, 100, 200, 400, 800, 1500, 3000];
                     for &delay in &startup_delays_ms {
                         std::thread::sleep(std::time::Duration::from_millis(delay));
@@ -475,7 +800,6 @@ pub fn run() {
                         update_icon(&win_handle, day);
                     }
 
-                    // Background loop: check every 10s for date change across midnight
                     loop {
                         std::thread::sleep(std::time::Duration::from_secs(10));
                         let day = unsafe { desktop_google_core::icon::windows::get_local_day() };
@@ -487,11 +811,36 @@ pub fn run() {
                 });
             }
 
-            // Exit application directly when window close button (X) is clicked
-            let app_handle_for_close = app.handle().clone();
+            // Keep child webview bounds synchronized on resize/DPI change and exit on close
+            let app_handle_for_events = app.handle().clone();
+            let win_for_events = window.clone();
             window.on_window_event(move |event| {
-                if let WindowEvent::CloseRequested { .. } = event {
-                    app_handle_for_close.exit(0);
+                match event {
+                    WindowEvent::Resized(new_size) => {
+                        let scale = win_for_events.scale_factor().unwrap_or(1.0);
+                        sync_child_webview_bounds(
+                            &app_handle_for_events,
+                            new_size.width,
+                            new_size.height,
+                            scale,
+                        );
+                    }
+                    WindowEvent::ScaleFactorChanged {
+                        scale_factor,
+                        new_inner_size,
+                        ..
+                    } => {
+                        sync_child_webview_bounds(
+                            &app_handle_for_events,
+                            new_inner_size.width,
+                            new_inner_size.height,
+                            *scale_factor,
+                        );
+                    }
+                    WindowEvent::CloseRequested { .. } => {
+                        app_handle_for_events.exit(0);
+                    }
+                    _ => {}
                 }
             });
 

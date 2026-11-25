@@ -424,19 +424,10 @@ console.log('\n[2/5] Testing Desktop Calendar full E2E lifecycle...');
   const calThemeEl = document.getElementById('desktop-theme');
   assert(calThemeEl && calThemeEl.textContent.includes('#desktop-custom-titlebar.calendar-titlebar'), 'Calendar theme must style .calendar-titlebar');
   assert(calThemeEl.textContent.includes('background: transparent !important'), 'Calendar titlebar must be transparent');
-  assert(calThemeEl.textContent.includes('backdrop-filter: none !important'), 'Calendar titlebar must disable backdrop-filter blur to prevent artifacts over event creation');
-  assert(calThemeEl.textContent.includes('html.desktop-calendar-app.desktop-calendar-eventedit body'), 'Calendar theme must offset /eventedit view below frameless titlebar');
+  assert(calThemeEl.textContent.includes('backdrop-filter: none !important'), 'Calendar titlebar must disable backdrop-filter blur');
   const calShellThemeEl = document.getElementById('desktop-shell-theme');
   assert(calShellThemeEl && calShellThemeEl.textContent.includes('background: transparent !important'), 'Calendar titlebar in shell theme must be transparent');
   assert(calShellThemeEl.textContent.includes('backdrop-filter: none !important'), 'Calendar titlebar in shell theme must disable backdrop-filter blur');
-
-  // Verify SPA navigation to /eventedit toggles desktop-calendar-eventedit class immediately
-  assert(!document.documentElement.classList.contains('desktop-calendar-eventedit'), 'Normal calendar view must not have .desktop-calendar-eventedit');
-  window.history.pushState({}, '', '/calendar/u/0/r/eventedit');
-  assert(document.documentElement.classList.contains('desktop-calendar-eventedit'), 'Navigating to /eventedit must add .desktop-calendar-eventedit on html');
-  assert(document.body.classList.contains('desktop-calendar-eventedit'), 'Navigating to /eventedit must add .desktop-calendar-eventedit on body');
-  window.history.pushState({}, '', '/calendar/u/0/r');
-  assert(!document.documentElement.classList.contains('desktop-calendar-eventedit'), 'Leaving /eventedit must remove .desktop-calendar-eventedit');
 
   // 2b. Verify live day-of-the-month icon rendering (512x512 in emerald green #15803d)
   const expectedDay = new Date().getDate();
@@ -451,10 +442,10 @@ console.log('\n[2/5] Testing Desktop Calendar full E2E lifecycle...');
   assert(dayDraw, 'Canvas must render today\'s day number onto 512x512 calendar icon');
   assert.strictEqual(dayDraw.fillStyle, '#15803d', 'Calendar date number must be rendered in emerald green #15803d');
 
-  // 2c. Verify erroneous "Calendar could not load the data" toast is automatically hidden and dismissed
+  // 2c. Verify Google Calendar DOM/toasts are NEVER auto-dismissed or hidden
   const errToast = document.getElementById('err-toast');
-  assert.strictEqual(errToast.style.display, 'none', 'Erroneous data load toast must be hidden with display: none');
-  assert(toastCloseClicked, 'Toast close button must be automatically clicked');
+  assert.notStrictEqual(errToast.style.display, 'none', 'Google Calendar DOM must never be hidden by observer');
+  assert(!toastCloseClicked, 'Google Calendar toasts must never be auto-dismissed');
 
   // 2d. Verify About Desktop Calendar dialog renders cleanly
   const menuBtn = document.getElementById('desktop-caption-menu');

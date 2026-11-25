@@ -27,6 +27,13 @@ pub struct NotificationPayload {
     pub meeting_url: Option<String>,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+pub struct ThemePayload {
+    pub is_dark: bool,
+    #[serde(default)]
+    pub bg_color: Option<String>,
+}
+
 /// Decodes hex string into UTF-8 string
 pub fn from_hex(hex: &str) -> Option<String> {
     if hex.len() % 2 != 0 {
@@ -45,7 +52,307 @@ pub fn to_hex(s: &str) -> String {
     s.as_bytes().iter().map(|b| format!("{:02x}", b)).collect()
 }
 
-/// Constructs the complete consolidated JavaScript bundle injected into the webview on page initialization
+/// Constructs the read-only JavaScript bundle injected into the Google content WebView.
+/// Strictly injects ZERO CSS and ZERO DOM elements into Google's page.
+pub fn get_content_bundle(app_kind: AppKind) -> String {
+    let app_kind_str = match app_kind {
+        AppKind::Mail => "mail",
+        AppKind::Calendar => "calendar",
+    };
+    let primary_host = match app_kind {
+        AppKind::Mail => "mail.google.com",
+        AppKind::Calendar => "calendar.google.com",
+    };
+    let observer_script = match app_kind {
+        AppKind::Mail => UNREAD_OBSERVER_SCRIPT,
+        AppKind::Calendar => CALENDAR_DATE_SCRIPT,
+    };
+
+    format!(
+        r#"
+(function() {{
+    window.__DESKTOP_APP_KIND__ = "{app_kind_str}";
+    var APP_KIND = "{app_kind_str}";
+    var PRIMARY_HOST = "{primary_host}";
+
+    try {{
+        if (window.self !== window.top || window.parent !== window || window.frameElement) {{
+            return;
+        }}
+    }} catch (_) {{
+        return;
+    }}
+
+    var host = (window.location.hostname || '').toLowerCase();
+    var path = (window.location.pathname || '').toLowerCase();
+    var search = (window.location.search || '').toLowerCase();
+
+    if (search.includes('companion') || search.includes('embed') || path.includes('/embed') || path.includes('/htmlembed')) {{
+        return;
+    }}
+
+    if (host !== PRIMARY_HOST && !host.includes('accounts.google.') && host !== 'accounts.google.com') {{
+        return;
+    }}
+
+    function isAuthFlow() {{
+        try {{
+            if (host === 'accounts.google.com' || host.startsWith('accounts.google.') || host === 'myaccount.google.com') {{
+                return true;
+            }}
+            if ((host === 'google.com' || host === 'www.google.com') &&
+                (path.startsWith('/accounts') || path.startsWith('/signin') || path.startsWith('/servicelogin') || path.includes('signinchooser'))) {{
+                return true;
+            }}
+        }} catch (_) {{}}
+        return false;
+    }}
+
+    // Read-only theme sampler so the separate 32px Shell titlebar matches the page background & contrast
+    (function initThemeSampler() {{
+        var lastKey = '';
+        function sampleAndReport() {{
+            try {{
+                if (document.title && document.title.startsWith('__desktop_cmd__:')) return;
+                var isDark = Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var bgColor = null;
+
+                if (APP_KIND === 'calendar') {{
+                    if ((document.documentElement && document.documentElement.getAttribute('data-theme') === 'dark') ||
+                        (document.body && (document.body.classList.contains('dark-mode') || document.body.classList.contains('dark-theme')))) {{
+                        isDark = true;
+                    }}
+                    if (document.body) {{
+                        var c = window.getComputedStyle(document.body).backgroundColor;
+                        if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') bgColor = c;
+                    }}
+                    if (!bgColor) bgColor = isDark ? '#1f1f1f' : '#ffffff';
+                }} else {{
+                    if (isAuthFlow()) {{
+                        bgColor = isDark ? '#202124' : '#f0f4f9';
+                    }} else {{
+                        var headerIcons = document.querySelectorAll('header svg, [role="banner"] svg, .gb_d svg');
+                        for (var i = 0; i < headerIcons.length; i++) {{
+                            var svg = headerIcons[i];
+                            var st = window.getComputedStyle(svg);
+                            var fill = st.fill || '';
+                            var col = st.color || '';
+                            var val = (fill && fill !== 'none' && !fill.startsWith('rgba(0, 0, 0, 0)')) ? fill : col;
+                            var rgb = val.match(/\d+/g);
+                            if (rgb && rgb.length >= 3) {{
+                                var lum = (parseInt(rgb[0], 10) * 299 + parseInt(rgb[1], 10) * 587 + parseInt(rgb[2], 10) * 114) / 1000;
+                                if (lum > 130) {{ isDark = true; break; }}
+                                if (lum < 110) {{ isDark = false; break; }}
+                            }}
+                        }}
+                        var headerEl = document.querySelector('header, [role="banner"]');
+                        if (headerEl) {{
+                            var hc = window.getComputedStyle(headerEl).backgroundColor;
+                            if (hc && hc !== 'rgba(0, 0, 0, 0)' && hc !== 'transparent') bgColor = hc;
+                        }}
+                        if (!bgColor && document.body) {{
+                            var bc = window.getComputedStyle(document.body).backgroundColor;
+                            if (bc && bc !== 'rgba(0, 0, 0, 0)' && bc !== 'transparent') bgColor = bc;
+                        }}
+                        if (!bgColor) bgColor = isDark ? '#202124' : '#f6f8fc';
+                    }}
+                }}
+
+                var key = (isDark ? '1' : '0') + '|' + (bgColor || '');
+                if (key === lastKey) return;
+                lastKey = key;
+
+                var jsonStr = JSON.stringify({{ is_dark: isDark, bg_color: bgColor }});
+                var bytes = new TextEncoder().encode(jsonStr);
+                var hex = '';
+                for (var j = 0; j < bytes.length; j++) {{
+                    hex += bytes[j].toString(16).padStart(2, '0');
+                }}
+                var prevTitle = document.title;
+                document.title = '__desktop_cmd__:theme:' + hex;
+                setTimeout(function() {{
+                    if (document.title.startsWith('__desktop_cmd__:')) {{
+                        document.title = prevTitle;
+                    }}
+                }}, 40);
+            }} catch (_) {{}}
+        }}
+
+        if (document.readyState === 'loading') {{
+            document.addEventListener('DOMContentLoaded', sampleAndReport);
+        }} else {{
+            sampleAndReport();
+        }}
+        setInterval(sampleAndReport, 1500);
+        if (window.matchMedia) {{
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', sampleAndReport);
+        }}
+    }})();
+
+    if (!isAuthFlow()) {{
+        {notif}
+        {nav}
+        {observer}
+    }}
+}})();
+"#,
+        app_kind_str = app_kind_str,
+        primary_host = primary_host,
+        notif = NOTIFICATION_BRIDGE_SCRIPT,
+        nav = NAVIGATION_INTERCEPTOR_SCRIPT,
+        observer = observer_script,
+    )
+}
+
+/// Constructs the JavaScript bundle for the dedicated 32px top Shell WebView (`shell.html`).
+pub fn get_shell_bundle(app_kind: AppKind) -> String {
+    let app_kind_str = match app_kind {
+        AppKind::Mail => "mail",
+        AppKind::Calendar => "calendar",
+    };
+    let primary_host = match app_kind {
+        AppKind::Mail => "mail.google.com",
+        AppKind::Calendar => "calendar.google.com",
+    };
+    let accent = crate::theme::get_windows_accent_color();
+    let accent_css = crate::theme::generate_accent_css(&accent);
+    let escaped_accent = accent_css.replace('\\', "\\\\").replace('`', "\\`");
+    let escaped_shell = SHELL_CSS.replace('\\', "\\\\").replace('`', "\\`");
+    let accent_hex = accent.to_hex_rgb();
+
+    format!(
+        r#"
+(function() {{
+    window.__DESKTOP_APP_KIND__ = "{app_kind_str}";
+    window.__DESKTOP_SHELL_ONLY__ = true;
+    window.__DESKTOP_FIRST_RUN__ = false;
+    window.__DESKTOP_ACCENT_COLOR__ = {{
+        hex: "{accent_hex}",
+        r: {accent_r},
+        g: {accent_g},
+        b: {accent_b},
+        a: {accent_a}
+    }};
+    var APP_KIND = "{app_kind_str}";
+    var PRIMARY_HOST = "{primary_host}";
+
+    function applyShellOnlyStyles() {{
+        var target = document.head || document.documentElement;
+        if (!target) return;
+        if (!document.getElementById('desktop-accent-theme')) {{
+            var accentStyleEl = document.createElement('style');
+            accentStyleEl.id = 'desktop-accent-theme';
+            accentStyleEl.textContent = `{accent}`;
+            target.appendChild(accentStyleEl);
+        }}
+        if (!document.getElementById('desktop-shell-theme')) {{
+            var styleEl = document.createElement('style');
+            styleEl.id = 'desktop-shell-theme';
+            styleEl.textContent = `{shell}`;
+            target.appendChild(styleEl);
+        }}
+    }}
+    applyShellOnlyStyles();
+    if (document.readyState === 'loading') {{
+        document.addEventListener('DOMContentLoaded', applyShellOnlyStyles);
+    }}
+
+    {titlebar}
+}})();
+"#,
+        app_kind_str = app_kind_str,
+        primary_host = primary_host,
+        accent_hex = accent_hex,
+        accent_r = accent.r,
+        accent_g = accent.g,
+        accent_b = accent.b,
+        accent_a = accent.a,
+        accent = escaped_accent,
+        shell = escaped_shell,
+        titlebar = TITLEBAR_SCRIPT,
+    )
+}
+
+/// Constructs the JavaScript bundle for the standalone child modal Dialog WebView (`dialog.html`).
+pub fn get_dialog_bundle(app_kind: AppKind, mode: &str, is_first_run: bool) -> String {
+    let app_kind_str = match app_kind {
+        AppKind::Mail => "mail",
+        AppKind::Calendar => "calendar",
+    };
+    let primary_host = match app_kind {
+        AppKind::Mail => "mail.google.com",
+        AppKind::Calendar => "calendar.google.com",
+    };
+    let accent = crate::theme::get_windows_accent_color();
+    let accent_css = crate::theme::generate_accent_css(&accent);
+    let escaped_accent = accent_css.replace('\\', "\\\\").replace('`', "\\`");
+    let escaped_shell = SHELL_CSS.replace('\\', "\\\\").replace('`', "\\`");
+    let escaped_theme = WIN11_THEME_CSS.replace('\\', "\\\\").replace('`', "\\`");
+    let accent_hex = accent.to_hex_rgb();
+
+    format!(
+        r#"
+(function() {{
+    window.__DESKTOP_APP_KIND__ = "{app_kind_str}";
+    window.__DESKTOP_DIALOG_MODE__ = "{mode}";
+    window.__DESKTOP_FIRST_RUN__ = {is_first_run};
+    window.__DESKTOP_ACCENT_COLOR__ = {{
+        hex: "{accent_hex}",
+        r: {accent_r},
+        g: {accent_g},
+        b: {accent_b},
+        a: {accent_a}
+    }};
+    var APP_KIND = "{app_kind_str}";
+    var PRIMARY_HOST = "{primary_host}";
+
+    function applyDialogStyles() {{
+        var target = document.head || document.documentElement;
+        if (!target) return;
+        if (!document.getElementById('desktop-accent-theme')) {{
+            var accentStyleEl = document.createElement('style');
+            accentStyleEl.id = 'desktop-accent-theme';
+            accentStyleEl.textContent = `{accent}`;
+            target.appendChild(accentStyleEl);
+        }}
+        if (!document.getElementById('desktop-shell-theme')) {{
+            var shellEl = document.createElement('style');
+            shellEl.id = 'desktop-shell-theme';
+            shellEl.textContent = `{shell}`;
+            target.appendChild(shellEl);
+        }}
+        if (!document.getElementById('desktop-theme')) {{
+            var themeEl = document.createElement('style');
+            themeEl.id = 'desktop-theme';
+            themeEl.textContent = `{theme}`;
+            target.appendChild(themeEl);
+        }}
+    }}
+    applyDialogStyles();
+    if (document.readyState === 'loading') {{
+        document.addEventListener('DOMContentLoaded', applyDialogStyles);
+    }}
+
+    {titlebar}
+}})();
+"#,
+        app_kind_str = app_kind_str,
+        mode = mode,
+        is_first_run = is_first_run,
+        primary_host = primary_host,
+        accent_hex = accent_hex,
+        accent_r = accent.r,
+        accent_g = accent.g,
+        accent_b = accent.b,
+        accent_a = accent.a,
+        accent = escaped_accent,
+        shell = escaped_shell,
+        theme = escaped_theme,
+        titlebar = TITLEBAR_SCRIPT,
+    )
+}
+
+/// Constructs the complete consolidated JavaScript bundle (legacy single-webview helper for tests)
 pub fn get_injected_bundle(app_kind: AppKind, is_first_run: bool) -> String {
     let app_kind_str = match app_kind {
         AppKind::Mail => "mail",
@@ -241,6 +548,49 @@ mod tests {
         assert!(cal_bundle.contains("initCalendarDateObserver"));
         assert!(cal_bundle.contains("#15803d"));
         assert!(!CALENDAR_DATE_SCRIPT.contains("#1a73e8"));
+    }
+
+    #[test]
+    fn test_content_bundle_zero_google_dom_or_css_interference() {
+        for kind in [AppKind::Mail, AppKind::Calendar] {
+            let content = get_content_bundle(kind);
+            assert!(
+                !content.contains("desktop-theme"),
+                "Content bundle must never inject CSS into Google pages"
+            );
+            assert!(
+                !content.contains("desktop-shell-theme"),
+                "Content bundle must never inject shell CSS into Google pages"
+            );
+            assert!(
+                !content.contains("desktop-custom-titlebar"),
+                "Content bundle must never inject titlebar DOM into Google pages"
+            );
+            assert!(
+                !content.contains("dismissDataLoadToast"),
+                "Content bundle must never auto-dismiss Google toasts"
+            );
+            assert!(
+                content.contains("initThemeSampler"),
+                "Content bundle must include read-only theme sampler"
+            );
+            assert!(
+                content.contains("DesktopNotification"),
+                "Content bundle must include notification bridge"
+            );
+            assert!(
+                content.contains("initNavigationInterceptor"),
+                "Content bundle must include navigation interceptor"
+            );
+
+            let shell = get_shell_bundle(kind);
+            assert!(shell.contains("__DESKTOP_SHELL_ONLY__ = true"));
+            assert!(shell.contains("desktop-shell-theme"));
+
+            let dialog = get_dialog_bundle(kind, "settings", false);
+            assert!(dialog.contains("__DESKTOP_DIALOG_MODE__ = \"settings\""));
+            assert!(dialog.contains("desktop-theme"));
+        }
     }
 
     #[test]
