@@ -1,3 +1,4 @@
+pub mod accounts;
 pub mod aumid;
 pub mod config;
 pub mod icon;

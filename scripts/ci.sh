@@ -64,6 +64,7 @@ node tests/calendar-protocol.test.js
 node tests/accent-color.test.js
 node tests/jumplist.test.js
 node tests/shell-dialog-e2e.test.js
+node tests/multi-account.test.js
 
 echo ""
 echo "============================================================"

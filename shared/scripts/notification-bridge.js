@@ -21,6 +21,9 @@
 
   function isNotificationsAllowed() {
     try {
+      if (window.__DESKTOP_NOTIFICATIONS_ENABLED__ === false) {
+        return false;
+      }
       return localStorage.getItem('desktop_pref_notifications_enabled') !== 'false';
     } catch (_) {
       return true;
