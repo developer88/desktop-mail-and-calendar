@@ -13,9 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Settings "Accounts" Tab:** Dedicated Accounts section in Settings to view all accounts, switch accounts, add new accounts, or remove accounts.
 - **Aggregated Mail Unread Badge:** Desktop Mail sums unread message counts across all accounts for the window title, taskbar icon badge, and taskbar overlay badge.
 - **Multi-Account Notifications:** Notifications fire from all accounts with the account's circular avatar and account attribution (`Inbox · <account>` / `Calendar · <account>`), and clicking a notification restores the window and switches directly to that account.
+- **Windows 11 Mica Titlebar & Visual Regression Suite:** Enabled Windows 11 Mica backdrop on the frameless shell, pre-warmed child dialog windows for instant opening, and added baseline PNG pixel-diff visual regression and dual-webview E2E tests.
+
+### Changed
+- **Isolated Multi-WebView Shell Architecture:** Separated the 32px frameless titlebar (`shell.html`), native Windows popup menu, and modal dialogs (`dialog.html`) into dedicated webviews completely isolated from untouched Google Mail and Google Calendar content.
 
 ### Fixed
 - **External Google Links Routing:** Google Meet, Docs, Sheets, Slides, Drive, YouTube, and cross-service links clicked inside Mail or Calendar now open in the user's default browser instead of navigating inside the app.
+- **Calendar Event Editor Clearance & Shell Polish:** Polished Calendar event-edit clearance, titlebar update pill alignment, dialog scroll reset, and build-time auto-closing of running app instances.
 
 ## [0.8.0] - 2026-11-23
 
