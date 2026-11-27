@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-11-27
+
+### Added
+- **Multi-Account Support (Desktop Mail & Desktop Calendar):** Each account runs in its own isolated WebView2 profile within the main window, persisting active account and profile list across restarts while keeping non-active accounts alive in the background for live unread counts and notifications.
+- **Titlebar `+` Button & Jira-Style Avatar Stack:** Added a `+` button next to the hamburger menu; when 2 or more accounts are configured, a fixed-order overlapping circular avatar stack appears between `+` and the menu button for instant one-click switching.
+- **Settings "Accounts" Tab:** Dedicated Accounts section in Settings to view all accounts, switch accounts, add new accounts, or remove accounts.
+- **Aggregated Mail Unread Badge:** Desktop Mail sums unread message counts across all accounts for the window title, taskbar icon badge, and taskbar overlay badge.
+- **Multi-Account Notifications:** Notifications fire from all accounts with the account's circular avatar and account attribution (`Inbox · <account>` / `Calendar · <account>`), and clicking a notification restores the window and switches directly to that account.
+
+### Fixed
+- **External Google Links Routing:** Google Meet, Docs, Sheets, Slides, Drive, YouTube, and cross-service links clicked inside Mail or Calendar now open in the user's default browser instead of navigating inside the app.
+
 ## [0.8.0] - 2026-11-23
 
 ### Added

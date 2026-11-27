@@ -16,7 +16,7 @@ console.log(
 const root = path.resolve(__dirname, '..');
 // Pin deterministic version & calendar day in screenshot harnesses so version bumps
 // or calendar rollovers do not cause false-positive pixel diffs against baselines.
-const appVersion = '0.8.0';
+const appVersion = '0.9.0';
 const deterministicDateScript = '<script>Date.prototype.getDate = function () { return 25; };</script>';
 const disableAnimationsStyle =
   '<style>*, *::before, *::after { animation: none !important; animation-duration: 0s !important; transition: none !important; transition-duration: 0s !important; }</style>';

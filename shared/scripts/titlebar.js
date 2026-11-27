@@ -786,7 +786,7 @@
   }
 
   // Application Version & Update Management
-  const currentVer = '0.8.0';
+  const currentVer = '0.9.0';
 
   function getAppVersion() {
     return (typeof window !== 'undefined' && window.APP_VERSION) || currentVer;
@@ -1487,7 +1487,7 @@
         verLeft.textContent = 'Build Version ';
         const verNum = document.createElement('span');
         verNum.className = 'desktop-version-num';
-        verNum.textContent = '0.8.0';
+        verNum.textContent = '0.9.0';
         if (typeof window !== 'undefined' && window.APP_VERSION) {
           verNum.textContent = window.APP_VERSION;
         }
@@ -2287,7 +2287,7 @@
     closeSettings: closeSettingsDialog,
     checkForUpdates: function(silent) { return checkForUpdates(silent); },
     showUpdateBanner: function(version, url) {
-      const ver = version || '0.8.0';
+      const ver = version || '0.9.0';
       const targetUrl = url || ('https://github.com/developer88/desktop-mail-and-calendar/releases/tag/v' + ver);
       activeUpdateInfo = { version: ver, tag: 'v' + ver, url: targetUrl };
       updateTitlebarPill(ver, targetUrl);
