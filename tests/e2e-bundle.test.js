@@ -339,17 +339,19 @@ console.log('\n[1/5] Testing Desktop Mail full E2E lifecycle...');
   defaultAppBtn.click();
   assert(titleHistory.includes('__desktop_cmd__:open:defaultapps'), 'Clicking Open Windows Settings must trigger __desktop_cmd__:open:defaultapps');
 
-  // Switch to Privacy & permissions tab
+  // Switch to Accounts, Privacy & permissions, and About tabs
   const navTabs = settingsOverlay.querySelectorAll('.desktop-settings-nav-item');
-  assert.strictEqual(navTabs.length, 3, 'Settings must have 3 navigation tabs');
-  navTabs[1].click(); // Privacy
+  assert.strictEqual(navTabs.length, 4, 'Settings must have 4 navigation tabs');
+  navTabs[1].click(); // Accounts
+  assert(settingsOverlay.querySelector('#desktop-accounts-list'), 'Accounts tab must render accounts list');
+  navTabs[2].click(); // Privacy
   const privSwitches = settingsOverlay.querySelectorAll('.desktop-toggle-switch');
   assert.strictEqual(privSwitches.length, 3, 'Privacy tab must have Microphone, Camera, Location toggles');
   privSwitches[0].click();
   assert.strictEqual(window.localStorage.getItem('desktop_pref_perm_mic'), 'true');
 
   // Switch to About Desktop Mail tab (verifies zero innerHTML & 512x512 SVG logo)
-  navTabs[2].click();
+  navTabs[3].click();
   const aboutTitle = settingsOverlay.querySelector('.desktop-about-title');
   assert(aboutTitle, 'About tab title must render without CSP error');
   assert.strictEqual(aboutTitle.textContent, 'About Desktop Mail');
@@ -454,7 +456,7 @@ console.log('\n[2/5] Testing Desktop Calendar full E2E lifecycle...');
   document.querySelectorAll('.desktop-submenu .desktop-menu-item')[0].click();
   const settingsOverlay = document.getElementById('desktop-settings-overlay');
   const navTabs = settingsOverlay.querySelectorAll('.desktop-settings-nav-item');
-  navTabs[2].click(); // About Desktop Calendar
+  navTabs[3].click(); // About Desktop Calendar
   const aboutTitle = settingsOverlay.querySelector('.desktop-about-title');
   assert.strictEqual(aboutTitle.textContent, 'About Desktop Calendar');
   const calLogo = settingsOverlay.querySelector('.desktop-about-logo svg');

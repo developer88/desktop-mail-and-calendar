@@ -23,8 +23,8 @@ const { createMockDocument } = require('./mock-dom');
 console.log('Running Windows 11 Personalization Accent Color Sync Test Suite...\n');
 
 const root = path.resolve(__dirname, '..');
-const shellCss = fs.readFileSync(path.join(root, 'shared', 'styles', 'shell.css'), 'utf8');
-const win11ThemeCss = fs.readFileSync(path.join(root, 'shared', 'styles', 'win11-theme.css'), 'utf8');
+const shellCss = fs.readFileSync(path.join(root, 'shared', 'styles', 'shell.css'), 'utf8').replace(/\r\n/g, '\n');
+const win11ThemeCss = fs.readFileSync(path.join(root, 'shared', 'styles', 'win11-theme.css'), 'utf8').replace(/\r\n/g, '\n');
 const titlebarScript = fs.readFileSync(path.join(root, 'shared', 'scripts', 'titlebar.js'), 'utf8');
 const coreThemeRs = fs.readFileSync(path.join(root, 'crates', 'core', 'src', 'theme.rs'), 'utf8');
 const coreScriptsRs = fs.readFileSync(path.join(root, 'crates', 'core', 'src', 'scripts.rs'), 'utf8');

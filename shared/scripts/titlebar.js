@@ -290,6 +290,60 @@
       path.setAttribute('stroke-linecap', 'round');
       svg.appendChild(circle);
       svg.appendChild(path);
+    } else if (type === 'plus') {
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', 'M 8,2.5 L 8,13.5 M 2.5,8 L 13.5,8');
+      path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(path);
+    } else if (type === 'users') {
+      const head = document.createElementNS(svgNS, 'circle');
+      head.setAttribute('cx', '6.5');
+      head.setAttribute('cy', '5.5');
+      head.setAttribute('r', '2.5');
+      head.setAttribute('fill', 'none');
+      head.setAttribute('stroke', 'currentColor');
+      head.setAttribute('stroke-width', '1.4');
+      const body = document.createElementNS(svgNS, 'path');
+      body.setAttribute('d', 'M 2,13.5 C 2,10.8 4,9.5 6.5,9.5 C 9,9.5 11,10.8 11,13.5');
+      body.setAttribute('fill', 'none');
+      body.setAttribute('stroke', 'currentColor');
+      body.setAttribute('stroke-width', '1.4');
+      body.setAttribute('stroke-linecap', 'round');
+      const head2 = document.createElementNS(svgNS, 'circle');
+      head2.setAttribute('cx', '11.5');
+      head2.setAttribute('cy', '6');
+      head2.setAttribute('r', '1.8');
+      head2.setAttribute('fill', 'none');
+      head2.setAttribute('stroke', 'currentColor');
+      head2.setAttribute('stroke-width', '1.3');
+      const body2 = document.createElementNS(svgNS, 'path');
+      body2.setAttribute('d', 'M 11.5,9.8 C 13.2,9.8 14.5,10.9 14.5,13');
+      body2.setAttribute('fill', 'none');
+      body2.setAttribute('stroke', 'currentColor');
+      body2.setAttribute('stroke-width', '1.3');
+      body2.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(head);
+      svg.appendChild(body);
+      svg.appendChild(head2);
+      svg.appendChild(body2);
+    } else if (type === 'user') {
+      const head = document.createElementNS(svgNS, 'circle');
+      head.setAttribute('cx', '8');
+      head.setAttribute('cy', '5.5');
+      head.setAttribute('r', '2.5');
+      head.setAttribute('fill', 'none');
+      head.setAttribute('stroke', 'currentColor');
+      head.setAttribute('stroke-width', '1.4');
+      const body = document.createElementNS(svgNS, 'path');
+      body.setAttribute('d', 'M 3.2,13.5 C 3.2,10.8 5.2,9.5 8,9.5 C 10.8,9.5 12.8,10.8 12.8,13.5');
+      body.setAttribute('fill', 'none');
+      body.setAttribute('stroke', 'currentColor');
+      body.setAttribute('stroke-width', '1.4');
+      body.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(head);
+      svg.appendChild(body);
     } else if (type === 'bell') {
       const path = document.createElementNS(svgNS, 'path');
       path.setAttribute('d', 'M 8,2 C 5.5,2 4.5,4 4.5,7 C 4.5,9.5 3,11 3,11 L 13,11 C 13,11 11.5,9.5 11.5,7 C 11.5,4 10.5,2 8,2 Z M 6.5,12 C 6.5,12.8 7.2,13.5 8,13.5 C 8.8,13.5 9.5,12.8 9.5,12');
@@ -819,7 +873,145 @@
     }, 4 * 60 * 60 * 1000);
   }
 
-  // Settings Modal Dialog with 3 sections matching Gemini
+  // Multi-account state & Jira-style avatar stack helpers
+  let accountsState = {
+    active_account_id: 'default',
+    accounts: [{ id: 'default', email: null, name: null, avatar_url: null, unread_count: 0 }],
+    notifications_enabled: true
+  };
+  let activeAccountsRerender = null;
+
+  const ACCOUNT_GRADIENTS = [
+    'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+    'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+    'linear-gradient(135deg, #ea580c 0%, #f97316 100%)',
+    'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)',
+    'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)',
+    'linear-gradient(135deg, #db2777 0%, #ec4899 100%)'
+  ];
+
+  function sanitizeAccountName(rawName) {
+    if (!rawName) return '';
+    return String(rawName)
+      .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF\u00A0]/g, ' ')
+      .replace(/,?\s*Google\s+(membership|One|Workspace)\b.*/i, '')
+      .replace(/[,\s]+$/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function getAccountInitials(acc, _idx) {
+    const cleanName = sanitizeAccountName(acc.name);
+    const src = (cleanName || acc.email || '').trim();
+    if (!src) return '';
+    if (cleanName) {
+      const parts = cleanName.split(/\s+/);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+      }
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+    return src.slice(0, 2).toUpperCase();
+  }
+
+  function getAccountGradient(idx) {
+    return ACCOUNT_GRADIENTS[idx % ACCOUNT_GRADIENTS.length];
+  }
+
+  function createAvatarContent(acc, idx, imgClass, fallbackClass) {
+    const initials = getAccountInitials(acc, idx);
+    const fallback = document.createElement('span');
+    fallback.className = fallbackClass;
+    if (initials) {
+      fallback.textContent = initials;
+      fallback.style.background = getAccountGradient(idx);
+    } else {
+      fallback.style.background = 'linear-gradient(135deg, #64748b 0%, #475569 100%)';
+      const userSvg = createSvgIcon('user');
+      userSvg.setAttribute('width', '12');
+      userSvg.setAttribute('height', '12');
+      fallback.appendChild(userSvg);
+    }
+
+    if (acc.avatar_url) {
+      const img = document.createElement('img');
+      img.className = imgClass;
+      img.alt = '';
+      img.setAttribute('referrerpolicy', 'no-referrer');
+      img.src = acc.avatar_url;
+      img.addEventListener('error', () => {
+        if (img.parentNode) {
+          img.parentNode.replaceChild(fallback, img);
+        }
+      });
+      return img;
+    }
+    return fallback;
+  }
+
+  function renderTitlebarAccountStack() {
+    const stack = document.getElementById('desktop-account-stack');
+    if (!stack) return;
+
+    while (stack.firstChild) {
+      stack.removeChild(stack.firstChild);
+    }
+
+    const list = (accountsState && Array.isArray(accountsState.accounts)) ? accountsState.accounts : [];
+    if (list.length <= 1) {
+      stack.classList.remove('visible');
+      return;
+    }
+
+    stack.classList.add('visible');
+    list.forEach((acc, idx) => {
+      const btn = document.createElement('button');
+      const isActive = acc.id === accountsState.active_account_id;
+      btn.className = 'desktop-account-avatar-btn' + (isActive ? ' active' : '');
+      btn.setAttribute('data-account-id', acc.id);
+      btn.style.zIndex = String(20 - idx);
+
+      const label = acc.email || acc.name || ('Account ' + (idx + 1));
+      const unreadSuffix = (!isCalendar && acc.unread_count > 0) ? (' (' + acc.unread_count + ' unread)') : '';
+      btn.title = label + unreadSuffix;
+
+      btn.appendChild(createAvatarContent(acc, idx, 'desktop-account-avatar-img', 'desktop-account-avatar-fallback'));
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (window.__TAURI__ && window.__TAURI__.core) {
+          window.__TAURI__.core.invoke('switch_account', { accountId: acc.id }).catch(() => {});
+        }
+      });
+
+      stack.appendChild(btn);
+    });
+  }
+
+  window.__desktop_update_accounts = function(newState) {
+    if (!newState || !Array.isArray(newState.accounts)) return;
+    accountsState = newState;
+    if (typeof newState.notifications_enabled === 'boolean') {
+      setPref('notifications_enabled', newState.notifications_enabled);
+    }
+    renderTitlebarAccountStack();
+    if (typeof activeAccountsRerender === 'function') {
+      activeAccountsRerender();
+    }
+  };
+
+  function fetchInitialAccountsState() {
+    if (window.__TAURI__ && window.__TAURI__.core) {
+      window.__TAURI__.core.invoke('get_accounts_state')
+        .then((state) => {
+          if (state) window.__desktop_update_accounts(state);
+        })
+        .catch(() => {});
+    }
+  }
+
+  // Settings Modal Dialog with 4 sections (General, Accounts, Privacy, About)
   function openSettingsDialog(initialTab) {
     if (document.getElementById('desktop-settings-overlay')) return;
     initAccentColorSync();
@@ -863,6 +1055,7 @@
 
     const tabs = [
       { id: 'general', label: 'General', icon: 'gear' },
+      { id: 'accounts', label: 'Accounts', icon: 'users' },
       { id: 'privacy', label: 'Privacy & permissions', icon: 'shield' },
       { id: 'about', label: isCalendar ? 'About Desktop Calendar' : 'About Desktop Mail', icon: 'info' }
     ];
@@ -870,7 +1063,7 @@
     const contentArea = document.createElement('div');
     contentArea.className = 'desktop-settings-content';
 
-    const startTab = (initialTab === 'about' || initialTab === 'privacy') ? initialTab : 'general';
+    const startTab = (initialTab === 'about' || initialTab === 'privacy' || initialTab === 'accounts') ? initialTab : 'general';
     let currentTab = startTab;
     const navItems = {};
 
@@ -999,6 +1192,9 @@
                 Notification.requestPermission();
               }
             }
+            if (window.__TAURI__ && window.__TAURI__.core) {
+              window.__TAURI__.core.invoke('set_notifications_enabled', { enabled: Boolean(enabled) }).catch(() => {});
+            }
           }
         );
 
@@ -1068,6 +1264,126 @@
             triggerAction('register:protocols');
           }
         );
+      } else if (tabId === 'accounts') {
+        const headerRow = document.createElement('div');
+        headerRow.className = 'desktop-accounts-header';
+
+        const headerText = document.createElement('div');
+        const secTitle = document.createElement('div');
+        secTitle.className = 'desktop-accounts-header-title';
+        secTitle.textContent = 'Google Accounts';
+        const secDesc = document.createElement('div');
+        secDesc.className = 'desktop-accounts-header-sub';
+        secDesc.textContent = 'All accounts stay active in the background for notifications and unread counts.';
+        headerText.appendChild(secTitle);
+        headerText.appendChild(secDesc);
+
+        const addBtn = document.createElement('button');
+        addBtn.id = 'desktop-accounts-add-btn';
+        addBtn.className = 'desktop-accounts-add-btn';
+        addBtn.appendChild(createSvgIcon('plus'));
+        const addLabel = document.createElement('span');
+        addLabel.textContent = 'Add account';
+        addBtn.appendChild(addLabel);
+        addBtn.addEventListener('click', () => {
+          if (window.__TAURI__ && window.__TAURI__.core) {
+            window.__TAURI__.core.invoke('add_account').catch(() => {});
+          }
+        });
+
+        headerRow.appendChild(headerText);
+        headerRow.appendChild(addBtn);
+        contentArea.appendChild(headerRow);
+
+        const listContainer = document.createElement('div');
+        listContainer.id = 'desktop-accounts-list';
+        contentArea.appendChild(listContainer);
+
+        function renderAccountsList() {
+          while (listContainer.firstChild) {
+            listContainer.removeChild(listContainer.firstChild);
+          }
+          const list = (accountsState && Array.isArray(accountsState.accounts)) ? accountsState.accounts : [];
+          list.forEach((acc, idx) => {
+            const isActive = acc.id === accountsState.active_account_id;
+            const card = document.createElement('div');
+            card.className = 'desktop-settings-card desktop-account-card' + (isActive ? ' active-card' : '');
+
+            const left = document.createElement('div');
+            left.className = 'desktop-account-row-left';
+
+            const avatarWrap = document.createElement('div');
+            avatarWrap.className = 'desktop-account-row-avatar';
+            avatarWrap.appendChild(createAvatarContent(acc, idx, 'desktop-account-avatar-img', 'desktop-account-avatar-fallback'));
+
+            const meta = document.createElement('div');
+            meta.className = 'desktop-account-row-meta';
+
+            const nameRow = document.createElement('div');
+            nameRow.className = 'desktop-account-row-name';
+            const cleanName = sanitizeAccountName(acc.name);
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = cleanName || acc.email || ('Account ' + (idx + 1));
+            nameRow.appendChild(nameSpan);
+
+            if (isActive) {
+              const activeBadge = document.createElement('span');
+              activeBadge.className = 'desktop-account-active-badge';
+              activeBadge.textContent = 'Active';
+              nameRow.appendChild(activeBadge);
+            }
+            if (!isCalendar && acc.unread_count > 0) {
+              const unreadBadge = document.createElement('span');
+              unreadBadge.className = 'desktop-account-unread-badge';
+              unreadBadge.textContent = acc.unread_count + ' unread';
+              nameRow.appendChild(unreadBadge);
+            }
+
+            const emailRow = document.createElement('div');
+            emailRow.className = 'desktop-account-row-email';
+            emailRow.textContent = acc.email || 'Sign in to sync this account';
+
+            meta.appendChild(nameRow);
+            meta.appendChild(emailRow);
+            left.appendChild(avatarWrap);
+            left.appendChild(meta);
+
+            const actions = document.createElement('div');
+            actions.className = 'desktop-account-row-actions';
+
+            if (!isActive) {
+              const switchBtn = document.createElement('button');
+              switchBtn.className = 'desktop-account-action-btn';
+              switchBtn.textContent = 'Switch';
+              switchBtn.addEventListener('click', () => {
+                if (window.__TAURI__ && window.__TAURI__.core) {
+                  window.__TAURI__.core.invoke('switch_account', { accountId: acc.id }).catch(() => {});
+                }
+              });
+              actions.appendChild(switchBtn);
+            }
+
+            if (list.length > 1) {
+              const removeBtn = document.createElement('button');
+              removeBtn.className = 'desktop-account-action-btn danger';
+              removeBtn.textContent = 'Remove';
+              removeBtn.addEventListener('click', () => {
+                if (window.__TAURI__ && window.__TAURI__.core) {
+                  window.__TAURI__.core.invoke('remove_account', { accountId: acc.id }).catch(() => {});
+                }
+              });
+              actions.appendChild(removeBtn);
+            }
+
+            card.appendChild(left);
+            card.appendChild(actions);
+            listContainer.appendChild(card);
+          });
+        }
+
+        activeAccountsRerender = renderAccountsList;
+        renderAccountsList();
+        fetchInitialAccountsState();
       } else if (tabId === 'privacy') {
         const secTitle = document.createElement('div');
         secTitle.className = 'desktop-settings-section-title';
@@ -1368,14 +1684,14 @@
     }
     const existingSplash = document.getElementById('desktop-splash-overlay');
     if (existingSplash) existingSplash.remove();
-    const targetTab = (mode === 'about' || mode === 'privacy') ? mode : 'general';
+    const targetTab = (mode === 'about' || mode === 'privacy' || mode === 'accounts') ? mode : 'general';
     const existingSettings = document.getElementById('desktop-settings-overlay');
     if (!existingSettings) {
       openSettingsDialog(targetTab);
       return;
     }
     const navItems = existingSettings.querySelectorAll('.desktop-settings-nav-item');
-    const tabOrder = ['general', 'privacy', 'about'];
+    const tabOrder = ['general', 'accounts', 'privacy', 'about'];
     const idx = tabOrder.indexOf(targetTab);
     if (idx >= 0 && navItems[idx]) {
       navItems[idx].click();
@@ -1826,6 +2142,17 @@
       }
     });
 
+    // Add Account (+) Button
+    const addAccountBtn = document.createElement('button');
+    addAccountBtn.className = 'desktop-caption-btn add-account';
+    addAccountBtn.id = 'desktop-caption-add-account';
+    addAccountBtn.title = 'Add Google account';
+    addAccountBtn.appendChild(createSvgIcon('plus'));
+
+    // Jira-style Overlapping Account Avatar Stack (visible only when 2+ accounts exist)
+    const accountStack = document.createElement('div');
+    accountStack.id = 'desktop-account-stack';
+
     // Hamburger Menu Button (3 horizontal lines)
     const menuBtn = document.createElement('button');
     menuBtn.className = 'desktop-caption-btn menu';
@@ -1852,6 +2179,8 @@
     closeBtn.appendChild(createSvgIcon('close'));
 
     controls.appendChild(updatePill);
+    controls.appendChild(addAccountBtn);
+    controls.appendChild(accountStack);
     controls.appendChild(menuBtn);
     controls.appendChild(minBtn);
     controls.appendChild(maxBtn);
@@ -1865,8 +2194,20 @@
       root.appendChild(titlebar);
     }
     updateAdaptiveTheme();
+    renderTitlebarAccountStack();
+    if (window.__DESKTOP_SHELL_ONLY__ || window.__DESKTOP_DIALOG_MODE__) {
+      fetchInitialAccountsState();
+    }
 
     // Action handlers
+    addAccountBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      closeMenu();
+      if (window.__TAURI__ && window.__TAURI__.core) {
+        window.__TAURI__.core.invoke('add_account').catch(() => {});
+      }
+    });
     menuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       e.preventDefault();

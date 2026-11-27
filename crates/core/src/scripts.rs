@@ -10,7 +10,19 @@ pub const CALENDAR_DATE_SCRIPT: &str =
     include_str!("../../../shared/scripts/calendar-date-observer.js");
 pub const NOTIFICATION_BRIDGE_SCRIPT: &str =
     include_str!("../../../shared/scripts/notification-bridge.js");
+pub const ACCOUNT_OBSERVER_SCRIPT: &str =
+    include_str!("../../../shared/scripts/account-observer.js");
 pub const TITLEBAR_SCRIPT: &str = include_str!("../../../shared/scripts/titlebar.js");
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+pub struct ProfilePayload {
+    #[serde(default)]
+    pub email: Option<String>,
+    #[serde(default)]
+    pub name: Option<String>,
+    #[serde(default)]
+    pub avatar_url: Option<String>,
+}
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
 pub struct NotificationPayload {
@@ -105,6 +117,7 @@ pub fn get_content_bundle(app_kind: AppKind) -> String {
         {notif}
         {nav}
         {observer}
+        {account_observer}
     }}
 }})();
 "#,
@@ -113,6 +126,7 @@ pub fn get_content_bundle(app_kind: AppKind) -> String {
         notif = NOTIFICATION_BRIDGE_SCRIPT,
         nav = NAVIGATION_INTERCEPTOR_SCRIPT,
         observer = observer_script,
+        account_observer = ACCOUNT_OBSERVER_SCRIPT,
     )
 }
 

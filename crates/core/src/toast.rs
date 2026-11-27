@@ -7,18 +7,20 @@ pub struct ToastOptions<'a> {
     pub title: &'a str,
     pub body: &'a str,
     pub icon_path: Option<&'a Path>,
+    pub icon_crop_circle: bool,
     pub attribution: Option<&'a str>,
     pub open_label: &'a str,
     pub tag: Option<&'a str>,
     pub silent: bool,
     pub meeting_url: Option<&'a str>,
+    pub account_id: Option<&'a str>,
 }
 
 /// Describes the user's action when activating a Windows toast notification.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ToastAction {
-    /// Restore, unminimize, and focus the application window.
-    OpenApp,
+    /// Restore, unminimize, focus the application window, and optionally switch to an account.
+    OpenApp(Option<String>),
     /// Launch a meeting or video conference URL in the user's default browser.
     JoinMeeting(String),
 }
@@ -185,9 +187,14 @@ pub fn build_toast_xml(opts: &ToastOptions<'_>) -> String {
 
     let image_xml = if let Some(path) = opts.icon_path {
         let uri = escape_xml(&path_to_file_uri(path));
+        let crop = if opts.icon_crop_circle {
+            "circle"
+        } else {
+            "none"
+        };
         format!(
-            "<image placement=\"appLogoOverride\" hint-crop=\"none\" src=\"{}\"/>",
-            uri
+            "<image placement=\"appLogoOverride\" hint-crop=\"{}\" src=\"{}\"/>",
+            crop, uri
         )
     } else {
         String::new()
@@ -205,26 +212,35 @@ pub fn build_toast_xml(opts: &ToastOptions<'_>) -> String {
         ""
     };
 
+    let open_arg = opts
+        .account_id
+        .filter(|id| !id.trim().is_empty())
+        .map(|id| format!("open:{}", id.trim()))
+        .unwrap_or_else(|| "open".to_string());
+    let escaped_open_arg = escape_xml(&open_arg);
+
     let actions_xml = if let Some(meeting_url) = opts.meeting_url.filter(|u| !u.trim().is_empty()) {
         format!(
             "<actions>\
                 <action content=\"Join Video Call\" arguments=\"join:{meeting_url}\" activationType=\"foreground\"/>\
-                <action content=\"{open_label}\" arguments=\"open\" activationType=\"foreground\"/>\
+                <action content=\"{open_label}\" arguments=\"{open_arg}\" activationType=\"foreground\"/>\
             </actions>",
             meeting_url = escape_xml(meeting_url.trim()),
             open_label = escape_xml(opts.open_label),
+            open_arg = escaped_open_arg,
         )
     } else {
         format!(
             "<actions>\
-                <action content=\"{open_label}\" arguments=\"open\" activationType=\"foreground\"/>\
+                <action content=\"{open_label}\" arguments=\"{open_arg}\" activationType=\"foreground\"/>\
             </actions>",
             open_label = escape_xml(opts.open_label),
+            open_arg = escaped_open_arg,
         )
     };
 
     format!(
-        "<toast launch=\"open\" activationType=\"foreground\">\
+        "<toast launch=\"{open_arg}\" activationType=\"foreground\">\
             <visual>\
                 <binding template=\"ToastGeneric\">\
                     {image_xml}\
@@ -236,6 +252,7 @@ pub fn build_toast_xml(opts: &ToastOptions<'_>) -> String {
             {actions_xml}\
             {audio_xml}\
         </toast>",
+        open_arg = escaped_open_arg,
         image_xml = image_xml,
         title = escape_xml(&formatted_title),
         body_xml = body_xml,
@@ -273,9 +290,10 @@ where
         }
     }
 
+    let fallback_account_id = opts.account_id.map(|s| s.to_string());
     let handler = TypedEventHandler::<ToastNotification, windows::core::IInspectable>::new(
         move |_sender, args| {
-            let mut action = ToastAction::OpenApp;
+            let mut action = ToastAction::OpenApp(fallback_account_id.clone());
             if let Some(inspectable) = args.as_ref() {
                 use windows::core::Interface;
                 if let Ok(toast_args) = inspectable.cast::<ToastActivatedEventArgs>() {
@@ -286,6 +304,10 @@ where
                         } else if arg_str.starts_with("http://") || arg_str.starts_with("https://")
                         {
                             action = ToastAction::JoinMeeting(arg_str);
+                        } else if let Some(acc_id) = arg_str.strip_prefix("open:") {
+                            if !acc_id.trim().is_empty() {
+                                action = ToastAction::OpenApp(Some(acc_id.trim().to_string()));
+                            }
                         }
                     }
                 }
@@ -358,11 +380,13 @@ mod tests {
             title: "Desktop Mail",
             body: "You have 1 new unread message.",
             icon_path: Some(&icon),
+            icon_crop_circle: false,
             attribution: None,
             open_label: "Open Mail",
             tag: Some("unread_inbox_1"),
             silent: false,
             meeting_url: None,
+            account_id: None,
         });
         assert!(xml.contains("template=\"ToastGeneric\""));
         assert!(xml.contains("placement=\"appLogoOverride\""));
@@ -384,11 +408,13 @@ mod tests {
             title: "Q&A <Team> \"Sync\"",
             body: "Room A & B",
             icon_path: None,
+            icon_crop_circle: false,
             attribution: None,
             open_label: "Open Calendar",
             tag: None,
             silent: true,
             meeting_url: None,
+            account_id: None,
         });
         assert!(xml.contains("Q&amp;A &lt;Team&gt; &quot;Sync&quot;"));
         assert!(xml.contains("Room A &amp; B"));
@@ -451,11 +477,13 @@ mod tests {
             title: "Sprint Review",
             body: "Join video call: https://meet.google.com/abc-defg-hij",
             icon_path: None,
+            icon_crop_circle: false,
             attribution: None,
             open_label: "Open Calendar",
             tag: Some("cal_evt_1"),
             silent: false,
             meeting_url: Some("https://meet.google.com/abc-defg-hij"),
+            account_id: None,
         });
 
         assert!(xml.contains("content=\"Join Video Call\""));
@@ -463,5 +491,32 @@ mod tests {
         assert!(xml.contains("activationType=\"foreground\""));
         assert!(xml.contains("content=\"Open Calendar\""));
         assert!(xml.contains("arguments=\"open\""));
+    }
+
+    #[test]
+    fn test_build_toast_xml_multi_account_avatar_circle_and_routing() {
+        let avatar = PathBuf::from(
+            r"C:\Users\andrey\AppData\Local\com.andrey.desktop-mail\avatars\work.png",
+        );
+        let xml = build_toast_xml(&ToastOptions {
+            aumid: "com.andrey.desktop-mail",
+            app_name: "Desktop Mail",
+            title: "Alice Johnson",
+            body: "Budget approval needed",
+            icon_path: Some(&avatar),
+            icon_crop_circle: true,
+            attribution: Some("Inbox · work@company.com"),
+            open_label: "Open Mail",
+            tag: Some("msg_99"),
+            silent: false,
+            meeting_url: None,
+            account_id: Some("acct-2-123"),
+        });
+
+        assert!(xml.contains("hint-crop=\"circle\""));
+        assert!(xml.contains("avatars/work.png"));
+        assert!(xml.contains("<text placement=\"attribution\">Inbox · work@company.com</text>"));
+        assert!(xml.contains("<toast launch=\"open:acct-2-123\" activationType=\"foreground\">"));
+        assert!(xml.contains("arguments=\"open:acct-2-123\""));
     }
 }

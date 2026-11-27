@@ -81,11 +81,15 @@
         const target = url.searchParams.get('q') || url.searchParams.get('url');
         if (target) {
           const targetUrl = new URL(target, window.location.href);
-          if (!isGoogleHost(targetUrl.hostname)) {
-            return false;
-          }
+          return isInternalUrl(targetUrl);
         }
       } catch (_) {}
+    }
+    if (host === 'accounts.google.com' || host.startsWith('accounts.google.') || host === 'myaccount.google.com') {
+      return true;
+    }
+    if (typeof PRIMARY_HOST !== 'undefined' && PRIMARY_HOST) {
+      return host === PRIMARY_HOST;
     }
     return isGoogleHost(host);
   }
