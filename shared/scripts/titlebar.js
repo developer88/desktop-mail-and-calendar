@@ -328,6 +328,22 @@
       svg.appendChild(body);
       svg.appendChild(head2);
       svg.appendChild(body2);
+    } else if (type === 'user') {
+      const head = document.createElementNS(svgNS, 'circle');
+      head.setAttribute('cx', '8');
+      head.setAttribute('cy', '5.5');
+      head.setAttribute('r', '2.5');
+      head.setAttribute('fill', 'none');
+      head.setAttribute('stroke', 'currentColor');
+      head.setAttribute('stroke-width', '1.4');
+      const body = document.createElementNS(svgNS, 'path');
+      body.setAttribute('d', 'M 3.2,13.5 C 3.2,10.8 5.2,9.5 8,9.5 C 10.8,9.5 12.8,10.8 12.8,13.5');
+      body.setAttribute('fill', 'none');
+      body.setAttribute('stroke', 'currentColor');
+      body.setAttribute('stroke-width', '1.4');
+      body.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(head);
+      svg.appendChild(body);
     } else if (type === 'bell') {
       const path = document.createElementNS(svgNS, 'path');
       path.setAttribute('d', 'M 8,2 C 5.5,2 4.5,4 4.5,7 C 4.5,9.5 3,11 3,11 L 13,11 C 13,11 11.5,9.5 11.5,7 C 11.5,4 10.5,2 8,2 Z M 6.5,12 C 6.5,12.8 7.2,13.5 8,13.5 C 8.8,13.5 9.5,12.8 9.5,12');
@@ -865,13 +881,31 @@
   };
   let activeAccountsRerender = null;
 
-  const ACCOUNT_PALETTE = ['#0078d4', '#16a34a', '#ea580c', '#7c3aed', '#0d9488', '#db2777'];
+  const ACCOUNT_GRADIENTS = [
+    'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+    'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+    'linear-gradient(135deg, #ea580c 0%, #f97316 100%)',
+    'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)',
+    'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)',
+    'linear-gradient(135deg, #db2777 0%, #ec4899 100%)'
+  ];
 
-  function getAccountInitials(acc, idx) {
-    const src = (acc.name || acc.email || '').trim();
-    if (!src) return String(idx + 1);
-    if (acc.name && acc.name.trim()) {
-      const parts = acc.name.trim().split(/\s+/);
+  function sanitizeAccountName(rawName) {
+    if (!rawName) return '';
+    return String(rawName)
+      .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF\u00A0]/g, ' ')
+      .replace(/,?\s*Google\s+(membership|One|Workspace)\b.*/i, '')
+      .replace(/[,\s]+$/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function getAccountInitials(acc, _idx) {
+    const cleanName = sanitizeAccountName(acc.name);
+    const src = (cleanName || acc.email || '').trim();
+    if (!src) return '';
+    if (cleanName) {
+      const parts = cleanName.split(/\s+/);
       if (parts.length >= 2) {
         return (parts[0][0] + parts[1][0]).toUpperCase();
       }
@@ -880,15 +914,24 @@
     return src.slice(0, 2).toUpperCase();
   }
 
-  function getAccountColor(idx) {
-    return ACCOUNT_PALETTE[idx % ACCOUNT_PALETTE.length];
+  function getAccountGradient(idx) {
+    return ACCOUNT_GRADIENTS[idx % ACCOUNT_GRADIENTS.length];
   }
 
   function createAvatarContent(acc, idx, imgClass, fallbackClass) {
+    const initials = getAccountInitials(acc, idx);
     const fallback = document.createElement('span');
     fallback.className = fallbackClass;
-    fallback.textContent = getAccountInitials(acc, idx);
-    fallback.style.background = getAccountColor(idx);
+    if (initials) {
+      fallback.textContent = initials;
+      fallback.style.background = getAccountGradient(idx);
+    } else {
+      fallback.style.background = 'linear-gradient(135deg, #64748b 0%, #475569 100%)';
+      const userSvg = createSvgIcon('user');
+      userSvg.setAttribute('width', '12');
+      userSvg.setAttribute('height', '12');
+      fallback.appendChild(userSvg);
+    }
 
     if (acc.avatar_url) {
       const img = document.createElement('img');
@@ -1262,8 +1305,9 @@
           }
           const list = (accountsState && Array.isArray(accountsState.accounts)) ? accountsState.accounts : [];
           list.forEach((acc, idx) => {
+            const isActive = acc.id === accountsState.active_account_id;
             const card = document.createElement('div');
-            card.className = 'desktop-settings-card desktop-account-card';
+            card.className = 'desktop-settings-card desktop-account-card' + (isActive ? ' active-card' : '');
 
             const left = document.createElement('div');
             left.className = 'desktop-account-row-left';
@@ -1277,11 +1321,11 @@
 
             const nameRow = document.createElement('div');
             nameRow.className = 'desktop-account-row-name';
+            const cleanName = sanitizeAccountName(acc.name);
             const nameSpan = document.createElement('span');
-            nameSpan.textContent = acc.name || acc.email || ('Account ' + (idx + 1));
+            nameSpan.textContent = cleanName || acc.email || ('Account ' + (idx + 1));
             nameRow.appendChild(nameSpan);
 
-            const isActive = acc.id === accountsState.active_account_id;
             if (isActive) {
               const activeBadge = document.createElement('span');
               activeBadge.className = 'desktop-account-active-badge';
@@ -1297,7 +1341,7 @@
 
             const emailRow = document.createElement('div');
             emailRow.className = 'desktop-account-row-email';
-            emailRow.textContent = acc.email || 'Signed-in profile';
+            emailRow.textContent = acc.email || 'Sign in to sync this account';
 
             meta.appendChild(nameRow);
             meta.appendChild(emailRow);

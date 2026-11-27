@@ -135,7 +135,35 @@ fn is_auth_host_or_path(host: &str, path: &str) -> bool {
                 || path.contains("signinchooser")))
 }
 
-pub fn classify_url(raw_url: &str, _app_kind: AppKind) -> UrlCategory {
+fn is_external_google_web_app(host: &str, app_kind: AppKind) -> bool {
+    const ALWAYS_EXTERNAL_GOOGLE_HOSTS: &[&str] = &[
+        "meet.google.com",
+        "docs.google.com",
+        "sheets.google.com",
+        "slides.google.com",
+        "forms.google.com",
+        "drive.google.com",
+        "sites.google.com",
+        "chat.google.com",
+        "workspace.google.com",
+        "blog.google",
+        "youtube.com",
+        "youtu.be",
+    ];
+
+    for ext in ALWAYS_EXTERNAL_GOOGLE_HOSTS {
+        if host == *ext || host.ends_with(&format!(".{ext}")) {
+            return true;
+        }
+    }
+
+    match app_kind {
+        AppKind::Mail => host == "calendar.google.com" || host.starts_with("calendar.google."),
+        AppKind::Calendar => host == "mail.google.com" || host.starts_with("mail.google."),
+    }
+}
+
+pub fn classify_url(raw_url: &str, app_kind: AppKind) -> UrlCategory {
     if raw_url.starts_with("mailto:") {
         return UrlCategory::Mailto;
     }
@@ -160,12 +188,8 @@ pub fn classify_url(raw_url: &str, _app_kind: AppKind) -> UrlCategory {
 
     // Check if this is a Google redirector (e.g. google.com/url?q=https://external.com)
     if let Some(target_url_str) = extract_redirect_target(&parsed) {
-        if let Ok(target_url) = Url::parse(&target_url_str) {
-            if let Some(target_host) = target_url.host_str() {
-                if !is_google_host(target_host) {
-                    return UrlCategory::External;
-                }
-            }
+        if target_url_str != raw_url {
+            return classify_url(&target_url_str, app_kind);
         }
     }
 
@@ -184,7 +208,12 @@ pub fn classify_url(raw_url: &str, _app_kind: AppKind) -> UrlCategory {
         return UrlCategory::Auth;
     }
 
-    // All other Google ecosystem hosts stay in-app
+    // External Google web apps (Meet, Docs, Drive, YouTube, cross-service links) open in default browser
+    if is_external_google_web_app(&host, app_kind) {
+        return UrlCategory::External;
+    }
+
+    // All other Google ecosystem infrastructure/widgets stay in-app
     UrlCategory::InApp
 }
 
@@ -273,15 +302,30 @@ mod tests {
             "https://github.com/rust-lang/rust"
         );
 
-        // Google target inside redirect stays in-app
+        // Google Calendar target inside redirect stays in-app for Calendar, external for Mail
         let internal_redirect =
             "https://www.google.com/url?q=https://calendar.google.com/calendar/u/0/r";
         assert_eq!(
-            classify_url(internal_redirect, AppKind::Mail),
+            classify_url(internal_redirect, AppKind::Calendar),
             UrlCategory::InApp
         );
         assert!(!should_open_in_external_browser(
             internal_redirect,
+            AppKind::Calendar
+        ));
+        assert!(should_open_in_external_browser(
+            internal_redirect,
+            AppKind::Mail
+        ));
+
+        // Google Meet redirect must open in external browser for both apps
+        let meet_redirect = "https://www.google.com/url?q=https://meet.google.com/abc-defg-hij";
+        assert!(should_open_in_external_browser(
+            meet_redirect,
+            AppKind::Calendar
+        ));
+        assert!(should_open_in_external_browser(
+            meet_redirect,
             AppKind::Mail
         ));
     }
@@ -322,8 +366,7 @@ mod tests {
 
     #[test]
     fn test_google_ecosystem_endpoints_stay_in_app() {
-        let ecosystem_urls = [
-            "https://calendar.google.com/calendar/u/0/r",
+        let shared_ecosystem_urls = [
             "https://calendar-pa.clients6.google.com/calendar/v3/users/me/calendarList",
             "https://clients4.google.com/inbox/sync",
             "https://tasks.google.com/embed",
@@ -333,37 +376,63 @@ mod tests {
             "https://play.google.com/log",
             "https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxK.woff2",
             "https://lh3.googleusercontent.com/a/default-user=s64",
-            "https://meet.google.com/abc-defg-hij",
-            "https://workspace.google.com/products/calendar",
-            "https://calendar.google.co.uk/calendar/u/0/r",
-            "https://google.de/search?q=test",
-            "https://blog.google/technology/ai",
-            "https://drive.google.com/drive/u/0/my-drive",
-            "https://docs.google.com/document/d/123/edit",
-            "https://chat.google.com",
         ];
 
-        for url in ecosystem_urls {
+        for url in shared_ecosystem_urls {
             assert_eq!(
                 classify_url(url, AppKind::Calendar),
                 UrlCategory::InApp,
                 "Expected {url} to be classified as InApp for Calendar"
             );
-            assert!(
-                !should_open_in_external_browser(url, AppKind::Calendar),
-                "Expected {url} to stay in-app for Calendar"
-            );
+            assert!(!should_open_in_external_browser(url, AppKind::Calendar));
 
             assert_eq!(
                 classify_url(url, AppKind::Mail),
                 UrlCategory::InApp,
                 "Expected {url} to be classified as InApp for Mail"
             );
-            assert!(
-                !should_open_in_external_browser(url, AppKind::Mail),
-                "Expected {url} to stay in-app for Mail"
-            );
+            assert!(!should_open_in_external_browser(url, AppKind::Mail));
         }
+    }
+
+    #[test]
+    fn test_external_google_apps_open_in_default_browser() {
+        let external_google_urls = [
+            "https://meet.google.com/abc-defg-hij",
+            "https://drive.google.com/drive/u/0/my-drive",
+            "https://docs.google.com/document/d/123/edit",
+            "https://sheets.google.com/spreadsheets/d/123",
+            "https://slides.google.com/presentation/d/123",
+            "https://chat.google.com",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "https://workspace.google.com/products/calendar",
+        ];
+
+        for url in external_google_urls {
+            assert_eq!(
+                classify_url(url, AppKind::Calendar),
+                UrlCategory::External,
+                "Expected {url} to open in external browser for Calendar"
+            );
+            assert!(should_open_in_external_browser(url, AppKind::Calendar));
+
+            assert_eq!(
+                classify_url(url, AppKind::Mail),
+                UrlCategory::External,
+                "Expected {url} to open in external browser for Mail"
+            );
+            assert!(should_open_in_external_browser(url, AppKind::Mail));
+        }
+
+        // Cross-service links open in external browser
+        assert!(should_open_in_external_browser(
+            "https://calendar.google.com/calendar/u/0/r",
+            AppKind::Mail
+        ));
+        assert!(should_open_in_external_browser(
+            "https://mail.google.com/mail/u/0/#inbox",
+            AppKind::Calendar
+        ));
     }
 
     #[test]

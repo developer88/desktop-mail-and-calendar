@@ -21,6 +21,26 @@
     return hex;
   }
 
+  function cleanText(str) {
+    return String(str || '')
+      .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF\u00A0]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function extractNameFromAria(aria, email) {
+    const normalized = cleanText(aria);
+    const emailIdx = normalized.indexOf(email);
+    let beforeEmail = emailIdx > 0 ? normalized.slice(0, emailIdx) : normalized;
+    beforeEmail = beforeEmail
+      .replace(/^(Google Account|Google-Konto|Compte Google|Cuenta de Google|Account Google)\s*:\s*/i, '')
+      .replace(/,?\s*Google\s+(membership|One|Workspace)\b.*/i, '')
+      .replace(/[(\[\s,\-|]+$/g, '')
+      .replace(/^[(\[\s,\-|]+/g, '')
+      .trim();
+    return beforeEmail;
+  }
+
   function extractProfile() {
     let email = '';
     let name = '';
@@ -33,18 +53,14 @@
       );
       for (let i = 0; i < candidates.length; i++) {
         const el = candidates[i];
-        const aria = (el.getAttribute('aria-label') || el.getAttribute('title') || '').trim();
+        const aria = cleanText(el.getAttribute('aria-label') || el.getAttribute('title') || '');
         if (aria) {
           const emailMatch = aria.match(/([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/);
           if (emailMatch) {
             email = emailMatch[1];
-            const cleaned = aria
-              .replace(/^(Google Account|Google-Konto|Compte Google|Cuenta de Google)\s*:\s*/i, '')
-              .replace(email, '')
-              .replace(/[()\n\r]+/g, ' ')
-              .trim();
-            if (cleaned) {
-              name = cleaned;
+            const extracted = extractNameFromAria(aria, email);
+            if (extracted) {
+              name = extracted;
             }
           }
         }

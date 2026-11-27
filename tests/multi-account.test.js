@@ -101,9 +101,20 @@ console.log('[1/4] PASS: Trusted Types CSP compliance verified.');
   assert(!circles[0].classList.contains('active'));
   assert(circles[1].classList.contains('active'));
 
+  // Unsigned-in account (no name/email) renders SVG user icon instead of raw number
+  window.__desktop_update_accounts({
+    active_account_id: 'default',
+    accounts: [
+      { id: 'default', email: 'personal@gmail.com', name: 'Personal User', avatar_url: null, unread_count: 0 },
+      { id: 'acct-2', email: null, name: null, avatar_url: null, unread_count: 0 }
+    ],
+    notifications_enabled: true
+  });
+  assert(stack.children[1].querySelector('svg'), 'Unsigned-in fallback circle must render crisp vector user icon');
+
   // Clicking circle switches account
-  circles[2].click();
-  assert(invoked.some((c) => c.cmd === 'switch_account' && c.args.accountId === 'acct-3'), 'Clicking avatar circle must invoke switch_account');
+  stack.children[1].click();
+  assert(invoked.some((c) => c.cmd === 'switch_account' && c.args.accountId === 'acct-2'), 'Clicking avatar circle must invoke switch_account');
   console.log('[2/4] PASS: Titlebar single-account vs Jira-style multi-account stack verified.');
 }
 
@@ -168,11 +179,11 @@ console.log('[1/4] PASS: Trusted Types CSP compliance verified.');
   console.log('[3/4] PASS: Settings dialog Accounts tab verified.');
 }
 
-// 4. Account Observer Profile Extraction
+// 4. Account Observer Profile Extraction (including invisible chars & ", Google membership" stripping)
 {
   const dom = new JSDOM(`<!DOCTYPE html><html><head><title>Inbox (4) - test@gmail.com - Gmail</title></head><body>
     <header>
-      <a aria-label="Google Account: Andrey Eremin (andrey@example.com)" href="https://accounts.google.com/SignOutOptions">
+      <a aria-label="Google Account: Andrey Eremin\u00A0\u200B(andrey@example.com), Google membership" href="https://accounts.google.com/SignOutOptions">
         <img src="https://lh3.googleusercontent.com/a/avatar123=s64" />
       </a>
     </header>
